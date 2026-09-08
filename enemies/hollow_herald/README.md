@@ -34,6 +34,6 @@ Drop-in file: **`res://enemies/hollow_herald/hollow_herald_realistic.glb`** (~2.
 
 `hollow_herald.tscn` / `BLOCKOUT_SCENE` instance `hollow_herald_realistic.glb` under the existing `HeraldBlockout` MeshRoot node. Capsule `r=0.48 h=2.35`, swipe **2.4** / lunge **1.4**, and wind-up clocks (1.15s / 1.25s) are untouched.
 
-**Joints:** swipe/lunge pose names are on the **Skeleton3D**. `MeshPoseRig` undoes the 0.01 armature so coat/crown stay meters and the authored 100× IBM skins `Body` at ~2.05 m. Idle is the bind A-pose; swipe wind-up / lunge use `set_bone_pose_rotation`. **`Crown`** is still a `MeshInstance3D` (HP pulse). **`TransitCoat`** / `CoatLapels` ride the armature root (not skinned).
+**Joints:** swipe/lunge pose names are on the **Skeleton3D**. `MeshPoseRig` undoes the 0.01 armature so coat/crown stay meters and the authored 100× IBM skins `Body` at ~2.05 m, and aligns Bip01 +Z to Godot −Z (same facing fix as HE). Idle is the bind A-pose; swipe wind-up / lunge use `set_bone_pose_rotation`. **`Crown`** is still a `MeshInstance3D` (HP pulse). **`TransitCoat`** / `CoatLapels` ride the armature root (not skinned).
 
 Licenses: `ATTRIBUTION.md` + `LICENSE.rocketbox.md`. Coat/crown maps are Poly Haven CC0. Not an Elden Ring / commercial rip.

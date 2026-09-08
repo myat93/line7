@@ -38,6 +38,8 @@ const POSE_PARTS: PackedStringArray = [
 @onready var pose_player: AnimationPlayer = $MeshRoot/PosePlayer
 
 var _sprinting: bool = false
+var _moving: bool = false
+var _stride: float = 0.0
 var _blockout: Node3D
 var _rig := MeshPoseRig.new()
 
@@ -155,6 +157,9 @@ func _physics_process(delta: float) -> void:
 
 	_regen(delta)
 	move_and_slide()
+	var planar := Vector2(velocity.x, velocity.z).length()
+	if state == State.FREE and planar > 0.15:
+		_stride += planar * delta * (2.8 if _sprinting else 2.2)
 	_update_visual_pose()
 
 
@@ -162,6 +167,7 @@ func _tick_free(delta: float) -> void:
 	var input_dir := _move_vector()
 	var sprinting := is_sprint_held() and input_dir.length() > 0.1
 	_sprinting = sprinting
+	_moving = input_dir.length() > 0.12
 	if sprinting and Combat.STAMINA_GATING:
 		if stamina <= 4.0:
 			sprinting = false
@@ -194,6 +200,7 @@ func _face_direction(dir: Vector3, delta: float) -> void:
 	dir.y = 0.0
 	if dir.length() < 0.05:
 		return
+	## MeshRoot −Z follows the camera-relative move (WASD via _move_vector).
 	## Godot forward is -Z. atan2(x, z) is +Z-forward and made HE moonwalk.
 	var desired := atan2(-dir.x, -dir.z)
 	mesh_root.rotation.y = lerp_angle(mesh_root.rotation.y, desired, 1.0 - exp(-14.0 * delta))
@@ -242,7 +249,11 @@ func _try_attack(heavy: bool) -> void:
 	_attack = profile
 	_attack_hit = false
 	_state_time = 0.0
+	_sprinting = false
+	_moving = false
 	state = State.ATTACK
+	if _rig.skeleton:
+		_rig.reset_to_bind()
 	_face_herald()
 	_place_hitbox(_active_box(), float(profile.reach), float(profile.width))
 
@@ -269,6 +280,7 @@ func _try_roll() -> void:
 		dir = -mesh_root.global_transform.basis.z
 	dir.y = 0.0
 	_roll_dir = dir.normalized()
+	_face_direction(_roll_dir, 1.0)
 	_iframe = Combat.ROLL_IFRAMES
 	_state_time = 0.0
 	state = State.ROLL
@@ -401,6 +413,9 @@ func _refresh_stance_visual() -> void:
 
 func _update_visual_pose() -> void:
 	mesh_root.rotation.x = 0.0
+	## Bind first every frame so run↔attack cannot keep a prior extra.
+	if _rig.skeleton:
+		_rig.reset_to_bind()
 	if Game.ashpike_bound and ashpike_visual:
 		ashpike_visual.rotation_degrees = Vector3(-18, 0, 12)
 		if state == State.ATTACK:
@@ -418,14 +433,17 @@ func _update_visual_pose() -> void:
 				_pose_jab()
 		State.HITSTUN:
 			_pose_idle()
-			_part_rot("Torso", Vector3(0.18, 0.12, 0.08))
-			_part_rot("Head", Vector3(-0.2, 0.15, 0.0))
+			_part_rot("Head", Vector3(-0.08, 0.06, 0.0))
 		State.DEAD:
-			_part_rot("Hips", Vector3(1.2, 0.0, 0.35))
-			_part_rot("Torso", Vector3(0.4, 0.0, 0.2))
+			_pose_idle()
+			_part_rot("Head", Vector3(0.12, 0.08, 0.0))
 		_:
-			if _sprinting:
+			if not is_on_floor() and velocity.y > 0.4:
+				_pose_jump()
+			elif _sprinting:
 				_pose_sprint()
+			elif _moving or Vector2(velocity.x, velocity.z).length() > 0.35:
+				_pose_walk()
 			else:
 				_pose_idle()
 
@@ -450,71 +468,85 @@ func _pose_idle() -> void:
 	_part_rot("R_Shin", Vector3.ZERO)
 
 
+func _pose_walk() -> void:
+	## Distance-driven stride so feet read against walk speed (no clock skate).
+	_pose_idle()
+	var swing := sin(_stride)
+	## Legs only — torso extras stretch the 100×-IBM sleeves.
+	_part_rot("L_Thigh", Vector3(swing * 0.12, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(-swing * 0.12, 0.0, 0.0))
+	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.10, 0.0, 0.0))
+	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.10, 0.0, 0.0))
+
+
 func _pose_sprint() -> void:
-	var swing := sin(Time.get_ticks_msec() * 0.012)
-	_part_pos("Hips", Vector3(0.0, -0.04, -0.06))
-	_part_rot("Hips", Vector3(0.12, 0.0, 0.0))
-	_part_rot("Torso", Vector3(0.42, swing * 0.05, 0.0))
-	_part_rot("Head", Vector3(-0.08, 0.0, 0.0))
-	_part_rot("L_UpperArm", Vector3(0.55 + swing * 0.45, 0.05, 0.12))
-	_part_rot("L_Forearm", Vector3(0.35, 0.0, 0.0))
-	_part_rot("R_UpperArm", Vector3(0.55 - swing * 0.45, -0.05, -0.12))
-	_part_rot("R_Forearm", Vector3(0.35, 0.0, 0.0))
-	_part_rot("L_Thigh", Vector3(swing * 0.55, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.4, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.55, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.4, 0.0, 0.0))
+	## No hip/torso lean — those extras flatten the IBM skin and read as a back-lean.
+	## Legs + a tiny head nod so the run still aims down the move.
+	_pose_idle()
+	var swing := sin(_stride)
+	_part_rot("Head", Vector3(0.05, 0.0, 0.0))
+	_part_rot("L_Thigh", Vector3(swing * 0.14, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(-swing * 0.14, 0.0, 0.0))
+	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.11, 0.0, 0.0))
+	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.11, 0.0, 0.0))
 
 
 func _pose_jab() -> void:
-	## Snap: fist is out almost immediately, then retracts in recovery.
-	var snap := 1.0 - pow(1.0 - clampf(_state_time / 0.10, 0.0, 1.0), 3.0)
-	if _state_time > 0.20:
-		snap = 1.0 - clampf((_state_time - 0.20) / 0.22, 0.0, 1.0)
+	## Hit window is wind 0.08 + active 0.12. Elbow-driven left snap — a 90°
+	## upper-arm swing is the clip spaghetti, not a reach buff. Clocks stay locked.
+	var wind: float = float(_attack.get("windup", 0.08))
+	var active: float = float(_attack.get("active", 0.12))
+	var recover: float = float(_attack.get("recovery", 0.22))
+	var snap := 1.0
+	if _state_time < wind:
+		snap = 1.0 - pow(1.0 - clampf(_state_time / maxf(wind, 0.04), 0.0, 1.0), 3.0)
+	elif _state_time > wind + active:
+		snap = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0)
 	_pose_idle()
-	_part_rot("Torso", Vector3(0.06, 0.14, 0.0) * snap)
-	_part_rot("L_UpperArm", Vector3(1.45, 0.18, 0.04) * snap + Vector3(0.12, 0.0, 0.08))
-	_part_rot("L_Forearm", Vector3(0.22, 0.0, 0.0))
-	_part_rot("L_Fist", Vector3(0.15, 0.0, 0.0) * snap)
-	_part_rot("R_UpperArm", Vector3(0.15, -0.08, -0.28))
+	## Negative local Z opens the A-pose elbow toward MeshRoot −Z. Fold extras
+	## put the fist on the hip and pinch the IBM sleeve (clip spaghetti).
+	_part_rot("L_Forearm", Vector3(0.08, 0.10, -0.28) * snap)
+	_part_rot("L_Fist", Vector3(0.16, 0.0, 0.0) * snap)
+	_rig.aim_along_y("L_UpperArm", Vector3(0.06, 0.14, -1.0), snap)
 
 
 func _pose_heavy() -> void:
+	## Coil through wind 0.32; commit on active 0.14. Elbow + capped aim, no hips.
 	var wind: float = float(_attack.get("windup", 0.32))
+	var active: float = float(_attack.get("active", 0.14))
+	var recover: float = float(_attack.get("recovery", 0.42))
 	_pose_idle()
 	if _state_time < wind:
 		var coil := clampf(_state_time / maxf(wind, 0.05), 0.0, 1.0)
 		coil = coil * coil
-		_part_rot("Torso", Vector3(0.12, -0.22, 0.06) * coil)
-		_part_rot("Hips", Vector3(-0.08, -0.08, 0.0) * coil)
-		_part_rot("R_UpperArm", Vector3(-0.65, -0.35, -0.42) * coil + Vector3(0.1, 0.0, -0.1))
-		_part_rot("R_Forearm", Vector3(0.55, 0.0, 0.0) * coil)
-		_part_rot("Head", Vector3(0.08, -0.12, 0.0) * coil)
+		_part_rot("R_Forearm", Vector3(0.16, 0.06, 0.10) * coil)
+		_part_rot("R_Fist", Vector3(0.10, 0.0, 0.0) * coil)
+		_rig.aim_along_y("R_UpperArm", Vector3(0.40, 0.22, 0.18), coil * 0.5)
 	else:
-		var commit := 1.0 - pow(1.0 - clampf((_state_time - wind) / 0.12, 0.0, 1.0), 2.0)
-		if _state_time > wind + 0.16:
-			commit = 1.0 - clampf((_state_time - wind - 0.16) / 0.36, 0.0, 1.0) * 0.55
-		_part_rot("Torso", Vector3(0.22, 0.18, 0.0) * commit)
-		_part_rot("Hips", Vector3(0.12, 0.1, 0.0) * commit)
-		_part_rot("R_UpperArm", Vector3(1.58, 0.12, -0.08) * commit)
-		_part_rot("R_Forearm", Vector3(0.18, 0.0, 0.0))
-		_part_rot("R_Fist", Vector3(0.2, 0.0, 0.0) * commit)
-		_part_rot("L_UpperArm", Vector3(0.2, 0.12, 0.35))
+		var commit := 1.0 - pow(1.0 - clampf((_state_time - wind) / 0.10, 0.0, 1.0), 2.0)
+		if _state_time > wind + active:
+			commit = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0) * 0.55
+		_part_rot("R_Forearm", Vector3(0.08, -0.10, -0.28) * commit)
+		_part_rot("R_Fist", Vector3(0.16, 0.0, 0.0) * commit)
+		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.12, -1.0), commit)
 
 
 func _pose_roll() -> void:
+	## Crouch-tuck, not a full somersault — large hip extras crumple the IBM skin.
 	var tuck := 1.0
 	if _state_time > 0.26:
 		tuck = 1.0 - clampf((_state_time - 0.26) / 0.14, 0.0, 1.0)
-	_part_pos("Hips", Vector3(0.0, -0.38, -0.18) * tuck)
-	_part_rot("Hips", Vector3(1.45, 0.0, 0.0) * tuck)
-	_part_rot("Torso", Vector3(0.75, 0.0, 0.0) * tuck)
-	_part_rot("Head", Vector3(0.35, 0.0, 0.0) * tuck)
-	_part_rot("L_Thigh", Vector3(-1.35, 0.0, 0.12) * tuck)
-	_part_rot("R_Thigh", Vector3(-1.45, 0.0, -0.12) * tuck)
-	_part_rot("L_Shin", Vector3(1.55, 0.0, 0.0) * tuck)
-	_part_rot("R_Shin", Vector3(1.45, 0.0, 0.0) * tuck)
-	_part_rot("L_UpperArm", Vector3(0.85, 0.4, 0.55) * tuck)
-	_part_rot("R_UpperArm", Vector3(0.85, -0.4, -0.55) * tuck)
-	_part_rot("L_Forearm", Vector3(0.9, 0.0, 0.0) * tuck)
-	_part_rot("R_Forearm", Vector3(0.9, 0.0, 0.0) * tuck)
+	_pose_idle()
+	_part_rot("Head", Vector3(0.08, 0.0, 0.0) * tuck)
+	_part_rot("L_Thigh", Vector3(-0.42, 0.0, 0.05) * tuck)
+	_part_rot("R_Thigh", Vector3(-0.44, 0.0, -0.05) * tuck)
+	_part_rot("L_Shin", Vector3(0.48, 0.0, 0.0) * tuck)
+	_part_rot("R_Shin", Vector3(0.46, 0.0, 0.0) * tuck)
+	_part_rot("L_Forearm", Vector3(0.18, 0.0, 0.0) * tuck)
+	_part_rot("R_Forearm", Vector3(0.18, 0.0, 0.0) * tuck)
+
+
+func _pose_jump() -> void:
+	_pose_idle()
+	_part_rot("L_Thigh", Vector3(-0.12, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(0.08, 0.0, 0.0))

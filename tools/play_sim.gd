@@ -91,6 +91,21 @@ func _run() -> void:
 	he._face_direction(Vector3(0.0, 0.0, 1.0), 1.0)
 	if absf(angle_difference(he.mesh_root.rotation.y, PI)) > 0.25:
 		_fail("HE does not face movement direction (+Z).")
+	## Camera-relative strafe (look +Z, move +X) must yaw the mesh, not moonwalk.
+	he._face_direction(Vector3(1.0, 0.0, 0.0), 1.0)
+	if absf(angle_difference(he.mesh_root.rotation.y, -PI * 0.5)) > 0.25:
+		_fail("HE does not face camera-relative strafe (+X / WASD).")
+	var strafe_fwd := -he.mesh_root.global_transform.basis.z
+	if he._rig.character_forward().dot(strafe_fwd) < 0.85:
+		_fail("HE chest does not follow strafe yaw (sideways mesh).")
+	he._face_direction(Vector3(0.0, 0.0, 1.0), 1.0)
+	var mesh_fwd := -he.mesh_root.global_transform.basis.z
+	var chest_fwd := he._rig.character_forward()
+	if chest_fwd.length() < 0.2 or chest_fwd.dot(mesh_fwd) < 0.85:
+		_fail("HE realistic mesh does not face MeshRoot / move forward (moonwalk).")
+	var realistic := he.mesh_root.find_child("HERealistic", true, false) as Node3D
+	if realistic and absf(angle_difference(realistic.rotation.y, PI * 0.5)) > 0.08:
+		_fail("HERealistic yaw must be +90° so Bip01 +X matches MeshRoot −Z (got y=%.3f)." % realistic.rotation.y)
 	var blockout := he.mesh_root.get_node_or_null("HEBlockout")
 	if blockout == null:
 		_fail("HE realistic mesh is not instanced under MeshRoot.")
@@ -98,15 +113,55 @@ func _run() -> void:
 		_fail("HE realistic Skeleton3D bones (Hips / L_Fist) were not imported.")
 	else:
 		_assert_visible_body(he, "HE")
-		var idle_q := he._rig.bone_pose_rotation("L_UpperArm")
+		he.state = HE.State.FREE
+		he._sprinting = false
+		he._update_visual_pose()
+		var idle_l := he._rig.bone_pose_rotation("L_UpperArm")
+		var idle_r := he._rig.bone_pose_rotation("R_UpperArm")
+		var idle_l_fore := he._rig.bone_pose_rotation("L_Forearm")
+		var idle_r_fore := he._rig.bone_pose_rotation("R_Forearm")
+		var idle_l_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
+		var idle_r_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
 		he.state = HE.State.ATTACK
 		he._attack = Combat.fists_light()
 		he._state_time = 0.12
 		he._update_visual_pose()
 		var jab_q := he._rig.bone_pose_rotation("L_UpperArm")
-		if idle_q.is_equal_approx(jab_q):
+		if idle_l.is_equal_approx(jab_q):
 			_fail("HE jab must rotate L_UpperArm off the A-pose rest.")
+		if idle_l_fore.is_equal_approx(he._rig.bone_pose_rotation("L_Forearm")):
+			_fail("HE jab must fold L_Forearm (elbow), not only nudge the upper arm.")
+		var jab_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
+		if jab_fwd < idle_l_fwd + 0.08:
+			_fail("HE jab L_UpperArm must swing toward MeshRoot forward.")
+		if _fist_span(he, "L_Fist") > 1.35:
+			_fail("HE jab L_Fist spaghetti — bone pose exploded the IBM skin.")
+		he._attack = Combat.fists_heavy()
+		he._state_time = 0.40
+		he._update_visual_pose()
+		var heavy_q := he._rig.bone_pose_rotation("R_UpperArm")
+		if idle_r.is_equal_approx(heavy_q):
+			_fail("HE heavy must rotate R_UpperArm off the A-pose rest.")
+		if idle_r_fore.is_equal_approx(he._rig.bone_pose_rotation("R_Forearm")):
+			_fail("HE heavy must fold R_Forearm (elbow) on the commit frame.")
+		var heavy_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
+		if heavy_fwd < idle_r_fwd + 0.08:
+			_fail("HE heavy R_UpperArm must commit toward MeshRoot forward.")
+		if _fist_span(he, "R_Fist") > 1.35:
+			_fail("HE heavy R_Fist spaghetti — bone pose exploded the IBM skin.")
 		he.state = HE.State.FREE
+		he._sprinting = false
+		he._update_visual_pose()
+		var idle_thigh := he._rig.bone_pose_rotation("L_Thigh")
+		he._sprinting = true
+		he._stride = 0.6
+		he._update_visual_pose()
+		var sprint_thigh := he._rig.bone_pose_rotation("L_Thigh")
+		if idle_thigh.is_equal_approx(sprint_thigh):
+			_fail("HE sprint must stride the legs (foot read).")
+		if _fist_span(he, "L_Fist") > 1.35 or _fist_span(he, "R_Fist") > 1.35:
+			_fail("HE sprint pose exploded an arm (IBM skin).")
+		he._sprinting = false
 		he._update_visual_pose()
 	var body_col := he.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if body_col == null or not (body_col.shape is CapsuleShape3D):
@@ -349,6 +404,19 @@ func _has_named_bones(root: Node, names: PackedStringArray) -> bool:
 		if skel.find_bone(bone_name) < 0:
 			return false
 	return true
+
+
+func _fist_span(he: HE, bone_name: String) -> float:
+	var skel: Skeleton3D = he._rig.skeleton
+	if skel == null:
+		return 0.0
+	var fist_idx := skel.find_bone(bone_name)
+	var hips_idx := skel.find_bone("Hips")
+	if fist_idx < 0 or hips_idx < 0:
+		return 0.0
+	var fist := skel.to_global(skel.get_bone_global_pose(fist_idx).origin)
+	var hips := skel.to_global(skel.get_bone_global_pose(hips_idx).origin)
+	return fist.distance_to(hips)
 
 
 func _assert_visible_body(host: Node, label: String) -> void:
