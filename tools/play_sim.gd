@@ -91,6 +91,14 @@ func _run() -> void:
 	he._face_direction(Vector3(0.0, 0.0, 1.0), 1.0)
 	if absf(angle_difference(he.mesh_root.rotation.y, PI)) > 0.25:
 		_fail("HE does not face movement direction (+Z).")
+	## Camera-relative strafe (look +Z, move +X) must yaw the mesh, not moonwalk.
+	he._face_direction(Vector3(1.0, 0.0, 0.0), 1.0)
+	if absf(angle_difference(he.mesh_root.rotation.y, -PI * 0.5)) > 0.25:
+		_fail("HE does not face camera-relative strafe (+X / WASD).")
+	var strafe_fwd := -he.mesh_root.global_transform.basis.z
+	if he._rig.character_forward().dot(strafe_fwd) < 0.85:
+		_fail("HE chest does not follow strafe yaw (sideways mesh).")
+	he._face_direction(Vector3(0.0, 0.0, 1.0), 1.0)
 	var mesh_fwd := -he.mesh_root.global_transform.basis.z
 	var chest_fwd := he._rig.character_forward()
 	if chest_fwd.length() < 0.2 or chest_fwd.dot(mesh_fwd) < 0.85:
@@ -110,6 +118,8 @@ func _run() -> void:
 		he._update_visual_pose()
 		var idle_l := he._rig.bone_pose_rotation("L_UpperArm")
 		var idle_r := he._rig.bone_pose_rotation("R_UpperArm")
+		var idle_l_fore := he._rig.bone_pose_rotation("L_Forearm")
+		var idle_r_fore := he._rig.bone_pose_rotation("R_Forearm")
 		var idle_l_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
 		var idle_r_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
 		he.state = HE.State.ATTACK
@@ -119,6 +129,8 @@ func _run() -> void:
 		var jab_q := he._rig.bone_pose_rotation("L_UpperArm")
 		if idle_l.is_equal_approx(jab_q):
 			_fail("HE jab must rotate L_UpperArm off the A-pose rest.")
+		if idle_l_fore.is_equal_approx(he._rig.bone_pose_rotation("L_Forearm")):
+			_fail("HE jab must fold L_Forearm (elbow), not only nudge the upper arm.")
 		var jab_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
 		if jab_fwd < idle_l_fwd + 0.08:
 			_fail("HE jab L_UpperArm must swing toward MeshRoot forward.")
@@ -130,6 +142,8 @@ func _run() -> void:
 		var heavy_q := he._rig.bone_pose_rotation("R_UpperArm")
 		if idle_r.is_equal_approx(heavy_q):
 			_fail("HE heavy must rotate R_UpperArm off the A-pose rest.")
+		if idle_r_fore.is_equal_approx(he._rig.bone_pose_rotation("R_Forearm")):
+			_fail("HE heavy must fold R_Forearm (elbow) on the commit frame.")
 		var heavy_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
 		if heavy_fwd < idle_r_fwd + 0.08:
 			_fail("HE heavy R_UpperArm must commit toward MeshRoot forward.")

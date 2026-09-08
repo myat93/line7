@@ -23,6 +23,7 @@ func _run() -> void:
 	_cam = _he.get_node("CameraPivot/SpringArm3D/Camera3D") as Camera3D
 	_he.global_position = Vector3(0.0, 1.05, 0.0)
 	_he.velocity = Vector3.ZERO
+	_he.set_physics_process(false)
 	_he.mesh_root.rotation.y = PI
 	## Directly behind HE, looking along MeshRoot −Z / +Z travel so facing is
 	## unambiguous (three-quarter hid the 90° chest error as "over-shoulder").

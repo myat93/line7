@@ -200,6 +200,7 @@ func _face_direction(dir: Vector3, delta: float) -> void:
 	dir.y = 0.0
 	if dir.length() < 0.05:
 		return
+	## MeshRoot −Z follows the camera-relative move (WASD via _move_vector).
 	## Godot forward is -Z. atan2(x, z) is +Z-forward and made HE moonwalk.
 	var desired := atan2(-dir.x, -dir.z)
 	mesh_root.rotation.y = lerp_angle(mesh_root.rotation.y, desired, 1.0 - exp(-14.0 * delta))
@@ -472,26 +473,27 @@ func _pose_walk() -> void:
 	_pose_idle()
 	var swing := sin(_stride)
 	## Legs only — torso extras stretch the 100×-IBM sleeves.
-	_part_rot("L_Thigh", Vector3(swing * 0.16, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.16, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.12, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.12, 0.0, 0.0))
+	_part_rot("L_Thigh", Vector3(swing * 0.12, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(-swing * 0.12, 0.0, 0.0))
+	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.10, 0.0, 0.0))
+	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.10, 0.0, 0.0))
 
 
 func _pose_sprint() -> void:
-	## Forward lean is negative local Z (Bip01 +X / MeshRoot −Z). Opposite swing.
-	## Modest extras only — large ones stretch the 100×-IBM skin.
+	## No hip/torso lean — those extras flatten the IBM skin and read as a back-lean.
+	## Legs + a tiny head nod so the run still aims down the move.
 	_pose_idle()
 	var swing := sin(_stride)
-	## Legs only. Hip/torso extras stretch the 100×-IBM sleeves across the back.
-	_part_rot("L_Thigh", Vector3(swing * 0.18, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.18, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.14, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.14, 0.0, 0.0))
+	_part_rot("Head", Vector3(0.05, 0.0, 0.0))
+	_part_rot("L_Thigh", Vector3(swing * 0.14, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(-swing * 0.14, 0.0, 0.0))
+	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.11, 0.0, 0.0))
+	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.11, 0.0, 0.0))
 
 
 func _pose_jab() -> void:
-	## Hit window is wind 0.08 + active 0.12. Rest-relative left snap; no IBM flip.
+	## Hit window is wind 0.08 + active 0.12. Elbow-driven left snap — a 90°
+	## upper-arm swing is the clip spaghetti, not a reach buff. Clocks stay locked.
 	var wind: float = float(_attack.get("windup", 0.08))
 	var active: float = float(_attack.get("active", 0.12))
 	var recover: float = float(_attack.get("recovery", 0.22))
@@ -501,13 +503,16 @@ func _pose_jab() -> void:
 	elif _state_time > wind + active:
 		snap = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0)
 	_pose_idle()
-	## Capped rest-relative aim (≤0.22 rad). No hips — those flatten the IBM skin.
-	_part_rot("L_Forearm", Vector3(0.18, 0.0, 0.0) * snap)
-	_rig.aim_along_y("L_UpperArm", Vector3(0.04, 0.12, -1.0), snap)
+	## Forearm / fist carry the silhouette. Upper-arm aim stays capped (≤0.28).
+	_part_rot("L_Forearm", Vector3(0.48, 0.12, 0.18) * snap)
+	_part_rot("L_Fist", Vector3(0.22, 0.06, 0.10) * snap)
+	_part_rot("R_Forearm", Vector3(0.20, 0.0, 0.0) * snap)
+	_rig.aim_along_y("L_UpperArm", Vector3(0.06, 0.14, -1.0), snap)
+	_rig.aim_along_y("L_Forearm", Vector3(0.04, 0.10, -1.0), snap)
 
 
 func _pose_heavy() -> void:
-	## Coil through wind 0.32; commit on active 0.14. Rest-relative right arm.
+	## Coil through wind 0.32; commit on active 0.14. Elbow + capped aim, no hips.
 	var wind: float = float(_attack.get("windup", 0.32))
 	var active: float = float(_attack.get("active", 0.14))
 	var recover: float = float(_attack.get("recovery", 0.42))
@@ -515,14 +520,18 @@ func _pose_heavy() -> void:
 	if _state_time < wind:
 		var coil := clampf(_state_time / maxf(wind, 0.05), 0.0, 1.0)
 		coil = coil * coil
-		_part_rot("R_Forearm", Vector3(0.22, 0.0, 0.0) * coil)
-		_rig.aim_along_y("R_UpperArm", Vector3(0.45, 0.20, 0.20), coil)
+		_part_rot("R_Forearm", Vector3(0.40, 0.10, 0.16) * coil)
+		_part_rot("R_Fist", Vector3(0.12, 0.0, 0.0) * coil)
+		_rig.aim_along_y("R_UpperArm", Vector3(0.40, 0.22, 0.18), coil * 0.65)
 	else:
 		var commit := 1.0 - pow(1.0 - clampf((_state_time - wind) / 0.10, 0.0, 1.0), 2.0)
 		if _state_time > wind + active:
 			commit = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0) * 0.55
-		_part_rot("R_Forearm", Vector3(0.10, 0.0, 0.0))
-		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.10, -1.0), commit)
+		_part_rot("R_Forearm", Vector3(0.36, -0.08, -0.14) * commit)
+		_part_rot("R_Fist", Vector3(0.18, 0.0, -0.10) * commit)
+		_part_rot("L_Forearm", Vector3(0.22, 0.0, 0.0) * commit)
+		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.12, -1.0), commit)
+		_rig.aim_along_y("R_Forearm", Vector3(-0.04, 0.10, -1.0), commit)
 
 
 func _pose_roll() -> void:

@@ -94,6 +94,7 @@ func set_char_rot(part_name: String, extra: Vector3) -> void:
 func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0) -> void:
 	## Rest-relative nudge so +Y (along-bone) leans toward a Godot direction.
 	## Cap the swing — a full 90° slerp stretches the 100×-IBM skin (clip 0:05/0:13).
+	## 0.28 rad is the read/safety ceiling; jab/heavy silhouette comes from the elbow.
 	if skeleton == null or not _bones.has(part_name):
 		return
 	if char_dir.length() < 0.05 or weight <= 0.001:
@@ -109,7 +110,8 @@ func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0) -> v
 		axis = rest_global.x
 	else:
 		axis = axis.normalized()
-	var ang := minf(current_y.angle_to(want), 0.22) * clampf(weight, 0.0, 1.0)
+	## 0.28 rad is enough to leave A-pose; 90° slerp is the clip spaghetti.
+	var ang := minf(current_y.angle_to(want), 0.28) * clampf(weight, 0.0, 1.0)
 	if ang < 0.01:
 		return
 	var parent_b := _parent_rest_basis(idx)
