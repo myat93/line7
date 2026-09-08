@@ -52,6 +52,34 @@ func _run() -> void:
 		for event in InputMap.action_get_events("roll"):
 			if event is InputEventKey and event.physical_keycode == KEY_SPACE:
 				_fail("Space must not roll.")
+	var roll_ctrl_ok := false
+	if InputMap.has_action("roll"):
+		for event in InputMap.action_get_events("roll"):
+			if event is InputEventKey and event.physical_keycode == KEY_CTRL and event.ctrl_pressed:
+				roll_ctrl_ok = true
+	if not roll_ctrl_ok:
+		_fail("Roll binding must match a live Ctrl press (ctrl_pressed=true).")
+	he.state = HE.State.FREE
+	var ctrl := InputEventKey.new()
+	ctrl.keycode = KEY_CTRL
+	ctrl.physical_keycode = KEY_CTRL
+	ctrl.ctrl_pressed = true
+	ctrl.pressed = true
+	if not he.event_starts_roll(ctrl):
+		_fail("Ctrl key event is not recognized as roll.")
+	Input.parse_input_event(ctrl)
+	Input.flush_buffered_events()
+	he._poll_roll_edge()
+	if he.state != HE.State.ROLL:
+		_fail("Ctrl did not start a roll.")
+	var ctrl_up := InputEventKey.new()
+	ctrl_up.keycode = KEY_CTRL
+	ctrl_up.physical_keycode = KEY_CTRL
+	ctrl_up.pressed = false
+	Input.parse_input_event(ctrl_up)
+	Input.flush_buffered_events()
+	he.state = HE.State.FREE
+	he._roll_held = false
 	he.stamina = 0.0
 	he._try_attack(false)
 	if he.state != HE.State.ATTACK:

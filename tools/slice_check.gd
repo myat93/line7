@@ -60,6 +60,9 @@ func _check_combat_rules(failures: PackedStringArray) -> void:
 		failures.append("Jump velocity must be set.")
 	if Combat.SPRINT_SPEED < Combat.WALK_SPEED * 1.6:
 		failures.append("Sprint must be clearly faster than walk.")
+	var project := FileAccess.get_file_as_string("res://project.godot")
+	if not project.contains("ctrl_pressed\":true"):
+		failures.append("project.godot must bind Ctrl with ctrl_pressed=true (roll).")
 
 
 func _check_scenes(failures: PackedStringArray) -> void:

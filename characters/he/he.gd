@@ -17,6 +17,7 @@ var _roll_dir: Vector3 = Vector3.FORWARD
 var _look_yaw: float = PI
 var _look_pitch: float = -0.12
 var _iframe: float = 0.0
+var _roll_held: bool = false
 
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var spring: SpringArm3D = $CameraPivot/SpringArm3D
@@ -67,7 +68,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_attack(true)
 	elif event.is_action_pressed("jump"):
 		_try_jump()
-	elif event.is_action_pressed("roll"):
+	elif event_starts_roll(event):
 		_try_roll()
 	elif event.is_action_pressed("interact"):
 		_try_interact()
@@ -79,7 +80,40 @@ func _unhandled_input(event: InputEvent) -> void:
 		_refresh_stance_visual()
 
 
+func _input(event: InputEvent) -> void:
+	if state == State.DEAD:
+		return
+	## Ctrl is a modifier; it often never reaches _unhandled_input as "roll".
+	if event_starts_roll(event):
+		_try_roll()
+		get_viewport().set_input_as_handled()
+
+
+func event_starts_roll(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		var key := event as InputEventKey
+		if not key.pressed or key.echo:
+			return false
+		if key.keycode == KEY_CTRL or key.physical_keycode == KEY_CTRL:
+			return true
+	return event.is_action_pressed("roll")
+
+
+func is_roll_held() -> bool:
+	if Input.is_physical_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_CTRL):
+		return true
+	return Input.is_action_pressed("roll")
+
+
+func _poll_roll_edge() -> void:
+	var held := is_roll_held()
+	if held and not _roll_held:
+		_try_roll()
+	_roll_held = held
+
+
 func _physics_process(delta: float) -> void:
+	_poll_roll_edge()
 	if not is_on_floor():
 		velocity.y -= Combat.GRAVITY * delta
 	elif velocity.y < 0.0:
