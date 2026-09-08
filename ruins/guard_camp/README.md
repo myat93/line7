@@ -2,9 +2,9 @@
 
 Separate exploration pocket off the service-tunnel far end. Not part of the fallen-castle ruins pocket (that pocket is also a camp on `main`).
 
-Props come from Jake’s **`CampKit`** (`ruins/fallen_castle/camp_kit.gd`) — generated bark/cloth/mud/rope meshes. Named pieces live in this folder: `palisade_log` / `palisade_ring`, `lean_to_a` / `lean_to_b`, `guard_plank`, `tripod_central`, `crate_loot`, `torch_post`, `mist_drop`.
+Props come from Jake’s **`CampKit`** (`ruins/fallen_castle/camp_kit.gd`) — Poly Haven CC0 PBR on the palisade / cloth / mud, plus imported crate / barrel / lantern / pot meshes. Named pieces live in this folder: `palisade_log` / `palisade_ring`, `lean_to_a` / `lean_to_b`, `guard_plank`, `tripod_central`, `crate_loot`, `torch_post`, `mist_drop`.
 
-Kenney Survival Kit / Fantasy Town Kit are **not** on `main` and are not vendored here (cartoon town read vs the locked camp still). Same CampKit, photo-matched layout.
+Kenney Survival Kit / Fantasy Town Kit are **not** on `main` (cartoon town read vs the locked camp still). Same photo-matched ~30 m / yard layout.
 
 **Enter:** tunnel past the locker → sealed **CAMP** door → **E**.
 
@@ -21,4 +21,4 @@ Kenney Survival Kit / Fantasy Town Kit are **not** on `main` and are not vendore
 
 Debug: **0** camp · **9** tunnel · **8** ruins camp.
 
-**Mesh vs placeholder:** every named piece is a CampKit `MeshInstance3D` (tapered bark logs, cloth planes, plank boxes, rope rails, hooped barrels, iron brazier). No CSG grey cubes. Ground is `Kit.mud_ground`. Mist is a translucent fog sheet, not a solid wall.
+**Mesh vs placeholder:** palisade logs and cloth still come from CampKit (now with Poly Haven maps). Crates, barrels, the cook pot, and the torch lantern instance CC0 glTF. No CSG grey cubes. Ground is `Kit.mud_ground`. Mist is a translucent fog sheet, not a solid wall.

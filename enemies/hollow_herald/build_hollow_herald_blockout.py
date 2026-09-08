@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 """Rebuild enemies/hollow_herald/hollow_herald_blockout.glb — official Jake path.
 
-Humanoid lesser-demon blockout, ~2.05 m to the crown tip, transit-coat bulk,
-loud wind-up arms with clawed fists. Joint names match hollow_herald.gd
-(`Hips`, `Torso`, `R_UpperArm`, `Crown`, …).
+~2.05 m lesser-demon transit-coat humanoid. Capsule / sphere / tapered meshes
+with embedded cloth / hollow-skin textures. Pose joints stay transform-only
+(`Hips`, `Torso`, `R_UpperArm`, `Crown`, …) so swipe / lunge clocks keep
+working. Capsule collision is unchanged in hollow_herald.tscn.
 
-Hierarchy is joint nodes (no scale) with mesh children (scale = box size).
-Origin at the feet, Y-up meters, +Z glTF forward (Godot imports that as -Z).
-
-hollow_herald.tscn and the BLOCKOUT_SCENE preload instance this GLB under
-MeshRoot/HeraldBlockout. Combat clocks and the capsule stay on the scene.
+Origin at the feet, Y-up meters, Godot-forward (−Z visor / lapels / fists).
 
 Usage:
     python3 enemies/hollow_herald/build_hollow_herald_blockout.py
@@ -17,13 +14,28 @@ Usage:
 
 from __future__ import annotations
 
-import json
-import struct
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
+
+from glb_kit import (  # noqa: E402
+    GlbBuilder,
+    box,
+    capsule,
+    cylinder,
+    ellipsoid,
+    plane,
+    rotate_mesh_x,
+    rotate_mesh_z,
+    sphere,
+    translate_mesh,
+    write_glb,
+)
 
 OUT = Path(__file__).with_name("hollow_herald_blockout.glb")
 
-# Pose joints hollow_herald.gd already looks up.
 POSE_JOINTS = (
     "Hips",
     "Torso",
@@ -41,407 +53,204 @@ POSE_JOINTS = (
     "R_Shin",
 )
 
-MATERIALS = {
-    ## Ashen transit coat — lesser-demon, still reads in the dim undercroft.
-    "coat": {"color": [0.50, 0.48, 0.58, 1.0], "rough": 0.72, "metal": 0.08},
-    "lining": {
-        "color": [0.48, 0.16, 0.18, 1.0],
-        "rough": 0.56,
-        "metal": 0.0,
-        "emissive": [0.22, 0.04, 0.04],
-    },
-    "pants": {"color": [0.22, 0.20, 0.26, 1.0], "rough": 0.86, "metal": 0.0},
-    "hollow": {"color": [0.70, 0.62, 0.56, 1.0], "rough": 0.60, "metal": 0.0},
-    "gauntlet": {
-        "color": [0.46, 0.32, 0.34, 1.0],
-        "rough": 0.42,
-        "metal": 0.16,
-        "emissive": [0.16, 0.05, 0.05],
-    },
-    "claw": {
-        "color": [0.78, 0.70, 0.58, 1.0],
-        "rough": 0.28,
-        "metal": 0.22,
-        "emissive": [0.20, 0.08, 0.04],
-    },
-    "crown": {
-        "color": [0.76, 0.66, 0.38, 1.0],
-        "rough": 0.34,
-        "metal": 0.50,
-        "emissive": [0.32, 0.22, 0.06],
-    },
-    "brass": {
-        "color": [0.66, 0.52, 0.30, 1.0],
-        "rough": 0.42,
-        "metal": 0.40,
-        "emissive": [0.08, 0.05, 0.01],
-    },
-    "void": {
-        "color": [0.06, 0.05, 0.07, 1.0],
-        "rough": 0.20,
-        "metal": 0.20,
-        "emissive": [0.16, 0.08, 0.04],
-    },
-    "boot": {"color": [0.12, 0.10, 0.10, 1.0], "rough": 0.54, "metal": 0.10},
-    "mark": {
-        "color": [0.54, 0.16, 0.18, 1.0],
-        "rough": 0.38,
-        "metal": 0.0,
-        "emissive": [0.30, 0.05, 0.04],
-    },
-}
+
+def _mats(b: GlbBuilder) -> None:
+    b.add_material("coat", [0.82, 0.80, 0.90, 1.0], 0.70, metal=0.06, texture="herald_coat")
+    b.add_material(
+        "lining",
+        [1.0, 0.42, 0.38, 1.0],
+        0.54,
+        emissive=[0.18, 0.03, 0.03],
+        texture="lining",
+        double_sided=True,
+    )
+    b.add_material("pants", [0.55, 0.52, 0.62, 1.0], 0.86, texture="pants")
+    b.add_material("hollow", [0.92, 0.86, 0.80, 1.0], 0.58, texture="hollow")
+    b.add_material(
+        "gauntlet",
+        [0.88, 0.68, 0.66, 1.0],
+        0.40,
+        metal=0.14,
+        emissive=[0.10, 0.03, 0.03],
+        texture="gauntlet",
+    )
+    b.add_material(
+        "claw",
+        [0.92, 0.84, 0.68, 1.0],
+        0.26,
+        metal=0.22,
+        emissive=[0.16, 0.06, 0.03],
+        texture="crown",
+    )
+    b.add_material(
+        "crown",
+        [0.95, 0.85, 0.50, 1.0],
+        0.32,
+        metal=0.48,
+        emissive=[0.26, 0.16, 0.04],
+        texture="crown",
+    )
+    b.add_material(
+        "brass",
+        [0.90, 0.74, 0.42, 1.0],
+        0.38,
+        metal=0.42,
+        emissive=[0.06, 0.04, 0.01],
+        texture="brass",
+    )
+    b.add_material(
+        "void",
+        [0.08, 0.06, 0.08, 1.0],
+        0.16,
+        metal=0.22,
+        emissive=[0.12, 0.05, 0.03],
+        texture="void",
+    )
+    b.add_material("boot", [0.50, 0.42, 0.38, 1.0], 0.50, metal=0.08, texture="boot")
+    b.add_material(
+        "mark",
+        [0.95, 0.32, 0.30, 1.0],
+        0.36,
+        emissive=[0.26, 0.04, 0.03],
+        texture="mark",
+    )
+    b.add_material("cloth", [0.78, 0.76, 0.86, 1.0], 0.76, texture="herald_coat", double_sided=True)
 
 
-def unit_cube() -> tuple[list[float], list[float], list[int]]:
-    faces = [
-        ((0.5, -0.5, -0.5), (0.5, 0.5, -0.5), (0.5, 0.5, 0.5), (0.5, -0.5, 0.5), (1, 0, 0)),
-        ((-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5), (-0.5, 0.5, -0.5), (-0.5, -0.5, -0.5), (-1, 0, 0)),
-        ((-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, 0.5, -0.5), (0, 1, 0)),
-        ((-0.5, -0.5, 0.5), (-0.5, -0.5, -0.5), (0.5, -0.5, -0.5), (0.5, -0.5, 0.5), (0, -1, 0)),
-        ((-0.5, -0.5, 0.5), (0.5, -0.5, 0.5), (0.5, 0.5, 0.5), (-0.5, 0.5, 0.5), (0, 0, 1)),
-        ((0.5, -0.5, -0.5), (-0.5, -0.5, -0.5), (-0.5, 0.5, -0.5), (0.5, 0.5, -0.5), (0, 0, -1)),
+def _claws(b: GlbBuilder, prefix: str) -> list[int]:
+    kids = []
+    for i, (x, z, h) in enumerate(((-0.05, -0.12, 0.20), (0.0, -0.16, 0.24), (0.05, -0.12, 0.20))):
+        claw = capsule(f"{prefix}c{i}", 0.012, h, 8, 3)
+        kids.append(b.mesh_node(f"{prefix}_Claw{i+1}", translate_mesh(claw, (x, -0.18, z)), "claw"))
+    return kids
+
+
+def _gauntlet_hand(b: GlbBuilder, prefix: str, bulky: bool) -> list[int]:
+    r = 0.072 if bulky else 0.062
+    kids = [
+        b.mesh_node(f"{prefix}_FistMesh", translate_mesh(sphere("fist", r, 12, 8), (0.0, -0.08, -0.04)), "gauntlet"),
+        b.mesh_node(f"{prefix}_Knuckle", translate_mesh(ellipsoid("kn", r * 1.05, 0.04, r * 0.9, 10, 6), (0.0, -0.02, -0.02)), "gauntlet"),
     ]
-    positions: list[float] = []
-    normals: list[float] = []
-    indices: list[int] = []
-    for a, b, c, d, n in faces:
-        base = len(positions) // 3
-        for p in (a, b, c, d):
-            positions.extend(p)
-            normals.extend(n)
-        indices.extend((base, base + 1, base + 2, base, base + 2, base + 3))
-    return positions, normals, indices
+    kids.extend(_claws(b, prefix))
+    return kids
 
 
-def pack_f32(values: list[float]) -> bytes:
-    return struct.pack(f"<{len(values)}f", *values)
+def _crown_bits(b: GlbBuilder) -> list[int]:
+    band = b.mesh_node("CrownBand", translate_mesh(cylinder("band", 0.11, 0.11, 0.045, 16, False), (0.0, 0.02, 0.0)), "crown")
+    brim = b.mesh_node("TransitBrim", translate_mesh(cylinder("brim", 0.14, 0.13, 0.018, 16, True), (0.0, 0.00, -0.02)), "brass")
+    horns = []
+    for name, x, tilt in (("CrownHornL", -0.08, 0.35), ("CrownHornC", 0.0, 0.0), ("CrownHornR", 0.08, -0.35)):
+        horn = rotate_mesh_z(cylinder(name.lower(), 0.008, 0.022, 0.18, 8, True), tilt)
+        horns.append(b.mesh_node(name, translate_mesh(horn, (x, 0.12, 0.02)), "crown"))
+    return [band, brim, *horns]
 
 
-def pack_u16(values: list[int]) -> bytes:
-    return struct.pack(f"<{len(values)}H", *values)
-
-
-def align4(buf: bytearray) -> None:
-    while len(buf) % 4:
-        buf.append(0)
-
-
-def minmax(values: list[float], stride: int) -> tuple[list[float], list[float]]:
-    mins = list(values[:stride])
-    maxs = list(values[:stride])
-    for i in range(0, len(values), stride):
-        for k in range(stride):
-            mins[k] = min(mins[k], values[i + k])
-            maxs[k] = max(maxs[k], values[i + k])
-    return mins, maxs
-
-
-def node(
-    name: str,
-    translation: tuple[float, float, float] | None = None,
-    scale: tuple[float, float, float] | None = None,
-    mesh: int | None = None,
-    children: list[int] | None = None,
-) -> dict:
-    out: dict = {"name": name}
-    if translation is not None:
-        out["translation"] = [round(v, 5) for v in translation]
-    if scale is not None:
-        out["scale"] = [round(v, 5) for v in scale]
-    if mesh is not None:
-        out["mesh"] = mesh
-    if children:
-        out["children"] = children
-    return out
-
-
-def _world_of(nodes: list[dict], idx: int) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
-    """Rest-pose world translation and scale (no rotations in this GLB)."""
-    chain: list[int] = []
-    parent_of: dict[int, int] = {}
-    for i, n in enumerate(nodes):
-        for child in n.get("children", []):
-            parent_of[child] = i
-    cur = idx
-    while True:
-        chain.append(cur)
-        if cur not in parent_of:
-            break
-        cur = parent_of[cur]
-    tx = ty = tz = 0.0
-    sx = sy = sz = 1.0
-    for i in reversed(chain):
-        n = nodes[i]
-        t = n.get("translation", [0.0, 0.0, 0.0])
-        s = n.get("scale", [1.0, 1.0, 1.0])
-        tx += t[0] * sx
-        ty += t[1] * sy
-        tz += t[2] * sz
-        sx *= s[0]
-        sy *= s[1]
-        sz *= s[2]
-    return (tx, ty, tz), (sx, sy, sz)
-
-
-def verify_nodes(nodes: list[dict]) -> tuple[float, float]:
-    names = {n["name"] for n in nodes}
-    missing = [j for j in POSE_JOINTS if j not in names]
-    if missing:
-        raise RuntimeError(f"Official blockout missing pose joints: {missing}")
-    for joint in POSE_JOINTS:
-        idx = next(i for i, n in enumerate(nodes) if n["name"] == joint)
-        if "scale" in nodes[idx]:
-            raise RuntimeError(f"Pose joint {joint} must not carry scale (pose squash).")
-        if "mesh" in nodes[idx]:
-            raise RuntimeError(f"Pose joint {joint} must be a transform-only node.")
-
-    min_y = 1e9
-    max_y = -1e9
-    for i, n in enumerate(nodes):
-        if "mesh" not in n:
-            continue
-        (tx, ty, tz), (sx, sy, sz) = _world_of(nodes, i)
-        min_y = min(min_y, ty - 0.5 * abs(sy))
-        max_y = max(max_y, ty + 0.5 * abs(sy))
-    height = max_y - min_y
-    if min_y < -0.02 or min_y > 0.08:
-        raise RuntimeError(f"Origin must sit at the feet (min Y={min_y:.3f})")
-    if not (2.00 <= max_y <= 2.10):
-        raise RuntimeError(f"Crown tip must be 2.00–2.10 m (max Y={max_y:.3f})")
-    if not (2.00 <= height <= 2.10):
-        raise RuntimeError(f"Blockout height {height:.3f} m is outside 2.00–2.10")
-    return min_y, max_y
+def _head_bits(b: GlbBuilder) -> list[int]:
+    crown = b.add_node("Crown", translation=(0.0, 0.18, 0.0), children=_crown_bits(b))
+    return [
+        b.mesh_node("HeadMesh", ellipsoid("head", 0.108, 0.120, 0.100, 16, 12), "hollow"),
+        b.mesh_node("CheekL", translate_mesh(ellipsoid("cl", 0.04, 0.05, 0.035, 8, 6), (-0.07, -0.02, -0.04)), "hollow"),
+        b.mesh_node("CheekR", translate_mesh(ellipsoid("cr", 0.04, 0.05, 0.035, 8, 6), (0.07, -0.02, -0.04)), "hollow"),
+        b.mesh_node("VoidVisor", translate_mesh(box("visor", (0.16, 0.042, 0.022)), (0.0, 0.04, -0.102)), "void"),
+        b.mesh_node("SocketL", translate_mesh(sphere("sl", 0.018, 8, 6), (-0.034, 0.03, -0.09)), "void"),
+        b.mesh_node("SocketR", translate_mesh(sphere("sr", 0.018, 8, 6), (0.034, 0.03, -0.09)), "void"),
+        crown,
+    ]
 
 
 def build() -> bytes:
-    positions, normals, indices = unit_cube()
-    pos_b = pack_f32(positions)
-    nrm_b = pack_f32(normals)
-    idx_b = pack_u16(indices)
-    blob = bytearray()
-    views = []
+    b = GlbBuilder("line7/enemies/hollow_herald/build_hollow_herald_blockout.py")
+    _mats(b)
 
-    def add_view(data: bytes, target: int) -> int:
-        align4(blob)
-        offset = len(blob)
-        blob.extend(data)
-        views.append({"buffer": 0, "byteOffset": offset, "byteLength": len(data), "target": target})
-        return len(views) - 1
+    l_fist = b.add_node("L_Fist", translation=(0.0, -0.40, 0.0), children=_gauntlet_hand(b, "L", False))
+    l_fore_mesh = b.mesh_node("L_ForearmMesh", translate_mesh(capsule("lf", 0.058, 0.36, 12, 4), (0.0, -0.16, -0.01)), "gauntlet")
+    l_fore = b.add_node("L_Forearm", translation=(0.0, -0.36, 0.0), children=[l_fore_mesh, l_fist])
+    l_up_mesh = b.mesh_node("L_UpperArmMesh", translate_mesh(capsule("lu", 0.058, 0.34, 12, 4), (0.0, -0.16, 0.0)), "coat")
+    l_ep = b.mesh_node("L_Epaulette", translate_mesh(ellipsoid("le", 0.08, 0.03, 0.07, 10, 6), (0.0, 0.02, 0.0)), "brass")
+    l_up = b.add_node("L_UpperArm", translation=(-0.28, 0.40, 0.0), children=[l_up_mesh, l_ep, l_fore])
 
-    pos_view = add_view(pos_b, 34962)
-    nrm_view = add_view(nrm_b, 34962)
-    idx_view = add_view(idx_b, 34963)
-    align4(blob)
+    r_fist = b.add_node("R_Fist", translation=(0.0, -0.42, 0.0), children=_gauntlet_hand(b, "R", True))
+    r_fore_mesh = b.mesh_node("R_ForearmMesh", translate_mesh(capsule("rf", 0.062, 0.40, 12, 4), (0.0, -0.18, -0.02)), "gauntlet")
+    r_fore = b.add_node("R_Forearm", translation=(0.0, -0.38, 0.0), children=[r_fore_mesh, r_fist])
+    r_up_mesh = b.mesh_node("R_UpperArmMesh", translate_mesh(capsule("ru", 0.062, 0.36, 12, 4), (0.0, -0.17, 0.0)), "coat")
+    r_ep = b.mesh_node("R_Epaulette", translate_mesh(ellipsoid("re", 0.08, 0.03, 0.07, 10, 6), (0.0, 0.02, 0.0)), "brass")
+    r_up = b.add_node("R_UpperArm", translation=(0.28, 0.40, 0.0), children=[r_up_mesh, r_ep, r_fore])
 
-    pos_min, pos_max = minmax(positions, 3)
-    accessors = [
-        {
-            "bufferView": pos_view,
-            "componentType": 5126,
-            "count": len(positions) // 3,
-            "type": "VEC3",
-            "min": pos_min,
-            "max": pos_max,
-        },
-        {
-            "bufferView": nrm_view,
-            "componentType": 5126,
-            "count": len(normals) // 3,
-            "type": "VEC3",
-        },
-        {
-            "bufferView": idx_view,
-            "componentType": 5123,
-            "count": len(indices),
-            "type": "SCALAR",
-        },
-    ]
-
-    mat_names = list(MATERIALS)
-    materials = []
-    for key in mat_names:
-        spec = MATERIALS[key]
-        entry = {
-            "name": key,
-            "pbrMetallicRoughness": {
-                "baseColorFactor": spec["color"],
-                "metallicFactor": spec["metal"],
-                "roughnessFactor": spec["rough"],
-            },
-        }
-        if "emissive" in spec:
-            entry["emissiveFactor"] = spec["emissive"]
-        materials.append(entry)
-
-    meshes = []
-    mesh_of: dict[str, int] = {}
-    for i, key in enumerate(mat_names):
-        meshes.append(
-            {
-                "name": f"box_{key}",
-                "primitives": [
-                    {
-                        "attributes": {"POSITION": 0, "NORMAL": 1},
-                        "indices": 2,
-                        "material": i,
-                    }
-                ],
-            }
-        )
-        mesh_of[key] = i
-
-    nodes: list[dict] = []
-
-    def add(n: dict) -> int:
-        nodes.append(n)
-        return len(nodes) - 1
-
-    def box(name: str, material: str, translation: tuple[float, float, float], size: tuple[float, float, float]) -> int:
-        return add(node(name, translation=translation, scale=size, mesh=mesh_of[material]))
-
-    def claws(prefix: str) -> list[int]:
-        ## Mesh children of the fist — they ride the existing swipe/lunge poses.
-        return [
-            box(f"{prefix}_Claw1", "claw", (0.06, -0.15, -0.13), (0.035, 0.22, 0.055)),
-            box(f"{prefix}_Claw2", "claw", (0.00, -0.18, -0.16), (0.040, 0.26, 0.060)),
-            box(f"{prefix}_Claw3", "claw", (-0.06, -0.15, -0.13), (0.035, 0.22, 0.055)),
-        ]
-
-    # --- arms hang -Y; long gauntlets + claws so the 1.15s swipe chamber reads ---
-    l_fist_mesh = box("L_FistMesh", "gauntlet", (0.0, -0.10, -0.06), (0.18, 0.18, 0.22))
-    l_fist = add(node("L_Fist", translation=(0.0, -0.40, 0.0), children=[l_fist_mesh, *claws("L")]))
-    l_fore_mesh = box("L_ForearmMesh", "gauntlet", (0.0, -0.18, -0.02), (0.15, 0.38, 0.16))
-    l_fore = add(node("L_Forearm", translation=(0.0, -0.36, 0.0), children=[l_fore_mesh, l_fist]))
-    l_up_mesh = box("L_UpperArmMesh", "coat", (0.0, -0.17, 0.0), (0.13, 0.36, 0.13))
-    l_epaulette = box("L_Epaulette", "brass", (0.0, 0.02, 0.0), (0.18, 0.06, 0.15))
-    l_up = add(node("L_UpperArm", translation=(-0.28, 0.40, 0.0), children=[l_up_mesh, l_epaulette, l_fore]))
-
-    r_fist_mesh = box("R_FistMesh", "gauntlet", (0.0, -0.12, -0.08), (0.20, 0.20, 0.26))
-    r_fist = add(node("R_Fist", translation=(0.0, -0.42, 0.0), children=[r_fist_mesh, *claws("R")]))
-    r_fore_mesh = box("R_ForearmMesh", "gauntlet", (0.0, -0.20, -0.03), (0.16, 0.42, 0.17))
-    r_fore = add(node("R_Forearm", translation=(0.0, -0.38, 0.0), children=[r_fore_mesh, r_fist]))
-    r_up_mesh = box("R_UpperArmMesh", "coat", (0.0, -0.18, 0.0), (0.14, 0.38, 0.14))
-    r_epaulette = box("R_Epaulette", "brass", (0.0, 0.02, 0.0), (0.18, 0.06, 0.15))
-    r_up = add(node("R_UpperArm", translation=(0.28, 0.40, 0.0), children=[r_up_mesh, r_epaulette, r_fore]))
-
-    horn_l = box("CrownHornL", "crown", (-0.11, 0.10, 0.04), (0.05, 0.18, 0.05))
-    horn_c = box("CrownHornC", "crown", (0.0, 0.14, 0.0), (0.05, 0.20, 0.05))
-    horn_r = box("CrownHornR", "crown", (0.11, 0.10, 0.04), (0.05, 0.18, 0.05))
-    band = box("CrownBand", "crown", (0.0, 0.03, 0.0), (0.24, 0.05, 0.24))
-    brim = box("TransitBrim", "brass", (0.0, 0.00, -0.07), (0.28, 0.03, 0.16))
-    crown = add(node("Crown", translation=(0.0, 0.18, 0.0), children=[band, brim, horn_l, horn_c, horn_r]))
-
-    visor = box("VoidVisor", "void", (0.0, 0.09, -0.10), (0.16, 0.055, 0.045))
-    head_mesh = box("HeadMesh", "hollow", (0.0, 0.11, -0.02), (0.20, 0.22, 0.20))
-    head = add(node("Head", translation=(0.0, 0.50, 0.0), children=[head_mesh, visor, crown]))
-
-    mark = box("ChestMark", "mark", (0.0, 0.14, -0.14), (0.09, 0.20, 0.03))
-    torso_mesh = box("TorsoMesh", "coat", (0.0, 0.22, 0.02), (0.48, 0.48, 0.28))
-    collar = box("Collar", "coat", (0.0, 0.44, -0.02), (0.28, 0.10, 0.20))
-    lapel_l = box("LapelL", "lining", (-0.07, 0.20, -0.13), (0.09, 0.32, 0.04))
-    lapel_r = box("LapelR", "lining", (0.07, 0.20, -0.13), (0.09, 0.32, 0.04))
-    btn_a = box("ButtonA", "brass", (-0.04, 0.24, -0.13), (0.035, 0.035, 0.03))
-    btn_b = box("ButtonB", "brass", (0.04, 0.24, -0.13), (0.035, 0.035, 0.03))
-    btn_c = box("ButtonC", "brass", (-0.04, 0.14, -0.13), (0.035, 0.035, 0.03))
-    btn_d = box("ButtonD", "brass", (0.04, 0.14, -0.13), (0.035, 0.035, 0.03))
-    torso = add(
-        node(
-            "Torso",
-            translation=(0.0, 0.10, 0.0),
-            children=[
-                torso_mesh,
-                collar,
-                lapel_l,
-                lapel_r,
-                mark,
-                btn_a,
-                btn_b,
-                btn_c,
-                btn_d,
-                head,
-                l_up,
-                r_up,
-            ],
-        )
+    head = b.add_node("Head", translation=(0.0, 0.50, 0.0), children=_head_bits(b))
+    neck = b.mesh_node("Neck", translate_mesh(capsule("neck", 0.048, 0.11, 10, 3), (0.0, 0.44, 0.0)), "hollow")
+    torso_mesh = b.mesh_node("TorsoMesh", translate_mesh(capsule("torso", 0.175, 0.50, 16, 5), (0.0, 0.20, 0.02)), "coat")
+    chest = b.mesh_node("Chest", translate_mesh(ellipsoid("chest", 0.185, 0.16, 0.12, 14, 8), (0.0, 0.26, 0.0)), "coat")
+    collar = b.mesh_node("Collar", translate_mesh(cylinder("col", 0.10, 0.12, 0.08, 14, False), (0.0, 0.42, -0.01)), "coat")
+    lapel_l = b.mesh_node("LapelL", translate_mesh(box("ll", (0.07, 0.30, 0.025)), (-0.06, 0.20, -0.13)), "lining")
+    lapel_r = b.mesh_node("LapelR", translate_mesh(box("lr", (0.07, 0.30, 0.025)), (0.06, 0.20, -0.13)), "lining")
+    mark = b.mesh_node("ChestMark", translate_mesh(box("mk", (0.07, 0.18, 0.02)), (0.0, 0.16, -0.145)), "mark")
+    buttons = []
+    for i, (x, y) in enumerate(((-0.035, 0.26), (0.035, 0.26), (-0.035, 0.16), (0.035, 0.16))):
+        buttons.append(b.mesh_node(f"Button{i}", translate_mesh(sphere(f"b{i}", 0.016, 8, 6), (x, y, -0.135)), "brass"))
+    torso = b.add_node(
+        "Torso",
+        translation=(0.0, 0.10, 0.0),
+        children=[torso_mesh, chest, collar, lapel_l, lapel_r, mark, neck, head, l_up, r_up, *buttons],
     )
 
-    l_foot = box("L_Foot", "boot", (0.0, -0.46, -0.07), (0.12, 0.08, 0.26))
-    l_shin_mesh = box("L_ShinMesh", "pants", (0.0, -0.20, 0.0), (0.11, 0.40, 0.12))
-    l_shin = add(node("L_Shin", translation=(0.0, -0.44, 0.0), children=[l_shin_mesh, l_foot]))
-    l_thigh_mesh = box("L_ThighMesh", "pants", (0.0, -0.20, 0.0), (0.13, 0.40, 0.14))
-    l_thigh = add(node("L_Thigh", translation=(-0.11, -0.06, 0.0), children=[l_thigh_mesh, l_shin]))
+    l_foot = b.mesh_node("L_Foot", translate_mesh(ellipsoid("lf", 0.058, 0.04, 0.13, 10, 6), (0.0, -0.44, -0.05)), "boot")
+    l_shin_mesh = b.mesh_node("L_ShinMesh", translate_mesh(capsule("ls", 0.052, 0.40, 12, 4), (0.0, -0.20, 0.0)), "pants")
+    l_shin = b.add_node("L_Shin", translation=(0.0, -0.44, 0.0), children=[l_shin_mesh, l_foot])
+    l_thigh_mesh = b.mesh_node("L_ThighMesh", translate_mesh(capsule("lt", 0.068, 0.40, 12, 4), (0.0, -0.18, 0.0)), "pants")
+    l_thigh = b.add_node("L_Thigh", translation=(-0.11, -0.06, 0.0), children=[l_thigh_mesh, l_shin])
 
-    r_foot = box("R_Foot", "boot", (0.0, -0.46, -0.07), (0.12, 0.08, 0.26))
-    r_shin_mesh = box("R_ShinMesh", "pants", (0.0, -0.20, 0.0), (0.11, 0.40, 0.12))
-    r_shin = add(node("R_Shin", translation=(0.0, -0.44, 0.0), children=[r_shin_mesh, r_foot]))
-    r_thigh_mesh = box("R_ThighMesh", "pants", (0.0, -0.20, 0.0), (0.13, 0.40, 0.14))
-    r_thigh = add(node("R_Thigh", translation=(0.11, -0.06, 0.0), children=[r_thigh_mesh, r_shin]))
+    r_foot = b.mesh_node("R_Foot", translate_mesh(ellipsoid("rf", 0.058, 0.04, 0.13, 10, 6), (0.0, -0.44, -0.05)), "boot")
+    r_shin_mesh = b.mesh_node("R_ShinMesh", translate_mesh(capsule("rs", 0.052, 0.40, 12, 4), (0.0, -0.20, 0.0)), "pants")
+    r_shin = b.add_node("R_Shin", translation=(0.0, -0.44, 0.0), children=[r_shin_mesh, r_foot])
+    r_thigh_mesh = b.mesh_node("R_ThighMesh", translate_mesh(capsule("rt", 0.068, 0.40, 12, 4), (0.0, -0.18, 0.0)), "pants")
+    r_thigh = b.add_node("R_Thigh", translation=(0.11, -0.06, 0.0), children=[r_thigh_mesh, r_shin])
 
-    hips_mesh = box("HipsMesh", "pants", (0.0, 0.0, 0.0), (0.34, 0.14, 0.20))
-    belt = box("Belt", "brass", (0.0, 0.07, 0.0), (0.38, 0.06, 0.22))
-    ## Open transit coat: long back + side flaps; limbs stay readable for swipe/lunge.
-    coat_back = box("CoatBack", "coat", (0.0, -0.46, 0.11), (0.48, 0.92, 0.12))
-    coat_flare_l = box("CoatFlareL", "coat", (-0.26, -0.44, 0.02), (0.13, 0.86, 0.26))
-    coat_flare_r = box("CoatFlareR", "coat", (0.26, -0.44, 0.02), (0.13, 0.86, 0.26))
-    hem_lining = box("HemLining", "lining", (0.0, -0.88, 0.06), (0.44, 0.14, 0.08))
-    hips = add(
-        node(
-            "Hips",
-            translation=(0.0, 1.02, 0.0),
-            children=[
-                hips_mesh,
-                belt,
-                coat_back,
-                coat_flare_l,
-                coat_flare_r,
-                hem_lining,
-                torso,
-                l_thigh,
-                r_thigh,
-            ],
-        )
+    hips_mesh = b.mesh_node("HipsMesh", translate_mesh(ellipsoid("hips", 0.16, 0.08, 0.11, 14, 8), (0.0, 0.0, 0.0)), "pants")
+    belt = b.mesh_node("Belt", translate_mesh(cylinder("belt", 0.175, 0.175, 0.055, 16, False), (0.0, 0.07, 0.0)), "brass")
+    coat_back = b.mesh_node(
+        "CoatBack",
+        translate_mesh(rotate_mesh_x(plane("back", 0.52, 0.95, 5), 0.18), (0.0, -0.42, 0.14)),
+        "cloth",
     )
-    ## Root name matches the MeshRoot/HeraldBlockout instance in hollow_herald.tscn.
-    root = add(node("HeraldBlockout", children=[hips]))
+    coat_l = b.mesh_node(
+        "CoatFlareL",
+        translate_mesh(rotate_mesh_z(rotate_mesh_x(plane("fl", 0.22, 0.88, 4), 0.12), 0.25), (-0.22, -0.40, 0.04)),
+        "cloth",
+    )
+    coat_r = b.mesh_node(
+        "CoatFlareR",
+        translate_mesh(rotate_mesh_z(rotate_mesh_x(plane("fr", 0.22, 0.88, 4), 0.12), -0.25), (0.22, -0.40, 0.04)),
+        "cloth",
+    )
+    hem = b.mesh_node("HemLining", translate_mesh(box("hem", (0.40, 0.10, 0.06)), (0.0, -0.86, 0.08)), "lining")
+    hips = b.add_node(
+        "Hips",
+        translation=(0.0, 1.02, 0.0),
+        children=[hips_mesh, belt, coat_back, coat_l, coat_r, hem, torso, l_thigh, r_thigh],
+    )
+    root = b.add_node("HeraldBlockout", children=[hips])
 
-    min_y, max_y = verify_nodes(nodes)
-
-    gltf = {
-        "asset": {
-            "version": "2.0",
-            "generator": "line7/enemies/hollow_herald/build_hollow_herald_blockout.py",
-        },
-        "scene": 0,
-        "scenes": [{"name": "HeraldBlockout", "nodes": [root]}],
-        "nodes": nodes,
-        "meshes": meshes,
-        "materials": materials,
-        "accessors": accessors,
-        "bufferViews": views,
-        "buffers": [{"byteLength": len(blob)}],
-    }
-
-    json_bytes = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
-    while len(json_bytes) % 4:
-        json_bytes += b" "
-
-    total = 12 + 8 + len(json_bytes) + 8 + len(blob)
-    header = struct.pack("<4sII", b"glTF", 2, total)
-    json_chunk = struct.pack("<I4s", len(json_bytes), b"JSON") + json_bytes
-    bin_chunk = struct.pack("<I4s", len(blob), b"BIN\x00") + bytes(blob)
-    packed = header + json_chunk + bin_chunk
-    if len(packed) != total:
-        raise RuntimeError(f"GLB size mismatch {len(packed)} != {total}")
-    if packed[:4] != b"glTF":
-        raise RuntimeError("GLB header missing")
-    print(f"Verified rest AABB Y=[{min_y:.3f}, {max_y:.3f}] height={max_y - min_y:.3f}m")
-    return packed
+    names = {n["name"] for n in b.nodes}
+    missing = [j for j in POSE_JOINTS if j not in names]
+    if missing:
+        raise RuntimeError(f"Official mesh missing pose joints: {missing}")
+    for joint in POSE_JOINTS:
+        node = next(n for n in b.nodes if n["name"] == joint)
+        if "scale" in node or "mesh" in node:
+            raise RuntimeError(f"Pose joint {joint} must be transform-only.")
+    min_y, max_y = b.mesh_world_aabb()
+    if min_y < -0.04 or min_y > 0.08:
+        raise RuntimeError(f"Origin must sit at the feet (min Y={min_y:.3f})")
+    if not (2.00 <= max_y <= 2.14):
+        raise RuntimeError(f"Crown tip must be 2.00–2.14 m (max Y={max_y:.3f})")
+    print(f"Verified Herald rest AABB Y=[{min_y:.3f}, {max_y:.3f}] height={max_y - min_y:.3f}m")
+    return b.pack("HeraldBlockout", root)
 
 
 def main() -> None:
     data = build()
-    OUT.write_bytes(data)
-    print(f"Wrote {OUT} ({len(data)} bytes, official ~2.05m lesser-demon blockout)")
+    write_glb(OUT, data)
+    print("Wrote official ~2.05m lesser-demon transit-coat humanoid")
 
 
 if __name__ == "__main__":

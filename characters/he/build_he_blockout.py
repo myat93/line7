@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Rebuild characters/he/he_blockout.glb — ~1.8m civilian box humanoid.
+"""Rebuild characters/he/he_blockout.glb — ~1.8m civilian human mesh.
 
-Oversized fists/forearms so jab and heavy read at a glance. Hierarchy is
-joint nodes (no scale) with mesh children (scale = box size) so HE can
-pose parts without squash. Origin at the feet, Y-up, +Z glTF forward
-(Godot imports that as -Z).
+Capsule / sphere / tapered-limb meshes with embedded PBR-style textures.
+Pose joints stay transform-only (`Hips`, `L_Fist`, …) so he.gd can drive
+jab / heavy / roll / sprint. Collision stays on the capsule in he.tscn.
+
+Origin at the feet, Y-up meters, Godot-forward (−Z face / fists).
 
 Usage:
     python3 characters/he/build_he_blockout.py
@@ -12,282 +13,193 @@ Usage:
 
 from __future__ import annotations
 
-import json
-import struct
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
+
+from glb_kit import (  # noqa: E402
+    GlbBuilder,
+    box,
+    capsule,
+    cylinder,
+    ellipsoid,
+    plane,
+    rotate_mesh_x,
+    rotate_mesh_z,
+    sphere,
+    translate_mesh,
+    write_glb,
+)
 
 OUT = Path(__file__).with_name("he_blockout.glb")
 
-
-MATERIALS = {
-    ## Linear-ish mid values so the mesh reads in the dim undercroft.
-    "coat": {"color": [0.42, 0.38, 0.32, 1.0], "rough": 0.78, "metal": 0.0},
-    "shirt": {"color": [0.28, 0.40, 0.38, 1.0], "rough": 0.72, "metal": 0.0},
-    "pants": {"color": [0.22, 0.23, 0.28, 1.0], "rough": 0.84, "metal": 0.0},
-    "skin": {"color": [0.72, 0.55, 0.42, 1.0], "rough": 0.58, "metal": 0.0},
-    "hair": {"color": [0.12, 0.10, 0.09, 1.0], "rough": 0.9, "metal": 0.0},
-    "wrap": {
-        "color": [0.62, 0.28, 0.18, 1.0],
-        "rough": 0.62,
-        "metal": 0.04,
-        "emissive": [0.12, 0.03, 0.02],
-    },
-    "boot": {"color": [0.16, 0.14, 0.12, 1.0], "rough": 0.5, "metal": 0.08},
-    "visor": {
-        "color": [0.12, 0.22, 0.28, 1.0],
-        "rough": 0.22,
-        "metal": 0.35,
-        "emissive": [0.16, 0.55, 0.62],
-    },
-    "belt": {"color": [0.36, 0.26, 0.18, 1.0], "rough": 0.68, "metal": 0.04},
-    "mark": {
-        "color": [0.78, 0.22, 0.18, 1.0],
-        "rough": 0.42,
-        "metal": 0.0,
-        "emissive": [0.45, 0.08, 0.05],
-    },
-}
+POSE_JOINTS = (
+    "Hips",
+    "Torso",
+    "Head",
+    "L_UpperArm",
+    "L_Forearm",
+    "L_Fist",
+    "R_UpperArm",
+    "R_Forearm",
+    "R_Fist",
+    "L_Thigh",
+    "L_Shin",
+    "R_Thigh",
+    "R_Shin",
+)
 
 
-def unit_cube() -> tuple[list[float], list[float], list[int]]:
-    faces = [
-        ((0.5, -0.5, -0.5), (0.5, 0.5, -0.5), (0.5, 0.5, 0.5), (0.5, -0.5, 0.5), (1, 0, 0)),
-        ((-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5), (-0.5, 0.5, -0.5), (-0.5, -0.5, -0.5), (-1, 0, 0)),
-        ((-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, 0.5, -0.5), (0, 1, 0)),
-        ((-0.5, -0.5, 0.5), (-0.5, -0.5, -0.5), (0.5, -0.5, -0.5), (0.5, -0.5, 0.5), (0, -1, 0)),
-        ((-0.5, -0.5, 0.5), (0.5, -0.5, 0.5), (0.5, 0.5, 0.5), (-0.5, 0.5, 0.5), (0, 0, 1)),
-        ((0.5, -0.5, -0.5), (-0.5, -0.5, -0.5), (-0.5, 0.5, -0.5), (0.5, 0.5, -0.5), (0, 0, -1)),
+def _mats(b: GlbBuilder) -> None:
+    b.add_material("coat", [0.86, 0.80, 0.70, 1.0], 0.78, texture="coat")
+    b.add_material("shirt", [0.78, 0.88, 0.86, 1.0], 0.72, texture="shirt")
+    b.add_material("pants", [0.72, 0.76, 0.88, 1.0], 0.84, texture="pants")
+    b.add_material("skin", [0.96, 0.82, 0.70, 1.0], 0.52, texture="skin")
+    b.add_material("hair", [0.55, 0.42, 0.34, 1.0], 0.88, texture="hair")
+    b.add_material(
+        "wrap",
+        [1.0, 0.72, 0.58, 1.0],
+        0.58,
+        metal=0.02,
+        emissive=[0.10, 0.02, 0.01],
+        texture="wrap",
+    )
+    b.add_material("boot", [0.70, 0.62, 0.52, 1.0], 0.48, metal=0.06, texture="boot")
+    b.add_material(
+        "visor",
+        [0.18, 0.32, 0.38, 0.92],
+        0.18,
+        metal=0.42,
+        emissive=[0.10, 0.38, 0.42],
+    )
+    b.add_material("belt", [0.82, 0.64, 0.42, 1.0], 0.62, metal=0.04, texture="belt")
+    b.add_material(
+        "mark",
+        [1.0, 0.42, 0.32, 1.0],
+        0.40,
+        emissive=[0.38, 0.06, 0.04],
+        texture="mark",
+    )
+    b.add_material("eye", [0.95, 0.94, 0.90, 1.0], 0.22, texture="eye")
+    b.add_material("iris", [0.16, 0.24, 0.26, 1.0], 0.28, texture="iris")
+    b.add_material("cloth", [0.80, 0.74, 0.64, 1.0], 0.80, texture="coat", double_sided=True)
+
+
+def _hand(b: GlbBuilder, prefix: str, sign: float) -> list[int]:
+    kids = [
+        b.mesh_node(f"{prefix}_FistMesh", translate_mesh(sphere("fist", 0.055, 12, 8), (0.0, -0.06, -0.03)), "wrap"),
+        b.mesh_node(f"{prefix}_Palm", translate_mesh(ellipsoid("palm", 0.045, 0.035, 0.055, 10, 8), (0.0, -0.02, -0.02)), "wrap"),
     ]
-    positions: list[float] = []
-    normals: list[float] = []
-    indices: list[int] = []
-    for a, b, c, d, n in faces:
-        base = len(positions) // 3
-        for p in (a, b, c, d):
-            positions.extend(p)
-            normals.extend(n)
-        indices.extend((base, base + 1, base + 2, base, base + 2, base + 3))
-    return positions, normals, indices
+    for i, x in enumerate((-0.028, -0.010, 0.010, 0.028)):
+        finger = capsule(f"f{i}", 0.009, 0.085, 8, 3)
+        kids.append(b.mesh_node(f"{prefix}_Finger{i}", translate_mesh(finger, (x, -0.12, -0.05)), "wrap"))
+    thumb = rotate_mesh_z(capsule("thumb", 0.010, 0.062, 8, 3), 0.85 * sign)
+    kids.append(b.mesh_node(f"{prefix}_Thumb", translate_mesh(thumb, (0.045 * sign, -0.05, -0.01)), "wrap"))
+    return kids
 
 
-def pack_f32(values: list[float]) -> bytes:
-    return struct.pack(f"<{len(values)}f", *values)
-
-
-def pack_u16(values: list[int]) -> bytes:
-    return struct.pack(f"<{len(values)}H", *values)
-
-
-def align4(buf: bytearray) -> None:
-    while len(buf) % 4:
-        buf.append(0)
-
-
-def minmax(values: list[float], stride: int) -> tuple[list[float], list[float]]:
-    mins = list(values[:stride])
-    maxs = list(values[:stride])
-    for i in range(0, len(values), stride):
-        for k in range(stride):
-            mins[k] = min(mins[k], values[i + k])
-            maxs[k] = max(maxs[k], values[i + k])
-    return mins, maxs
-
-
-def node(
-    name: str,
-    translation: tuple[float, float, float] | None = None,
-    scale: tuple[float, float, float] | None = None,
-    mesh: int | None = None,
-    children: list[int] | None = None,
-) -> dict:
-    out: dict = {"name": name}
-    if translation is not None:
-        out["translation"] = [round(v, 5) for v in translation]
-    if scale is not None:
-        out["scale"] = [round(v, 5) for v in scale]
-    if mesh is not None:
-        out["mesh"] = mesh
-    if children:
-        out["children"] = children
-    return out
+def _head_bits(b: GlbBuilder) -> list[int]:
+    bits = [
+        b.mesh_node("HeadMesh", ellipsoid("head", 0.105, 0.118, 0.098, 16, 12), "skin"),
+        b.mesh_node("Jaw", translate_mesh(ellipsoid("jaw", 0.078, 0.045, 0.070, 12, 8), (0.0, -0.04, -0.02)), "skin"),
+        b.mesh_node("Nose", translate_mesh(ellipsoid("nose", 0.016, 0.022, 0.028, 8, 6), (0.0, 0.02, -0.10)), "skin"),
+        b.mesh_node("EarL", translate_mesh(ellipsoid("el", 0.018, 0.032, 0.012, 8, 6), (-0.10, 0.02, 0.01)), "skin"),
+        b.mesh_node("EarR", translate_mesh(ellipsoid("er", 0.018, 0.032, 0.012, 8, 6), (0.10, 0.02, 0.01)), "skin"),
+        b.mesh_node("EyeL", translate_mesh(sphere("el", 0.016, 8, 6), (-0.034, 0.028, -0.086)), "eye"),
+        b.mesh_node("EyeR", translate_mesh(sphere("er", 0.016, 8, 6), (0.034, 0.028, -0.086)), "eye"),
+        b.mesh_node("IrisL", translate_mesh(sphere("il", 0.008, 7, 5), (-0.034, 0.028, -0.098)), "iris"),
+        b.mesh_node("IrisR", translate_mesh(sphere("ir", 0.008, 7, 5), (0.034, 0.028, -0.098)), "iris"),
+        b.mesh_node("Brow", translate_mesh(box("brow", (0.10, 0.012, 0.018)), (0.0, 0.055, -0.088)), "hair"),
+        b.mesh_node("Mouth", translate_mesh(box("mouth", (0.046, 0.008, 0.012)), (0.0, -0.018, -0.092)), "wrap"),
+        b.mesh_node("HairCap", translate_mesh(ellipsoid("hc", 0.114, 0.078, 0.110, 14, 8), (0.0, 0.108, 0.012)), "hair"),
+        b.mesh_node("HairBack", translate_mesh(ellipsoid("hb", 0.095, 0.080, 0.070, 12, 8), (0.0, 0.04, 0.055)), "hair"),
+        b.mesh_node("HairFringe", translate_mesh(ellipsoid("hf", 0.090, 0.032, 0.042, 10, 6), (0.0, 0.112, -0.055)), "hair"),
+        b.mesh_node("Visor", translate_mesh(box("visor", (0.16, 0.028, 0.018)), (0.0, 0.036, -0.108)), "visor"),
+    ]
+    return bits
 
 
 def build() -> bytes:
-    positions, normals, indices = unit_cube()
-    pos_b = pack_f32(positions)
-    nrm_b = pack_f32(normals)
-    idx_b = pack_u16(indices)
-    blob = bytearray()
-    views = []
+    b = GlbBuilder("line7/characters/he/build_he_blockout.py")
+    _mats(b)
 
-    def add_view(data: bytes, target: int) -> int:
-        align4(blob)
-        offset = len(blob)
-        blob.extend(data)
-        views.append({"buffer": 0, "byteOffset": offset, "byteLength": len(data), "target": target})
-        return len(views) - 1
+    l_fist = b.add_node("L_Fist", translation=(0.0, -0.34, 0.0), children=_hand(b, "L", -1.0))
+    l_fore_mesh = b.mesh_node("L_ForearmMesh", translate_mesh(capsule("lf", 0.048, 0.30, 12, 4), (0.0, -0.14, -0.01)), "wrap")
+    l_fore = b.add_node("L_Forearm", translation=(0.0, -0.30, 0.0), children=[l_fore_mesh, l_fist])
+    l_up_mesh = b.mesh_node("L_UpperArmMesh", translate_mesh(capsule("lu", 0.046, 0.28, 12, 4), (0.0, -0.13, 0.0)), "coat")
+    l_up = b.add_node("L_UpperArm", translation=(-0.22, 0.38, 0.0), children=[l_up_mesh, l_fore])
 
-    pos_view = add_view(pos_b, 34962)
-    nrm_view = add_view(nrm_b, 34962)
-    idx_view = add_view(idx_b, 34963)
-    align4(blob)
+    r_fist = b.add_node("R_Fist", translation=(0.0, -0.34, 0.0), children=_hand(b, "R", 1.0))
+    r_fore_mesh = b.mesh_node("R_ForearmMesh", translate_mesh(capsule("rf", 0.048, 0.30, 12, 4), (0.0, -0.14, -0.01)), "wrap")
+    r_fore = b.add_node("R_Forearm", translation=(0.0, -0.30, 0.0), children=[r_fore_mesh, r_fist])
+    r_up_mesh = b.mesh_node("R_UpperArmMesh", translate_mesh(capsule("ru", 0.046, 0.28, 12, 4), (0.0, -0.13, 0.0)), "coat")
+    r_up = b.add_node("R_UpperArm", translation=(0.22, 0.38, 0.0), children=[r_up_mesh, r_fore])
 
-    pos_min, pos_max = minmax(positions, 3)
-    accessors = [
-        {
-            "bufferView": pos_view,
-            "componentType": 5126,
-            "count": len(positions) // 3,
-            "type": "VEC3",
-            "min": pos_min,
-            "max": pos_max,
-        },
-        {
-            "bufferView": nrm_view,
-            "componentType": 5126,
-            "count": len(normals) // 3,
-            "type": "VEC3",
-        },
-        {
-            "bufferView": idx_view,
-            "componentType": 5123,
-            "count": len(indices),
-            "type": "SCALAR",
-        },
-    ]
-
-    mat_names = list(MATERIALS)
-    materials = []
-    for key in mat_names:
-        spec = MATERIALS[key]
-        entry = {
-            "name": key,
-            "pbrMetallicRoughness": {
-                "baseColorFactor": spec["color"],
-                "metallicFactor": spec["metal"],
-                "roughnessFactor": spec["rough"],
-            },
-        }
-        if "emissive" in spec:
-            entry["emissiveFactor"] = spec["emissive"]
-        materials.append(entry)
-
-    meshes = []
-    mesh_of: dict[str, int] = {}
-    for i, key in enumerate(mat_names):
-        meshes.append(
-            {
-                "name": f"box_{key}",
-                "primitives": [
-                    {
-                        "attributes": {"POSITION": 0, "NORMAL": 1},
-                        "indices": 2,
-                        "material": i,
-                    }
-                ],
-            }
-        )
-        mesh_of[key] = i
-
-    # Built leaves-first so child indices exist when parents are appended.
-    nodes: list[dict] = []
-
-    def add(n: dict) -> int:
-        nodes.append(n)
-        return len(nodes) - 1
-
-    def box(name: str, material: str, translation: tuple[float, float, float], size: tuple[float, float, float]) -> int:
-        return add(node(name, translation=translation, scale=size, mesh=mesh_of[material]))
-
-    # --- left arm (hangs -Y; oversized forearm + fist) ---
-    l_fist_mesh = box("L_FistMesh", "wrap", (0.0, -0.10, -0.05), (0.17, 0.16, 0.20))
-    l_fist = add(node("L_Fist", translation=(0.0, -0.34, 0.0), children=[l_fist_mesh]))
-    l_fore_mesh = box("L_ForearmMesh", "wrap", (0.0, -0.16, -0.02), (0.13, 0.32, 0.14))
-    l_fore = add(node("L_Forearm", translation=(0.0, -0.30, 0.0), children=[l_fore_mesh, l_fist]))
-    l_up_mesh = box("L_UpperArmMesh", "coat", (0.0, -0.14, 0.0), (0.09, 0.28, 0.09))
-    l_up = add(node("L_UpperArm", translation=(-0.22, 0.38, 0.0), children=[l_up_mesh, l_fore]))
-
-    r_fist_mesh = box("R_FistMesh", "wrap", (0.0, -0.10, -0.05), (0.17, 0.16, 0.20))
-    r_fist = add(node("R_Fist", translation=(0.0, -0.34, 0.0), children=[r_fist_mesh]))
-    r_fore_mesh = box("R_ForearmMesh", "wrap", (0.0, -0.16, -0.02), (0.13, 0.32, 0.14))
-    r_fore = add(node("R_Forearm", translation=(0.0, -0.30, 0.0), children=[r_fore_mesh, r_fist]))
-    r_up_mesh = box("R_UpperArmMesh", "coat", (0.0, -0.14, 0.0), (0.09, 0.28, 0.09))
-    r_up = add(node("R_UpperArm", translation=(0.22, 0.38, 0.0), children=[r_up_mesh, r_fore]))
-
-    visor = box("Visor", "visor", (0.0, 0.11, -0.10), (0.16, 0.045, 0.04))
-    hair = box("Hair", "hair", (0.0, 0.18, 0.02), (0.22, 0.10, 0.22))
-    head_mesh = box("HeadMesh", "skin", (0.0, 0.11, -0.02), (0.20, 0.22, 0.20))
-    head = add(node("Head", translation=(0.0, 0.50, 0.0), children=[head_mesh, hair, visor]))
-
-    chest = box("ChestMark", "mark", (0.08, 0.16, -0.12), (0.07, 0.20, 0.03))
-    torso_mesh = box("TorsoMesh", "coat", (0.0, 0.22, 0.0), (0.38, 0.46, 0.22))
-    shirt = box("ShirtFront", "shirt", (0.0, 0.14, -0.11), (0.22, 0.28, 0.04))
-    torso = add(
-        node(
-            "Torso",
-            translation=(0.0, 0.10, 0.0),
-            children=[torso_mesh, shirt, chest, head, l_up, r_up],
-        )
+    head = b.add_node("Head", translation=(0.0, 0.52, 0.0), children=_head_bits(b))
+    neck = b.mesh_node("Neck", translate_mesh(capsule("neck", 0.042, 0.10, 10, 3), (0.0, 0.44, 0.0)), "skin")
+    torso_mesh = b.mesh_node("TorsoMesh", translate_mesh(capsule("torso", 0.145, 0.46, 16, 5), (0.0, 0.20, 0.01)), "coat")
+    chest = b.mesh_node("Chest", translate_mesh(ellipsoid("chest", 0.155, 0.14, 0.095, 14, 8), (0.0, 0.28, -0.01)), "coat")
+    shirt = b.mesh_node("ShirtFront", translate_mesh(box("shirt", (0.16, 0.22, 0.03)), (0.0, 0.16, -0.10)), "shirt")
+    collar = b.mesh_node("Collar", translate_mesh(cylinder("col", 0.08, 0.09, 0.06, 14, False), (0.0, 0.40, -0.01)), "coat")
+    lapel_l = b.mesh_node("LapelL", translate_mesh(box("ll", (0.05, 0.26, 0.02)), (-0.05, 0.22, -0.12)), "shirt")
+    lapel_r = b.mesh_node("LapelR", translate_mesh(box("lr", (0.05, 0.26, 0.02)), (0.05, 0.22, -0.12)), "shirt")
+    mark = b.mesh_node("ChestMark", translate_mesh(box("mark", (0.05, 0.16, 0.02)), (0.07, 0.22, -0.125)), "mark")
+    torso = b.add_node(
+        "Torso",
+        translation=(0.0, 0.10, 0.0),
+        children=[torso_mesh, chest, shirt, collar, lapel_l, lapel_r, mark, neck, head, l_up, r_up],
     )
 
-    l_foot = box("L_Foot", "boot", (0.0, -0.04, -0.07), (0.11, 0.08, 0.24))
-    l_shin_mesh = box("L_ShinMesh", "pants", (0.0, -0.20, 0.0), (0.10, 0.40, 0.11))
-    l_shin = add(node("L_Shin", translation=(0.0, -0.42, 0.0), children=[l_shin_mesh, l_foot]))
-    l_thigh_mesh = box("L_ThighMesh", "pants", (0.0, -0.20, 0.0), (0.12, 0.40, 0.13))
-    l_thigh = add(node("L_Thigh", translation=(-0.10, -0.06, 0.0), children=[l_thigh_mesh, l_shin]))
+    l_foot = b.mesh_node("L_Foot", translate_mesh(ellipsoid("lf", 0.055, 0.038, 0.12, 10, 6), (0.0, -0.42, -0.04)), "boot")
+    l_shin_mesh = b.mesh_node("L_ShinMesh", translate_mesh(capsule("ls", 0.048, 0.40, 12, 4), (0.0, -0.20, 0.0)), "pants")
+    l_shin = b.add_node("L_Shin", translation=(0.0, -0.42, 0.0), children=[l_shin_mesh, l_foot])
+    l_thigh_mesh = b.mesh_node("L_ThighMesh", translate_mesh(capsule("lt", 0.062, 0.40, 12, 4), (0.0, -0.18, 0.0)), "pants")
+    l_thigh = b.add_node("L_Thigh", translation=(-0.10, -0.06, 0.0), children=[l_thigh_mesh, l_shin])
 
-    r_foot = box("R_Foot", "boot", (0.0, -0.04, -0.07), (0.11, 0.08, 0.24))
-    r_shin_mesh = box("R_ShinMesh", "pants", (0.0, -0.20, 0.0), (0.10, 0.40, 0.11))
-    r_shin = add(node("R_Shin", translation=(0.0, -0.42, 0.0), children=[r_shin_mesh, r_foot]))
-    r_thigh_mesh = box("R_ThighMesh", "pants", (0.0, -0.20, 0.0), (0.12, 0.40, 0.13))
-    r_thigh = add(node("R_Thigh", translation=(0.10, -0.06, 0.0), children=[r_thigh_mesh, r_shin]))
+    r_foot = b.mesh_node("R_Foot", translate_mesh(ellipsoid("rf", 0.055, 0.038, 0.12, 10, 6), (0.0, -0.42, -0.04)), "boot")
+    r_shin_mesh = b.mesh_node("R_ShinMesh", translate_mesh(capsule("rs", 0.048, 0.40, 12, 4), (0.0, -0.20, 0.0)), "pants")
+    r_shin = b.add_node("R_Shin", translation=(0.0, -0.42, 0.0), children=[r_shin_mesh, r_foot])
+    r_thigh_mesh = b.mesh_node("R_ThighMesh", translate_mesh(capsule("rt", 0.062, 0.40, 12, 4), (0.0, -0.18, 0.0)), "pants")
+    r_thigh = b.add_node("R_Thigh", translation=(0.10, -0.06, 0.0), children=[r_thigh_mesh, r_shin])
 
-    hips_mesh = box("HipsMesh", "pants", (0.0, 0.0, 0.0), (0.30, 0.14, 0.18))
-    belt = box("Belt", "belt", (0.0, 0.06, 0.0), (0.34, 0.06, 0.20))
-    hips = add(
-        node(
-            "Hips",
-            translation=(0.0, 0.92, 0.0),
-            children=[hips_mesh, belt, torso, l_thigh, r_thigh],
-        )
+    hips_mesh = b.mesh_node("HipsMesh", translate_mesh(ellipsoid("hips", 0.14, 0.08, 0.10, 14, 8), (0.0, 0.0, 0.0)), "pants")
+    belt = b.mesh_node("Belt", translate_mesh(cylinder("belt", 0.155, 0.155, 0.055, 16, False), (0.0, 0.06, 0.0)), "belt")
+    buckle = b.mesh_node("Buckle", translate_mesh(box("bk", (0.05, 0.04, 0.02)), (0.0, 0.06, -0.15)), "visor")
+    coat_hem = b.mesh_node(
+        "CoatHem",
+        translate_mesh(rotate_mesh_x(plane("hem", 0.42, 0.38, 4), 0.35), (0.0, -0.22, 0.08)),
+        "cloth",
     )
-    root = add(node("HEBlockout", children=[hips]))
+    hips = b.add_node(
+        "Hips",
+        translation=(0.0, 0.92, 0.0),
+        children=[hips_mesh, belt, buckle, coat_hem, torso, l_thigh, r_thigh],
+    )
+    root = b.add_node("HEBlockout", children=[hips])
 
-    gltf = {
-        "asset": {
-            "version": "2.0",
-            "generator": "line7/characters/he/build_he_blockout.py",
-        },
-        "scene": 0,
-        "scenes": [{"name": "HEBlockout", "nodes": [root]}],
-        "nodes": nodes,
-        "meshes": meshes,
-        "materials": materials,
-        "accessors": accessors,
-        "bufferViews": views,
-        "buffers": [{"byteLength": len(blob)}],
-    }
-
-    json_bytes = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
-    while len(json_bytes) % 4:
-        json_bytes += b" "
-
-    total = 12 + 8 + len(json_bytes) + 8 + len(blob)
-    header = struct.pack("<4sII", b"glTF", 2, total)
-    json_chunk = struct.pack("<I4s", len(json_bytes), b"JSON") + json_bytes
-    bin_chunk = struct.pack("<I4s", len(blob), b"BIN\x00") + bytes(blob)
-    packed = header + json_chunk + bin_chunk
-    if len(packed) != total:
-        raise RuntimeError(f"GLB size mismatch {len(packed)} != {total}")
-    if packed[:4] != b"glTF":
-        raise RuntimeError("GLB header missing")
-    return packed
+    names = {n["name"] for n in b.nodes}
+    missing = [j for j in POSE_JOINTS if j not in names]
+    if missing:
+        raise RuntimeError(f"HE mesh missing pose joints: {missing}")
+    for joint in POSE_JOINTS:
+        node = next(n for n in b.nodes if n["name"] == joint)
+        if "scale" in node or "mesh" in node:
+            raise RuntimeError(f"Pose joint {joint} must be transform-only.")
+    min_y, max_y = b.mesh_world_aabb()
+    if min_y < -0.04 or min_y > 0.08:
+        raise RuntimeError(f"Origin must sit at the feet (min Y={min_y:.3f})")
+    if not (1.68 <= max_y <= 1.92):
+        raise RuntimeError(f"HE height tip {max_y:.3f} m is outside 1.68–1.92")
+    print(f"Verified HE rest AABB Y=[{min_y:.3f}, {max_y:.3f}]")
+    return b.pack("HEBlockout", root)
 
 
 def main() -> None:
     data = build()
-    OUT.write_bytes(data)
-    print(f"Wrote {OUT} ({len(data)} bytes, ~{1.80:.2f}m civilian blockout)")
+    write_glb(OUT, data)
+    print("Wrote ~1.80m civilian human mesh (capsule limbs, posed fists)")
 
 
 if __name__ == "__main__":

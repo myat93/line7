@@ -7,3 +7,6 @@
 *.svg text
 *.py text
 *.glb binary
+*.bin binary
+*.jpg binary
+*.png binary
