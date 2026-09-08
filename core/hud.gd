@@ -39,11 +39,12 @@ func _refresh() -> void:
 		_set_fill(stam_fill, float(vitals.get("stamina", 0.0)) / Combat.PLAYER_MAX_STAMINA, 280.0)
 	stance.text = Game.stance_label()
 	var herald := Game.herald
-	if herald and is_instance_valid(herald) and herald.has_method("get_hp") and not Game.herald_dead:
+	var in_duel := Game.current_pocket == "undercroft"
+	if in_duel and herald and is_instance_valid(herald) and herald.has_method("get_hp") and not Game.herald_dead:
 		herald_wrap.visible = true
 		_set_fill(herald_fill, float(herald.get_hp()) / float(Combat.HERALD_MAX_HP), 360.0)
 	else:
-		herald_wrap.visible = Game.herald != null and not Game.herald_dead
+		herald_wrap.visible = false
 
 
 func _set_fill(rect: ColorRect, ratio: float, full_width: float) -> void:

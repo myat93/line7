@@ -34,6 +34,10 @@ func _ready() -> void:
 		var sim := Node.new()
 		sim.set_script(load("res://tools/play_sim.gd"))
 		add_child(sim)
+	elif OS.get_cmdline_user_args().has("--pocket-shots"):
+		var shots := Node.new()
+		shots.set_script(load("res://tools/pocket_shots.gd"))
+		add_child(shots)
 
 
 func restart() -> void:
