@@ -81,6 +81,8 @@ godot --headless --path . --script res://tools/slice_check.gd
 godot --headless --path . -- --slice-sim
 ```
 
+`godot --path . -- --pose-shots` writes stills of idle / jab / heavy / roll / sprint.
+
 Prints `LINE7_SLICE_OK` / `LINE7_PLAY_SIM_OK` when the layout, fist-first rules, shrine bind contract, and `main.tscn` wiring hold.
 
 ## Out of scope

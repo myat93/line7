@@ -41,6 +41,7 @@ var _sprinting: bool = false
 var _blockout: Node3D
 var _pose: Dictionary = {}
 var _pose_rest: Dictionary = {}
+var _pose_rest_pos: Dictionary = {}
 
 
 func _ready() -> void:
@@ -388,6 +389,7 @@ func _bind_blockout() -> void:
 func _cache_pose_nodes() -> void:
 	_pose.clear()
 	_pose_rest.clear()
+	_pose_rest_pos.clear()
 	if _blockout == null:
 		return
 	for part_name in POSE_PARTS:
@@ -396,6 +398,7 @@ func _cache_pose_nodes() -> void:
 			continue
 		_pose[part_name] = node
 		_pose_rest[part_name] = node.rotation
+		_pose_rest_pos[part_name] = node.position
 
 
 func _part_rot(part_name: String, extra: Vector3) -> void:
@@ -404,6 +407,14 @@ func _part_rot(part_name: String, extra: Vector3) -> void:
 		return
 	var rest: Vector3 = _pose_rest.get(part_name, Vector3.ZERO)
 	node.rotation = rest + extra
+
+
+func _part_pos(part_name: String, extra: Vector3) -> void:
+	var node: Node3D = _pose.get(part_name) as Node3D
+	if node == null:
+		return
+	var rest: Vector3 = _pose_rest_pos.get(part_name, node.position)
+	node.position = rest + extra
 
 
 func _refresh_stance_visual() -> void:
@@ -448,6 +459,7 @@ func _update_visual_pose() -> void:
 
 
 func _pose_idle() -> void:
+	_part_pos("Hips", Vector3.ZERO)
 	_part_rot("Hips", Vector3.ZERO)
 	_part_rot("Torso", Vector3.ZERO)
 	_part_rot("Head", Vector3.ZERO)
@@ -465,8 +477,9 @@ func _pose_idle() -> void:
 
 func _pose_sprint() -> void:
 	var swing := sin(Time.get_ticks_msec() * 0.012)
-	_part_rot("Hips", Vector3(0.08, 0.0, 0.0))
-	_part_rot("Torso", Vector3(0.28, swing * 0.04, 0.0))
+	_part_pos("Hips", Vector3(0.0, -0.04, -0.06))
+	_part_rot("Hips", Vector3(0.12, 0.0, 0.0))
+	_part_rot("Torso", Vector3(0.42, swing * 0.05, 0.0))
 	_part_rot("Head", Vector3(-0.08, 0.0, 0.0))
 	_part_rot("L_UpperArm", Vector3(0.55 + swing * 0.45, 0.05, 0.12))
 	_part_rot("L_Forearm", Vector3(0.35, 0.0, 0.0))
@@ -518,8 +531,9 @@ func _pose_roll() -> void:
 	var tuck := 1.0
 	if _state_time > 0.26:
 		tuck = 1.0 - clampf((_state_time - 0.26) / 0.14, 0.0, 1.0)
-	_part_rot("Hips", Vector3(1.15, 0.0, 0.0) * tuck)
-	_part_rot("Torso", Vector3(0.62, 0.0, 0.0) * tuck)
+	_part_pos("Hips", Vector3(0.0, -0.38, -0.18) * tuck)
+	_part_rot("Hips", Vector3(1.45, 0.0, 0.0) * tuck)
+	_part_rot("Torso", Vector3(0.75, 0.0, 0.0) * tuck)
 	_part_rot("Head", Vector3(0.35, 0.0, 0.0) * tuck)
 	_part_rot("L_Thigh", Vector3(-1.35, 0.0, 0.12) * tuck)
 	_part_rot("R_Thigh", Vector3(-1.45, 0.0, -0.12) * tuck)

@@ -104,6 +104,14 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		failures.append("HE capsule collision/hurtbox must remain.")
 	if he_text.contains("CapsuleMesh"):
 		failures.append("HE visual must not be a capsule mesh; instance the blockout GLB.")
+	var glb := load("res://characters/he/he_blockout.glb") as PackedScene
+	if glb == null:
+		failures.append("he_blockout.glb did not import as a PackedScene.")
+	else:
+		var visual: Node = glb.instantiate()
+		if visual.find_child("Hips", true, false) == null or visual.find_child("L_Fist", true, false) == null:
+			failures.append("he_blockout.glb is missing pose joints (Hips / L_Fist).")
+		visual.free()
 	if load("res://ruins/fallen_castle/camp_kit.gd") == null:
 		failures.append("camp_kit.gd failed to compile.")
 	var castle_src := FileAccess.get_file_as_string("res://ruins/fallen_castle/fallen_castle.gd")

@@ -29,6 +29,10 @@ func _ready() -> void:
 		var sim := Node.new()
 		sim.set_script(load("res://tools/play_sim.gd"))
 		add_child(sim)
+	if OS.get_cmdline_user_args().has("--pose-shots"):
+		var shots := Node.new()
+		shots.set_script(load("res://tools/pose_shots.gd"))
+		add_child(shots)
 
 
 func restart() -> void:

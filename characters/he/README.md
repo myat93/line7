@@ -24,3 +24,5 @@ python3 characters/he/build_he_blockout.py
 ```
 
 That writes `he_blockout.glb`: ~1.8 m civilian boxes, oversized fists/forearms, named joints (`Hips`, `Torso`, `L_UpperArm`, …) so `he.gd` can pose jab snap, heavy commit, roll tuck, and sprint lean. The GLB has no clips yet; when it does, hook them on `MeshRoot/PosePlayer`.
+
+The GLB is authored Godot-forward (−Z visor / chest / fists) so it matches `MeshRoot` yaw and hitbox forward without rotating the capsule.

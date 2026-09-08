@@ -19,30 +19,32 @@ from pathlib import Path
 OUT = Path(__file__).with_name("he_blockout.glb")
 
 
-def srgb(r: int, g: int, b: int) -> list[float]:
-    return [round((c / 255.0) ** 2.2, 6) for c in (r, g, b)] + [1.0]
-
-
 MATERIALS = {
-    "coat": {"color": srgb(74, 69, 60), "rough": 0.82, "metal": 0.0},
-    "shirt": {"color": srgb(52, 68, 66), "rough": 0.78, "metal": 0.0},
-    "pants": {"color": srgb(38, 40, 46), "rough": 0.86, "metal": 0.0},
-    "skin": {"color": srgb(196, 160, 122), "rough": 0.62, "metal": 0.0},
-    "hair": {"color": srgb(26, 24, 22), "rough": 0.9, "metal": 0.0},
-    "wrap": {"color": srgb(139, 64, 48), "rough": 0.7, "metal": 0.05},
-    "boot": {"color": srgb(28, 26, 24), "rough": 0.55, "metal": 0.08},
+    ## Linear-ish mid values so the mesh reads in the dim undercroft.
+    "coat": {"color": [0.42, 0.38, 0.32, 1.0], "rough": 0.78, "metal": 0.0},
+    "shirt": {"color": [0.28, 0.40, 0.38, 1.0], "rough": 0.72, "metal": 0.0},
+    "pants": {"color": [0.22, 0.23, 0.28, 1.0], "rough": 0.84, "metal": 0.0},
+    "skin": {"color": [0.72, 0.55, 0.42, 1.0], "rough": 0.58, "metal": 0.0},
+    "hair": {"color": [0.12, 0.10, 0.09, 1.0], "rough": 0.9, "metal": 0.0},
+    "wrap": {
+        "color": [0.62, 0.28, 0.18, 1.0],
+        "rough": 0.62,
+        "metal": 0.04,
+        "emissive": [0.12, 0.03, 0.02],
+    },
+    "boot": {"color": [0.16, 0.14, 0.12, 1.0], "rough": 0.5, "metal": 0.08},
     "visor": {
-        "color": srgb(28, 48, 58),
+        "color": [0.12, 0.22, 0.28, 1.0],
         "rough": 0.22,
         "metal": 0.35,
-        "emissive": [0.08, 0.28, 0.32],
+        "emissive": [0.16, 0.55, 0.62],
     },
-    "belt": {"color": srgb(61, 46, 34), "rough": 0.7, "metal": 0.04},
+    "belt": {"color": [0.36, 0.26, 0.18, 1.0], "rough": 0.68, "metal": 0.04},
     "mark": {
-        "color": srgb(180, 48, 42),
-        "rough": 0.45,
+        "color": [0.78, 0.22, 0.18, 1.0],
+        "rough": 0.42,
         "metal": 0.0,
-        "emissive": [0.22, 0.04, 0.03],
+        "emissive": [0.45, 0.08, 0.05],
     },
 }
 
@@ -198,28 +200,28 @@ def build() -> bytes:
         return add(node(name, translation=translation, scale=size, mesh=mesh_of[material]))
 
     # --- left arm (hangs -Y; oversized forearm + fist) ---
-    l_fist_mesh = box("L_FistMesh", "wrap", (0.0, -0.10, 0.05), (0.17, 0.16, 0.20))
+    l_fist_mesh = box("L_FistMesh", "wrap", (0.0, -0.10, -0.05), (0.17, 0.16, 0.20))
     l_fist = add(node("L_Fist", translation=(0.0, -0.34, 0.0), children=[l_fist_mesh]))
-    l_fore_mesh = box("L_ForearmMesh", "wrap", (0.0, -0.16, 0.02), (0.13, 0.32, 0.14))
+    l_fore_mesh = box("L_ForearmMesh", "wrap", (0.0, -0.16, -0.02), (0.13, 0.32, 0.14))
     l_fore = add(node("L_Forearm", translation=(0.0, -0.30, 0.0), children=[l_fore_mesh, l_fist]))
     l_up_mesh = box("L_UpperArmMesh", "coat", (0.0, -0.14, 0.0), (0.09, 0.28, 0.09))
     l_up = add(node("L_UpperArm", translation=(-0.22, 0.38, 0.0), children=[l_up_mesh, l_fore]))
 
-    r_fist_mesh = box("R_FistMesh", "wrap", (0.0, -0.10, 0.05), (0.17, 0.16, 0.20))
+    r_fist_mesh = box("R_FistMesh", "wrap", (0.0, -0.10, -0.05), (0.17, 0.16, 0.20))
     r_fist = add(node("R_Fist", translation=(0.0, -0.34, 0.0), children=[r_fist_mesh]))
-    r_fore_mesh = box("R_ForearmMesh", "wrap", (0.0, -0.16, 0.02), (0.13, 0.32, 0.14))
+    r_fore_mesh = box("R_ForearmMesh", "wrap", (0.0, -0.16, -0.02), (0.13, 0.32, 0.14))
     r_fore = add(node("R_Forearm", translation=(0.0, -0.30, 0.0), children=[r_fore_mesh, r_fist]))
     r_up_mesh = box("R_UpperArmMesh", "coat", (0.0, -0.14, 0.0), (0.09, 0.28, 0.09))
     r_up = add(node("R_UpperArm", translation=(0.22, 0.38, 0.0), children=[r_up_mesh, r_fore]))
 
-    visor = box("Visor", "visor", (0.0, 0.11, 0.10), (0.16, 0.045, 0.04))
-    hair = box("Hair", "hair", (0.0, 0.18, -0.02), (0.22, 0.10, 0.22))
-    head_mesh = box("HeadMesh", "skin", (0.0, 0.11, 0.02), (0.20, 0.22, 0.20))
+    visor = box("Visor", "visor", (0.0, 0.11, -0.10), (0.16, 0.045, 0.04))
+    hair = box("Hair", "hair", (0.0, 0.18, 0.02), (0.22, 0.10, 0.22))
+    head_mesh = box("HeadMesh", "skin", (0.0, 0.11, -0.02), (0.20, 0.22, 0.20))
     head = add(node("Head", translation=(0.0, 0.50, 0.0), children=[head_mesh, hair, visor]))
 
-    chest = box("ChestMark", "mark", (0.08, 0.16, 0.12), (0.07, 0.20, 0.03))
+    chest = box("ChestMark", "mark", (0.08, 0.16, -0.12), (0.07, 0.20, 0.03))
     torso_mesh = box("TorsoMesh", "coat", (0.0, 0.22, 0.0), (0.38, 0.46, 0.22))
-    shirt = box("ShirtFront", "shirt", (0.0, 0.14, 0.11), (0.22, 0.28, 0.04))
+    shirt = box("ShirtFront", "shirt", (0.0, 0.14, -0.11), (0.22, 0.28, 0.04))
     torso = add(
         node(
             "Torso",
@@ -228,13 +230,13 @@ def build() -> bytes:
         )
     )
 
-    l_foot = box("L_Foot", "boot", (0.0, -0.04, 0.07), (0.11, 0.08, 0.24))
+    l_foot = box("L_Foot", "boot", (0.0, -0.04, -0.07), (0.11, 0.08, 0.24))
     l_shin_mesh = box("L_ShinMesh", "pants", (0.0, -0.20, 0.0), (0.10, 0.40, 0.11))
     l_shin = add(node("L_Shin", translation=(0.0, -0.42, 0.0), children=[l_shin_mesh, l_foot]))
     l_thigh_mesh = box("L_ThighMesh", "pants", (0.0, -0.20, 0.0), (0.12, 0.40, 0.13))
     l_thigh = add(node("L_Thigh", translation=(-0.10, -0.06, 0.0), children=[l_thigh_mesh, l_shin]))
 
-    r_foot = box("R_Foot", "boot", (0.0, -0.04, 0.07), (0.11, 0.08, 0.24))
+    r_foot = box("R_Foot", "boot", (0.0, -0.04, -0.07), (0.11, 0.08, 0.24))
     r_shin_mesh = box("R_ShinMesh", "pants", (0.0, -0.20, 0.0), (0.10, 0.40, 0.11))
     r_shin = add(node("R_Shin", translation=(0.0, -0.42, 0.0), children=[r_shin_mesh, r_foot]))
     r_thigh_mesh = box("R_ThighMesh", "pants", (0.0, -0.20, 0.0), (0.12, 0.40, 0.13))
