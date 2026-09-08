@@ -465,9 +465,7 @@ func _pose_walk() -> void:
 	## Distance-driven stride so feet read against walk speed (no clock skate).
 	_pose_idle()
 	var swing := sin(_stride)
-	## After +90° align, negative local Z leans the spine toward MeshRoot −Z.
-	_part_rot("Torso", Vector3(0.0, swing * 0.04, -0.04))
-	## Keep A-pose arms — even small upper-arm extras stretch the 100× IBM.
+	## Legs only — torso extras stretch the 100×-IBM sleeves.
 	_part_rot("L_Thigh", Vector3(swing * 0.34, 0.0, 0.0))
 	_part_rot("R_Thigh", Vector3(-swing * 0.34, 0.0, 0.0))
 	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.28, 0.0, 0.0))
@@ -479,10 +477,7 @@ func _pose_sprint() -> void:
 	## Modest extras only — large ones stretch the 100×-IBM skin.
 	_pose_idle()
 	var swing := sin(_stride)
-	_part_rot("Hips", Vector3(0.0, 0.0, -0.08))
-	_part_rot("Torso", Vector3(0.0, swing * 0.04, -0.16))
-	_part_rot("Head", Vector3(0.05, 0.0, 0.0))
-	## No arm extras — those pulled the IBM sleeve across the back.
+	## Legs only. Hip/torso extras stretch the 100×-IBM sleeves across the back.
 	_part_rot("L_Thigh", Vector3(swing * 0.42, 0.0, 0.0))
 	_part_rot("R_Thigh", Vector3(-swing * 0.42, 0.0, 0.0))
 	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.40, 0.0, 0.0))
@@ -545,9 +540,7 @@ func _pose_roll() -> void:
 	if _state_time > 0.26:
 		tuck = 1.0 - clampf((_state_time - 0.26) / 0.14, 0.0, 1.0)
 	_pose_idle()
-	_part_rot("Hips", Vector3(0.0, 0.0, -0.18) * tuck)
-	_part_rot("Torso", Vector3(0.0, 0.0, -0.14) * tuck)
-	_part_rot("Head", Vector3(0.10, 0.0, 0.0) * tuck)
+	_part_rot("Head", Vector3(0.08, 0.0, 0.0) * tuck)
 	_part_rot("L_Thigh", Vector3(-0.42, 0.0, 0.05) * tuck)
 	_part_rot("R_Thigh", Vector3(-0.44, 0.0, -0.05) * tuck)
 	_part_rot("L_Shin", Vector3(0.48, 0.0, 0.0) * tuck)

@@ -136,12 +136,15 @@ func _run() -> void:
 		if _fist_span(he, "R_Fist") > 1.35:
 			_fail("HE heavy R_Fist spaghetti — bone pose exploded the IBM skin.")
 		he.state = HE.State.FREE
+		he._sprinting = false
+		he._update_visual_pose()
+		var idle_thigh := he._rig.bone_pose_rotation("L_Thigh")
 		he._sprinting = true
 		he._stride = 0.6
 		he._update_visual_pose()
-		var sprint_up := he._rig.bone_world_axis("Torso", 1)
-		if sprint_up.dot(mesh_fwd) < 0.08:
-			_fail("HE sprint must lean the torso toward move forward.")
+		var sprint_thigh := he._rig.bone_pose_rotation("L_Thigh")
+		if idle_thigh.is_equal_approx(sprint_thigh):
+			_fail("HE sprint must stride the legs (foot read).")
 		if _fist_span(he, "L_Fist") > 1.35 or _fist_span(he, "R_Fist") > 1.35:
 			_fail("HE sprint pose exploded an arm (IBM skin).")
 		he._sprinting = false
