@@ -92,8 +92,8 @@ func set_char_rot(part_name: String, extra: Vector3) -> void:
 
 
 func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0) -> void:
-	## Swing the bone so rest +Y (Bip01 along-bone) points at a Godot
-	## character-space direction (X right, Y up, −Z forward).
+	## Rest-relative nudge so +Y (along-bone) leans toward a Godot direction.
+	## Cap the swing — a full 90° slerp stretches the 100×-IBM skin (clip 0:05/0:13).
 	if skeleton == null or not _bones.has(part_name):
 		return
 	if char_dir.length() < 0.05 or weight <= 0.001:
@@ -102,18 +102,19 @@ func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0) -> v
 	var rest_global: Basis = _rest_global.get(part_name, skeleton.get_bone_rest(idx).basis)
 	var current_y := rest_global.y.normalized()
 	var want := (_char_basis() * char_dir).normalized()
-	var swing := Basis.IDENTITY
-	if current_y.dot(want) < 0.999:
-		var axis := current_y.cross(want)
-		if axis.length() < 0.001:
-			axis = rest_global.x
-		else:
-			axis = axis.normalized()
-		swing = Basis(axis, current_y.angle_to(want))
+	if current_y.dot(want) >= 0.999:
+		return
+	var axis := current_y.cross(want)
+	if axis.length() < 0.001:
+		axis = rest_global.x
+	else:
+		axis = axis.normalized()
+	var ang := minf(current_y.angle_to(want), 0.22) * clampf(weight, 0.0, 1.0)
+	if ang < 0.01:
+		return
 	var parent_b := _parent_rest_basis(idx)
-	var aimed := swing * rest_global
-	var blended := rest_global.slerp(aimed, clampf(weight, 0.0, 1.0))
-	var new_local := parent_b.inverse() * blended
+	var aimed := Basis(axis, ang) * rest_global
+	var new_local := parent_b.inverse() * aimed
 	skeleton.set_bone_pose_rotation(idx, new_local.get_rotation_quaternion())
 
 

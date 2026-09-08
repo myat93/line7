@@ -501,11 +501,9 @@ func _pose_jab() -> void:
 	elif _state_time > wind + active:
 		snap = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0)
 	_pose_idle()
-	## Arms only. Hip/torso extras stretch the 100×-IBM skin on run-stop.
-	_part_rot("L_Forearm", Vector3(0.20, 0.0, 0.0) * snap)
-	_part_rot("L_Fist", Vector3(0.06, 0.0, 0.0) * snap)
-	_rig.aim_along_y("L_UpperArm", Vector3(0.04, 0.10, -1.0), snap * 0.20)
-	_part_rot("R_UpperArm", Vector3(0.06, -0.04, -0.04))
+	## Capped rest-relative aim (≤0.22 rad). No hips — those flatten the IBM skin.
+	_part_rot("L_Forearm", Vector3(0.18, 0.0, 0.0) * snap)
+	_rig.aim_along_y("L_UpperArm", Vector3(0.04, 0.12, -1.0), snap)
 
 
 func _pose_heavy() -> void:
@@ -517,15 +515,14 @@ func _pose_heavy() -> void:
 	if _state_time < wind:
 		var coil := clampf(_state_time / maxf(wind, 0.05), 0.0, 1.0)
 		coil = coil * coil
-		_part_rot("R_Forearm", Vector3(0.28, 0.0, 0.0) * coil)
-		_rig.aim_along_y("R_UpperArm", Vector3(0.35, 0.25, 0.15), coil * 0.22)
+		_part_rot("R_Forearm", Vector3(0.22, 0.0, 0.0) * coil)
+		_rig.aim_along_y("R_UpperArm", Vector3(0.45, 0.20, 0.20), coil)
 	else:
 		var commit := 1.0 - pow(1.0 - clampf((_state_time - wind) / 0.10, 0.0, 1.0), 2.0)
 		if _state_time > wind + active:
 			commit = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0) * 0.55
 		_part_rot("R_Forearm", Vector3(0.10, 0.0, 0.0))
-		_part_rot("R_Fist", Vector3(0.06, 0.0, 0.0) * commit)
-		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.08, -1.0), commit * 0.20)
+		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.10, -1.0), commit)
 
 
 func _pose_roll() -> void:
