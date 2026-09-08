@@ -29,9 +29,8 @@ var _crown_pulse: float = 1.0
 @onready var pose_player: AnimationPlayer = $MeshRoot/PosePlayer
 
 var _blockout: Node3D
-var _pose: Dictionary = {}
-var _pose_rest: Dictionary = {}
-var _pose_rest_pos: Dictionary = {}
+var _rig := MeshPoseRig.new()
+var _crown: Node3D
 
 
 func _ready() -> void:
@@ -225,63 +224,35 @@ func _bind_blockout() -> void:
 		_blockout.name = "HeraldBlockout"
 		mesh_root.add_child(_blockout)
 	_apply_realistic_meters()
-	_cache_pose_nodes()
+	_rig.bind_parts(_blockout, POSE_PARTS)
+	_crown = _blockout.find_child("Crown", true, false) as Node3D
 	if pose_player:
 		pose_player.active = true
 
 
 func _apply_realistic_meters() -> void:
-	## Coat / crown are authored in meters on a 0.01 armature node. Undo that scale
-	## so the raincoat and horns read at ~2 m. Hide the Rocketbox body — its
-	## inverse binds collapse in Godot (A-pose / IBM pass still pending).
+	## Coat / crown are authored in meters on a 0.01 armature. Undo that scale
+	## so the raincoat and horns stay ~2 m, then rebuild IBM from rest so the
+	## Rocketbox Body can show at 2.05 m instead of collapsing.
 	if _blockout == null:
 		return
-	var visual := _blockout.find_child("HeraldRealistic", true, false) as Node3D
-	if visual:
-		visual.scale = Vector3.ONE
-	var body := _blockout.find_child("Body", true, false) as MeshInstance3D
-	if body:
-		body.visible = false
-
-
-func _cache_pose_nodes() -> void:
-	_pose.clear()
-	_pose_rest.clear()
-	_pose_rest_pos.clear()
-	if _blockout == null:
-		return
-	for part_name in POSE_PARTS:
-		var node := _blockout.find_child(part_name, true, false) as Node3D
-		if node == null:
-			continue
-		_pose[part_name] = node
-		_pose_rest[part_name] = node.rotation
-		_pose_rest_pos[part_name] = node.position
+	_rig.prepare_realistic(_blockout, 2.05)
 
 
 func _part_rot(part_name: String, extra: Vector3) -> void:
-	var node: Node3D = _pose.get(part_name) as Node3D
-	if node == null:
-		return
-	var rest: Vector3 = _pose_rest.get(part_name, Vector3.ZERO)
-	node.rotation = rest + extra
+	_rig.set_rot(part_name, extra)
 
 
 func _part_pos(part_name: String, extra: Vector3) -> void:
-	var node: Node3D = _pose.get(part_name) as Node3D
-	if node == null:
-		return
-	var rest: Vector3 = _pose_rest_pos.get(part_name, node.position)
-	node.position = rest + extra
+	_rig.set_pos(part_name, extra)
 
 
 func _update_visual_pose() -> void:
 	mesh_root.rotation.x = 0.0
 	mesh_root.scale = Vector3.ONE
 	_crown_pulse = move_toward(_crown_pulse, 1.0, 0.02)
-	var crown: Node3D = _pose.get("Crown") as Node3D
-	if crown:
-		crown.scale = Vector3.ONE * _crown_pulse
+	if _crown:
+		_crown.scale = Vector3.ONE * _crown_pulse
 	match phase:
 		Phase.SWIPE_WIND:
 			_pose_swipe_wind()

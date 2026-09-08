@@ -65,6 +65,7 @@ func _check_layout(failures: PackedStringArray) -> void:
 		"res://weapons/ashpike/ashpike_pickup.tscn",
 		"res://core/game.gd",
 		"res://core/combat.gd",
+		"res://core/mesh_pose_rig.gd",
 		"res://tools/slice_check.gd",
 	])
 	for path in required:
@@ -140,6 +141,8 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	var he_script := FileAccess.get_file_as_string("res://characters/he/he.gd")
 	if not he_script.contains("res://characters/he/he_realistic.glb"):
 		failures.append("he.gd BLOCKOUT_SCENE must preload he_realistic.glb.")
+	if not he_script.contains("prepare_realistic"):
+		failures.append("he.gd must call MeshPoseRig.prepare_realistic so the Rocketbox body is visible.")
 	var glb := load("res://characters/he/he_realistic.glb") as PackedScene
 	if glb == null:
 		failures.append("he_realistic.glb did not import as a PackedScene.")
@@ -147,6 +150,8 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		var visual: Node = glb.instantiate()
 		if not _has_named_bones(visual, PackedStringArray(["Hips", "L_Fist"])):
 			failures.append("he_realistic.glb is missing Skeleton3D pose bones (Hips / L_Fist).")
+		if visual.find_child("Body", true, false) == null:
+			failures.append("he_realistic.glb is missing the Rocketbox Body mesh.")
 		visual.free()
 	if load("res://ruins/fallen_castle/camp_kit.gd") == null:
 		failures.append("camp_kit.gd failed to compile.")
@@ -179,6 +184,13 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		failures.append("Herald swipe wind/active clocks must stay 1.15 / 0.38.")
 	if not herald_script.contains("_time >= 1.25") or not herald_script.contains("_time >= 0.42"):
 		failures.append("Herald lunge wind/active clocks must stay 1.25 / 0.42.")
+	if herald_script.contains("body.visible = false"):
+		failures.append("Herald Rocketbox Body must stay visible (IBM follow-up, do not hide).")
+	if not herald_script.contains("_apply_realistic_meters"):
+		failures.append("Herald must keep _apply_realistic_meters so coat/crown stay meter-scaled.")
+	var pose_rig := FileAccess.get_file_as_string("res://core/mesh_pose_rig.gd")
+	if not pose_rig.contains("set_bone_pose_rotation") or not pose_rig.contains("set_bind_pose"):
+		failures.append("MeshPoseRig must rebuild Skin IBM and pose via set_bone_pose_rotation.")
 	var official_glb := load("res://enemies/hollow_herald/hollow_herald_realistic.glb") as PackedScene
 	if official_glb == null:
 		failures.append("hollow_herald_realistic.glb did not import as a PackedScene.")
@@ -188,6 +200,8 @@ func _check_scenes(failures: PackedStringArray) -> void:
 			failures.append("hollow_herald_realistic.glb is missing Skeleton3D pose bones (Hips / R_UpperArm).")
 		if official_visual.find_child("Crown", true, false) == null:
 			failures.append("hollow_herald_realistic.glb is missing the Crown mesh.")
+		if official_visual.find_child("Body", true, false) == null:
+			failures.append("hollow_herald_realistic.glb is missing the Rocketbox Body mesh.")
 		official_visual.free()
 	var under_text := FileAccess.get_file_as_string("res://ruins/line7_undercroft/line7_undercroft.gd")
 	if not under_text.contains("line7_pocket") or not under_text.contains("door_gap"):

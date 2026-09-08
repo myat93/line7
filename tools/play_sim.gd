@@ -96,6 +96,18 @@ func _run() -> void:
 		_fail("HE realistic mesh is not instanced under MeshRoot.")
 	elif not _has_named_bones(blockout, PackedStringArray(["Hips", "L_Fist"])):
 		_fail("HE realistic Skeleton3D bones (Hips / L_Fist) were not imported.")
+	else:
+		_assert_visible_body(he, "HE")
+		var idle_q := he._rig.bone_pose_rotation("L_UpperArm")
+		he.state = HE.State.ATTACK
+		he._attack = Combat.fists_light()
+		he._state_time = 0.12
+		he._update_visual_pose()
+		var jab_q := he._rig.bone_pose_rotation("L_UpperArm")
+		if idle_q.is_equal_approx(jab_q):
+			_fail("HE jab must rotate L_UpperArm off the A-pose rest.")
+		he.state = HE.State.FREE
+		he._update_visual_pose()
 	var body_col := he.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if body_col == null or not (body_col.shape is CapsuleShape3D):
 		_fail("HE world collision must stay a capsule.")
@@ -113,6 +125,18 @@ func _run() -> void:
 		_fail("Herald realistic Skeleton3D bones (Hips / R_UpperArm) were not imported.")
 	elif herald_blockout.find_child("Crown", true, false) == null:
 		_fail("Herald Crown mesh was not imported.")
+	else:
+		_assert_visible_body(herald, "Herald")
+		var herald_idle := herald._rig.bone_pose_rotation("R_UpperArm")
+		herald.phase = HollowHerald.Phase.SWIPE_WIND
+		herald._time = 0.90
+		herald._update_visual_pose()
+		var wind_q := herald._rig.bone_pose_rotation("R_UpperArm")
+		if herald_idle.is_equal_approx(wind_q):
+			_fail("Herald swipe wind-up must rotate R_UpperArm off the A-pose rest.")
+		herald.phase = HollowHerald.Phase.WAIT
+		herald._time = 0.0
+		herald._update_visual_pose()
 	var herald_col := herald.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if herald_col == null or not (herald_col.shape is CapsuleShape3D):
 		_fail("Herald world collision must stay a capsule.")
@@ -325,6 +349,18 @@ func _has_named_bones(root: Node, names: PackedStringArray) -> bool:
 		if skel.find_bone(bone_name) < 0:
 			return false
 	return true
+
+
+func _assert_visible_body(host: Node, label: String) -> void:
+	var body := host.find_child("Body", true, false) as MeshInstance3D
+	if body == null:
+		_fail("%s Rocketbox Body mesh is missing." % label)
+		return
+	if not body.visible:
+		_fail("%s Rocketbox Body is hidden." % label)
+	var height := body.get_aabb().size.y * absf(body.scale.y)
+	if height < 1.2:
+		_fail("%s Rocketbox Body height is %.2f m — IBM/scale did not produce a readable body." % [label, height])
 
 
 func _fail(message: String) -> void:

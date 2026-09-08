@@ -80,7 +80,7 @@ A fourth linked scene at `ruins/guard_camp/` — palisade yard off the tunnel ex
 | Restart slice | **R** |
 | Free / recapture mouse | Esc |
 
-Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still the locked jab **1.32** / heavy **1.52**. MeshRoot stays A-pose until Skeleton3D bone poses or clips land — see `characters/he/README.md`.
+Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still the locked jab **1.32** / heavy **1.52**. Rocketbox bodies are posed with `Skeleton3D.set_bone_pose_rotation` (see `core/mesh_pose_rig.gd`).
 
 ## Folders
 

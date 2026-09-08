@@ -39,9 +39,7 @@ const POSE_PARTS: PackedStringArray = [
 
 var _sprinting: bool = false
 var _blockout: Node3D
-var _pose: Dictionary = {}
-var _pose_rest: Dictionary = {}
-var _pose_rest_pos: Dictionary = {}
+var _rig := MeshPoseRig.new()
 
 
 func _ready() -> void:
@@ -379,52 +377,27 @@ func _bind_blockout() -> void:
 		_blockout = BLOCKOUT_SCENE.instantiate() as Node3D
 		_blockout.name = "HEBlockout"
 		mesh_root.add_child(_blockout)
-	_cache_pose_nodes()
+	## Keep the 0.01 armature from collapsing the Rocketbox skin: rebuild IBM
+	## from rest and scale Body to the 1.8 m capsule. Pose via Skeleton3D.
+	_rig.prepare_realistic(_blockout, 1.8)
+	_rig.bind_parts(_blockout, POSE_PARTS)
 	## PosePlayer is the hook for authored clips. The GLB has none yet, so
 	## _update_visual_pose() drives jab / heavy / roll / sprint procedurally.
 	if pose_player:
 		pose_player.active = true
 
 
-func _cache_pose_nodes() -> void:
-	_pose.clear()
-	_pose_rest.clear()
-	_pose_rest_pos.clear()
-	if _blockout == null:
-		return
-	for part_name in POSE_PARTS:
-		var node := _blockout.find_child(part_name, true, false) as Node3D
-		if node == null:
-			continue
-		_pose[part_name] = node
-		_pose_rest[part_name] = node.rotation
-		_pose_rest_pos[part_name] = node.position
-
-
 func _part_rot(part_name: String, extra: Vector3) -> void:
-	var node: Node3D = _pose.get(part_name) as Node3D
-	if node == null:
-		return
-	var rest: Vector3 = _pose_rest.get(part_name, Vector3.ZERO)
-	node.rotation = rest + extra
+	_rig.set_rot(part_name, extra)
 
 
 func _part_pos(part_name: String, extra: Vector3) -> void:
-	var node: Node3D = _pose.get(part_name) as Node3D
-	if node == null:
-		return
-	var rest: Vector3 = _pose_rest_pos.get(part_name, node.position)
-	node.position = rest + extra
+	_rig.set_pos(part_name, extra)
 
 
 func _refresh_stance_visual() -> void:
 	if ashpike_visual:
 		ashpike_visual.set_bound(Game.ashpike_bound)
-	var show_fists := not Game.ashpike_bound
-	for part_name in ["L_Fist", "R_Fist"]:
-		var node: Node3D = _pose.get(part_name) as Node3D
-		if node:
-			node.visible = show_fists
 
 
 func _update_visual_pose() -> void:

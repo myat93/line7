@@ -9,7 +9,7 @@ HollowHerald (CharacterBody3D)   collision / movement
 ├── CollisionShape3D             CapsuleShape3D  r=0.48 h=2.35
 ├── MeshRoot                     facing yaw only
 │   ├── HeraldBlockout           instance of hollow_herald_realistic.glb
-│   └── PosePlayer               AnimationPlayer hook (empty; poses are procedural)
+│   └── PosePlayer               AnimationPlayer hook (empty; poses use Skeleton3D)
 ├── Telegraph                    swipe (red) / lunge (gold) light — timings unchanged
 ├── Hitboxes / Hurtbox           still capsule-driven, same swipe/lunge reach
 ```
@@ -34,6 +34,6 @@ Drop-in file: **`res://enemies/hollow_herald/hollow_herald_realistic.glb`** (~2.
 
 `hollow_herald.tscn` / `BLOCKOUT_SCENE` instance `hollow_herald_realistic.glb` under the existing `HeraldBlockout` MeshRoot node. Capsule `r=0.48 h=2.35`, swipe **2.4** / lunge **1.4**, and wind-up clocks (1.15s / 1.25s) are untouched.
 
-**Joints:** swipe/lunge pose names are on the **Skeleton3D** (`Hips`, `Torso`, `R_UpperArm`, `L_UpperArm`, forearms, fists, thighs/shins). Same Godot caveat as HE — `find_child` will not see skeleton bones. **`Crown`** is a real `MeshInstance3D` (band + horns); `find_child("Crown")` still drives the HP pulse. **`TransitCoat`** / `CoatLapels` ride the armature root (not skinned to swipe joints). Rest pose is A-pose.
+**Joints:** swipe/lunge pose names are on the **Skeleton3D**. `MeshPoseRig` undoes the 0.01 armature so coat/crown stay meters, rebuilds IBM from rest so the Rocketbox `Body` is visible at 2.05 m, and drives swipe wind-up / lunge with `set_bone_pose_rotation`. **`Crown`** is still a `MeshInstance3D` (HP pulse). **`TransitCoat`** / `CoatLapels` ride the armature root (not skinned). Rest pose is A-pose.
 
 Licenses: `ATTRIBUTION.md` + `LICENSE.rocketbox.md`. Coat/crown maps are Poly Haven CC0. Not an Elden Ring / commercial rip.

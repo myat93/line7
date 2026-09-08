@@ -9,7 +9,7 @@ HE (CharacterBody3D)          collision / movement
 ├── CollisionShape3D          CapsuleShape3D  r=0.32 h=1.8
 ├── MeshRoot                  facing yaw only
 │   ├── HEBlockout            instance of he_realistic.glb
-│   ├── PosePlayer            AnimationPlayer hook (empty; poses are procedural)
+│   ├── PosePlayer            AnimationPlayer hook (empty; poses use Skeleton3D)
 │   └── Ashpike
 ├── Hitboxes / Hurtbox        still capsule-driven, same locked reach
 └── CameraPivot
@@ -33,6 +33,6 @@ Drop-in file: **`res://characters/he/he_realistic.glb`** (~1.8 m civilian, origi
 
 `he.tscn` / `he.gd` instance `he_realistic.glb` under the existing `HEBlockout` MeshRoot node. Combat, capsule `r=0.32 h=1.8`, and locked fist reach are unchanged.
 
-**Joint note:** pose names exist on the **Skeleton3D** (`Hips`, `Torso`, `Head`, `L_UpperArm`, `L_Forearm`, `L_Fist`, `R_*`, thighs/shins). Godot does **not** expose those as `Node3D` children, so `_cache_pose_nodes()` / `find_child` miss them and jab/roll/sprint stay A-pose until `Skeleton3D.set_bone_pose_rotation` or clips on `MeshRoot/PosePlayer`. Rest pose is A-pose, not hang-down.
+**Joints:** pose names live on the **Skeleton3D**. `MeshPoseRig` (`core/mesh_pose_rig.gd`) rebuilds the Skin IBM from rest (the 0.01 armature × 100× binds collapse in Godot), scales `Body` to 1.8 m, and drives jab / heavy / roll / sprint with `Skeleton3D.set_bone_pose_rotation`. Rest pose is A-pose; extras are local deltas on that bind.
 
 Licenses: `ATTRIBUTION.md` + `LICENSE.rocketbox.md`. Not an Elden Ring / commercial rip.
