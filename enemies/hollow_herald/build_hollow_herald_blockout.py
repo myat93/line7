@@ -2,14 +2,14 @@
 """Rebuild enemies/hollow_herald/hollow_herald_blockout.glb — official Jake path.
 
 Humanoid lesser-demon blockout, ~2.05 m to the crown tip, transit-coat bulk,
-loud wind-up arms with clawed fists. Joint names match the temp
-herald_blockout.glb so Andrew can swap the preload without pose rework.
+loud wind-up arms with clawed fists. Joint names match hollow_herald.gd
+(`Hips`, `Torso`, `R_UpperArm`, `Crown`, …).
 
 Hierarchy is joint nodes (no scale) with mesh children (scale = box size).
 Origin at the feet, Y-up meters, +Z glTF forward (Godot imports that as -Z).
 
-This does **not** replace the wired temp. hollow_herald.tscn / .gd still
-instance herald_blockout.glb until Andrew swaps the path.
+hollow_herald.tscn and the BLOCKOUT_SCENE preload instance this GLB under
+MeshRoot/HeraldBlockout. Combat clocks and the capsule stay on the scene.
 
 Usage:
     python3 enemies/hollow_herald/build_hollow_herald_blockout.py
@@ -23,7 +23,7 @@ from pathlib import Path
 
 OUT = Path(__file__).with_name("hollow_herald_blockout.glb")
 
-# Pose joints hollow_herald.gd already looks up on the temp.
+# Pose joints hollow_herald.gd already looks up.
 POSE_JOINTS = (
     "Hips",
     "Torso",
@@ -401,7 +401,7 @@ def build() -> bytes:
             ],
         )
     )
-    ## Same instance name as the temp so a path-only preload swap keeps MeshRoot/HeraldBlockout.
+    ## Root name matches the MeshRoot/HeraldBlockout instance in hollow_herald.tscn.
     root = add(node("HeraldBlockout", children=[hips]))
 
     min_y, max_y = verify_nodes(nodes)
