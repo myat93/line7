@@ -27,3 +27,20 @@ python3 enemies/hollow_herald/build_hollow_herald_blockout.py
 ```
 
 That writes `hollow_herald_blockout.glb`. It is Godot-forward (−Z visor / lapels / fists) so it matches `MeshRoot` yaw and hitbox forward without rotating the capsule. The GLB has no clips yet; when it does, hook them on `MeshRoot/PosePlayer`.
+
+## Realistic mesh (Andrew — MeshRoot swap)
+
+Drop-in file: **`res://enemies/hollow_herald/hollow_herald_realistic.glb`** (~2.05 m, origin at feet, Y-up meters, Godot-forward).
+
+`hollow_herald.tscn` / `BLOCKOUT_SCENE` still instance `hollow_herald_blockout.glb`. Capsule `r=0.48 h=2.35`, swipe **2.4** / lunge **1.4**, and wind-up clocks (1.15s / 1.25s) are untouched.
+
+When you swap MeshRoot:
+
+1. In `hollow_herald.tscn`, point `HeraldBlockout` at `hollow_herald_realistic.glb` (keep that node name).
+2. In `hollow_herald.gd`, change `BLOCKOUT_SCENE` to the same path.
+3. **Joints:** swipe/lunge pose names are on the **Skeleton3D** (`Hips`, `Torso`, `R_UpperArm`, `L_UpperArm`, forearms, fists, thighs/shins). Same Godot caveat as HE — `find_child` will not see skeleton bones.
+4. **`Crown`** is a real `MeshInstance3D` (band + horns). `find_child("Crown")` works; the HP pulse scale in `_update_visual_pose` will still hit it.
+5. **`TransitCoat`** / `CoatLapels` are extra meshes (open raincoat flare so the wind-up arms stay readable). They are **not** skinned to the swipe joints — they ride the armature root. If the coat fights the chamber pose, hide `TransitCoat` or skin it later.
+6. Rest pose is A-pose. Box-blockout Euler coils will need retune.
+
+Licenses: `ATTRIBUTION.md` + `LICENSE.rocketbox.md`. Coat/crown maps are Poly Haven CC0. Not an Elden Ring / commercial rip.

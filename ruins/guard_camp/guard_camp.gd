@@ -1,7 +1,7 @@
 class_name GuardCamp
 extends Node3D
 
-## Photo-locked wooden guard camp. CampKit meshes. Enter from the tunnel.
+## Photo-locked wooden guard camp. PBR GLB props + CampKit collision. Enter from the tunnel.
 ## Loop: gap → tripod → left lean-tos / plank → optional crate E → mist drop.
 
 const Kit := preload("res://ruins/fallen_castle/camp_kit.gd")
@@ -80,12 +80,34 @@ func _build_yard() -> void:
 		Vector3(-1.35, 0.72, 6.8), Vector3(1.55, 0.72, 7.4),
 	]:
 		Kit.grass_tuft(geometry, p)
-	## Edge clutter: spare logs and a store barrel, not grey cubes.
-	var spare := Kit.add_log(geometry, Vector3(3.15, 0.78, 7.55), 1.15, 0.07, 82.0, 78.0)
-	spare.get_parent().rotation_degrees = Vector3(82, -28, 0)
-	Kit.barrel(geometry, Vector3(3.05, 0.7, 6.45))
-	Kit.crate(geometry, Vector3(2.85, 0.96, 4.55), Vector3(0.52, 0.32, 0.46), -22.0)
+	## Edge clutter: spare photogrammetry log + PH barrel/crate.
+	var spare := RealisticCamp.add(geometry, "res://ruins/guard_camp/meshes/palisade_log_realistic.glb", Vector3(3.15, 0.78, 7.55), -28.0)
+	spare.rotation_degrees = Vector3(82, -28, 0)
+	spare.scale = Vector3.ONE * (1.15 / 2.6)
+	RealisticCamp.add(geometry, "res://ruins/guard_camp/meshes/barrel_realistic.glb", Vector3(3.05, 0.7, 6.45))
+	var crate := RealisticCamp.add(geometry, "res://ruins/guard_camp/meshes/crate_realistic.glb", Vector3(2.85, 0.72, 4.55), -22.0)
+	crate.scale = Vector3(0.72, 0.58, 0.64)
 	_drape_hide(geometry, Vector3(2.78, 1.18, 4.58), Vector2(0.62, 0.5))
+
+
+func _dress_palisade_run(parent: Node3D, from: Vector3, to: Vector3, seed_n: int) -> void:
+	RealisticCamp.hide_meshes(parent)
+	var span := to - from
+	span.y = 0.0
+	var length := span.length()
+	if length < 0.2:
+		return
+	var dir := span / length
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	var count := maxi(int(length / 0.34), 2)
+	for i in count:
+		var t := float(i) / float(count - 1)
+		var jitter := float((seed_n * 17 + i * 31) % 10) * 0.012
+		var h := 2.15 + float((seed_n + i * 7) % 13) * 0.14
+		var pos := from.lerp(to, t) + side * (jitter - 0.05)
+		pos.y = from.y
+		var stake := RealisticCamp.add(parent, "res://ruins/guard_camp/meshes/palisade_log_realistic.glb", pos, float(i * 27))
+		stake.scale = Vector3.ONE * (h / 2.6)
 
 
 func _drape_hide(parent: Node3D, pos: Vector3, size: Vector2) -> void:
@@ -106,12 +128,18 @@ func _build_palisade() -> void:
 	var logs := Node3D.new()
 	logs.name = "palisade_log"
 	ring.add_child(logs)
-	Kit.palisade_run(logs, Vector3(-4.15, 0.7, 0.35), Vector3(-1.2, 0.7, 0.28), 2)
-	Kit.palisade_run(logs, Vector3(1.2, 0.7, 0.28), Vector3(4.15, 0.7, 0.35), 3)
-	Kit.palisade_run(logs, Vector3(-4.15, 0.7, 9.05), Vector3(-1.35, 0.7, 9.18), 4)
-	Kit.palisade_run(logs, Vector3(1.35, 0.7, 9.18), Vector3(4.15, 0.7, 9.05), 5)
-	Kit.palisade_run(logs, Vector3(-4.2, 0.7, 0.4), Vector3(-4.2, 0.7, 9.0), 6)
-	Kit.palisade_run(logs, Vector3(4.2, 0.7, 0.4), Vector3(4.2, 0.7, 9.0), 7)
+	## Collision + rope rails from CampKit; hide the cylinder stakes and drop PBR logs.
+	var runs: Array = [
+		[Vector3(-4.15, 0.7, 0.35), Vector3(-1.2, 0.7, 0.28), 2],
+		[Vector3(1.2, 0.7, 0.28), Vector3(4.15, 0.7, 0.35), 3],
+		[Vector3(-4.15, 0.7, 9.05), Vector3(-1.35, 0.7, 9.18), 4],
+		[Vector3(1.35, 0.7, 9.18), Vector3(4.15, 0.7, 9.05), 5],
+		[Vector3(-4.2, 0.7, 0.4), Vector3(-4.2, 0.7, 9.0), 6],
+		[Vector3(4.2, 0.7, 0.4), Vector3(4.2, 0.7, 9.0), 7],
+	]
+	for run in runs:
+		Kit.palisade_run(logs, run[0], run[1], run[2])
+		_dress_palisade_run(logs, run[0], run[1], run[2])
 	## Named stake at the enter gap so the piece exists as its own node.
 	var stake: Node3D = STAKE.instantiate()
 	stake.position = Vector3(-1.45, 0.7, 0.32)

@@ -21,4 +21,6 @@ Kenney Survival Kit / Fantasy Town Kit are **not** on `main` and are not vendore
 
 Debug: **0** camp · **9** tunnel · **8** ruins camp.
 
-**Mesh vs placeholder:** every named piece is a CampKit `MeshInstance3D` (tapered bark logs, cloth planes, plank boxes, rope rails, hooped barrels, iron brazier). No CSG grey cubes. Ground is `Kit.mud_ground`. Mist is a translucent fog sheet, not a solid wall.
+**Mesh vs placeholder:** named pieces instance PBR GLBs under `meshes/` (Poly Haven photogrammetry + Line 7 cloth/tripod). Palisade **collision boxes** stay CampKit so the ring does not change size. Ground is still `Kit.mud_ground`. See `ATTRIBUTION.md` / `meshes/README.md`. No CSG grey cubes. No Elden Ring rips.
+
+Andrew: camp scenes already point at the new GLBs. Character MeshRoot is still the blockout — swap paths in the HE / Herald READMEs.
