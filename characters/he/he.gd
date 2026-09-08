@@ -503,12 +503,11 @@ func _pose_jab() -> void:
 	elif _state_time > wind + active:
 		snap = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0)
 	_pose_idle()
-	## Forearm / fist carry the silhouette. Upper-arm aim stays capped (≤0.28).
-	_part_rot("L_Forearm", Vector3(0.48, 0.12, 0.18) * snap)
-	_part_rot("L_Fist", Vector3(0.22, 0.06, 0.10) * snap)
-	_part_rot("R_Forearm", Vector3(0.20, 0.0, 0.0) * snap)
+	## Negative local Z opens the A-pose elbow toward MeshRoot −Z. Fold extras
+	## put the fist on the hip and pinch the IBM sleeve (clip spaghetti).
+	_part_rot("L_Forearm", Vector3(0.08, 0.10, -0.28) * snap)
+	_part_rot("L_Fist", Vector3(0.16, 0.0, 0.0) * snap)
 	_rig.aim_along_y("L_UpperArm", Vector3(0.06, 0.14, -1.0), snap)
-	_rig.aim_along_y("L_Forearm", Vector3(0.04, 0.10, -1.0), snap)
 
 
 func _pose_heavy() -> void:
@@ -520,18 +519,16 @@ func _pose_heavy() -> void:
 	if _state_time < wind:
 		var coil := clampf(_state_time / maxf(wind, 0.05), 0.0, 1.0)
 		coil = coil * coil
-		_part_rot("R_Forearm", Vector3(0.40, 0.10, 0.16) * coil)
-		_part_rot("R_Fist", Vector3(0.12, 0.0, 0.0) * coil)
-		_rig.aim_along_y("R_UpperArm", Vector3(0.40, 0.22, 0.18), coil * 0.65)
+		_part_rot("R_Forearm", Vector3(0.16, 0.06, 0.10) * coil)
+		_part_rot("R_Fist", Vector3(0.10, 0.0, 0.0) * coil)
+		_rig.aim_along_y("R_UpperArm", Vector3(0.40, 0.22, 0.18), coil * 0.5)
 	else:
 		var commit := 1.0 - pow(1.0 - clampf((_state_time - wind) / 0.10, 0.0, 1.0), 2.0)
 		if _state_time > wind + active:
 			commit = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0) * 0.55
-		_part_rot("R_Forearm", Vector3(0.36, -0.08, -0.14) * commit)
-		_part_rot("R_Fist", Vector3(0.18, 0.0, -0.10) * commit)
-		_part_rot("L_Forearm", Vector3(0.22, 0.0, 0.0) * commit)
+		_part_rot("R_Forearm", Vector3(0.08, -0.10, -0.28) * commit)
+		_part_rot("R_Fist", Vector3(0.16, 0.0, 0.0) * commit)
 		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.12, -1.0), commit)
-		_rig.aim_along_y("R_Forearm", Vector3(-0.04, 0.10, -1.0), commit)
 
 
 func _pose_roll() -> void:
