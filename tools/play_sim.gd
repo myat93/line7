@@ -95,6 +95,9 @@ func _run() -> void:
 		_fail("Facing visor missing.")
 	if not ResourceLoader.exists("res://ruins/fallen_castle/fallen_castle.tscn"):
 		_fail("Fallen castle scene missing.")
+	var kit_script := load("res://ruins/fallen_castle/camp_kit.gd")
+	if kit_script == null:
+		_fail("camp_kit.gd failed to compile — camp will stay empty.")
 	Game.travel_to("fallen_castle")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -104,6 +107,13 @@ func _run() -> void:
 		_fail("HE spawned in the void at the castle (y=%.2f)." % he.global_position.y)
 	if he.global_position.z < 1.5:
 		_fail("HE did not teleport into the castle courtyard (z=%.2f)." % he.global_position.z)
+	var camp := he.get_parent().get_node_or_null("FallenCastle")
+	if camp == null:
+		_fail("FallenCastle node missing after travel.")
+	else:
+		var geo: Node = camp.get_node_or_null("Geometry")
+		if geo == null or geo.get_child_count() < 8:
+			_fail("Guard camp geometry did not build (kit/script error).")
 	Game.travel_to("undercroft")
 	await get_tree().process_frame
 	if Game.current_pocket != "undercroft":

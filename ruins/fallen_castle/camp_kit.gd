@@ -293,11 +293,11 @@ static func tripod(parent: Node3D, origin: Vector3) -> void:
 	root.position = origin
 	parent.add_child(root)
 	var apex := Vector3(0, 3.15, 0)
-	var feet := [Vector3(-0.95, 0, 0.55), Vector3(0.95, 0, 0.55), Vector3(0.0, 0, -1.05)]
+	var feet: Array[Vector3] = [Vector3(-0.95, 0, 0.55), Vector3(0.95, 0, 0.55), Vector3(0.0, 0, -1.05)]
 	for foot in feet:
 		var pole := MeshInstance3D.new()
 		var cyl := CylinderMesh.new()
-		var length := foot.distance_to(apex)
+		var length: float = foot.distance_to(apex)
 		cyl.top_radius = 0.045
 		cyl.bottom_radius = 0.055
 		cyl.height = length

@@ -91,3 +91,8 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	var he_text := FileAccess.get_file_as_string("res://characters/he/he.tscn")
 	if not he_text.contains("Ashpike"):
 		failures.append("HE is missing the hidden Ashpike visual.")
+	if load("res://ruins/fallen_castle/camp_kit.gd") == null:
+		failures.append("camp_kit.gd failed to compile.")
+	var castle_src := FileAccess.get_file_as_string("res://ruins/fallen_castle/fallen_castle.gd")
+	if castle_src.contains("CSGBox") or castle_src.contains("CSGCylinder"):
+		failures.append("Guard camp must not be CSG greybox.")
