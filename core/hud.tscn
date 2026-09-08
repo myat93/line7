@@ -1,0 +1,162 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/hud.gd" id="1_hud"]
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Bars" type="VBoxContainer" parent="Root"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 28.0
+offset_right = 340.0
+offset_bottom = 110.0
+theme_override_constants/separation = 10
+
+[node name="HPLabel" type="Label" parent="Root/Bars"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.78, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "HE"
+
+[node name="HPBar" type="ColorRect" parent="Root/Bars"]
+custom_minimum_size = Vector2(280, 14)
+layout_mode = 2
+color = Color(0.12, 0.08, 0.08, 0.85)
+
+[node name="Fill" type="ColorRect" parent="Root/Bars/HPBar"]
+layout_mode = 0
+offset_right = 280.0
+offset_bottom = 14.0
+color = Color(0.72, 0.22, 0.2, 0.95)
+
+[node name="StaminaLabel" type="Label" parent="Root/Bars"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.78, 0.74, 1)
+theme_override_font_sizes/font_size = 14
+text = "STAMINA"
+
+[node name="StaminaBar" type="ColorRect" parent="Root/Bars"]
+custom_minimum_size = Vector2(280, 10)
+layout_mode = 2
+color = Color(0.08, 0.1, 0.1, 0.85)
+
+[node name="Fill" type="ColorRect" parent="Root/Bars/StaminaBar"]
+layout_mode = 0
+offset_right = 280.0
+offset_bottom = 10.0
+color = Color(0.55, 0.78, 0.62, 0.95)
+
+[node name="Stance" type="Label" parent="Root"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 128.0
+offset_right = 420.0
+offset_bottom = 156.0
+theme_override_colors/font_color = Color(0.9, 0.84, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "FISTS"
+
+[node name="Herald" type="VBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 780.0
+offset_top = 24.0
+offset_right = -780.0
+offset_bottom = 70.0
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/Herald"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.74, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "HOLLOW HERALD"
+horizontal_alignment = 1
+
+[node name="Bar" type="ColorRect" parent="Root/Herald"]
+custom_minimum_size = Vector2(360, 12)
+layout_mode = 2
+color = Color(0.08, 0.07, 0.1, 0.85)
+
+[node name="Fill" type="ColorRect" parent="Root/Herald/Bar"]
+layout_mode = 0
+offset_right = 360.0
+offset_bottom = 12.0
+color = Color(0.62, 0.42, 0.72, 0.95)
+
+[node name="Banner" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -160.0
+offset_right = 420.0
+offset_bottom = -40.0
+theme_override_colors/font_color = Color(0.93, 0.88, 0.76, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 22
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Prompt" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -150.0
+offset_right = 280.0
+offset_bottom = -110.0
+theme_override_colors/font_color = Color(0.86, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 20
+text = ""
+horizontal_alignment = 1
+
+[node name="Help" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -520.0
+offset_top = -118.0
+offset_right = -28.0
+offset_bottom = -20.0
+theme_override_colors/font_color = Color(0.72, 0.74, 0.7, 0.75)
+theme_override_font_sizes/font_size = 13
+text = "WASD walk  ·  Shift sprint  ·  Mouse look
+LMB / J jab  ·  RMB / K heavy  ·  Space / Ctrl roll
+E take Ashpike  ·  1 bind  ·  2 fists  ·  R restart"
+horizontal_alignment = 2
+
+[node name="DeathVeil" type="ColorRect" parent="Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.04, 0.02, 0.03, 0.45)
