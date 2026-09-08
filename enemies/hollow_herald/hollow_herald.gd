@@ -6,7 +6,7 @@ extends CharacterBody3D
 
 enum Phase { WAIT, APPROACH, SWIPE_WIND, SWIPE, PAUSE, LUNGE_WIND, LUNGE, REST, DEAD }
 
-const BLOCKOUT_SCENE: PackedScene = preload("res://enemies/hollow_herald/herald_blockout.glb")
+const BLOCKOUT_SCENE: PackedScene = preload("res://enemies/hollow_herald/hollow_herald_blockout.glb")
 const POSE_PARTS: PackedStringArray = [
 	"Hips", "Torso", "Head", "Crown",
 	"L_UpperArm", "L_Forearm", "L_Fist",

@@ -2,7 +2,7 @@
 
 Godot **4.7.x** third-person combat slice. HE wakes in a flooded subway chapel, fights the Hollow Herald with bare fists, then takes the Ashpike from the angel-stone shrine — unequipped until it is bound.
 
-HE uses the civilian box blockout (`characters/he/he_blockout.glb`) as a visual under the existing capsule body. The Hollow Herald still instances the temp transit-coat blockout (`enemies/hollow_herald/herald_blockout.glb`) the same way. Jake’s official lesser-demon mesh is at `enemies/hollow_herald/hollow_herald_blockout.glb` (same pose joints; Andrew swaps the preload). Collision, hurtboxes, locked fist reach, and Herald swipe/lunge clocks stay on the capsules. This is one room, not an MMO.
+HE uses the civilian box blockout (`characters/he/he_blockout.glb`) as a visual under the existing capsule body. The Hollow Herald uses the official lesser-demon transit-coat blockout (`enemies/hollow_herald/hollow_herald_blockout.glb`) the same way. Collision, hurtboxes, locked fist reach, and Herald swipe/lunge clocks stay on the capsules. This is one room, not an MMO.
 
 ## Import and play
 
