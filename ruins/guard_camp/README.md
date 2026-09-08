@@ -10,7 +10,7 @@ Props come from Jake’s **`CampKit`** (`ruins/fallen_castle/camp_kit.gd`) — g
 
 1. `palisade_log` / `palisade_ring` — jagged rope-lashed stakes with horizontal rails, enter gap
 2. `tripod_central` — thin-pole cook tripod in the mud
-3. Check A / B — `lean_to_a` + `lean_to_b` (dark cloth) on the **left**, `guard_plank` between them
+3. Check A / B — `lean_to_a` + `lean_to_b` (dark cloth) on the **left of the enter view**, `guard_plank` between them
 4. Optional `crate_loot` — **E** wrap / scrap under the left clutter
 5. `torch_post` at the **mist exit** (warm brazier)
 6. `mist_drop` — purple forest fog beyond the ring. No softlock.

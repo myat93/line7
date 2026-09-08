@@ -182,7 +182,7 @@ static func palisade_run(parent: Node3D, from: Vector3, to: Vector3, seed_n: int
 	for i in count:
 		var t := float(i) / float(count - 1)
 		var jitter := float((seed_n * 17 + i * 31) % 10) * 0.012
-		var h := 2.35 + float((seed_n + i * 7) % 13) * 0.09
+		var h := 2.15 + float((seed_n + i * 7) % 13) * 0.14
 		var r := 0.11 + float((i * 3 + seed_n) % 5) * 0.012
 		var pos := from.lerp(to, t) + side * (jitter - 0.05)
 		pos.y = from.y

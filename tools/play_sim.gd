@@ -210,9 +210,9 @@ func _run() -> void:
 	for stand in [
 		Vector3(0.0, 1.0, 1.85),
 		Vector3(0.0, 1.0, 4.45),
-		Vector3(-2.2, 1.0, 3.3),
-		Vector3(-1.55, 1.85, 4.75),
-		Vector3(-1.45, 1.2, 7.25),
+		Vector3(2.2, 1.0, 3.3),
+		Vector3(1.55, 1.85, 4.75),
+		Vector3(1.45, 1.2, 7.25),
 		Vector3(0.0, 1.0, 8.55),
 	]:
 		he.global_position = stand

@@ -81,11 +81,11 @@ func _build_yard() -> void:
 	]:
 		Kit.grass_tuft(geometry, p)
 	## Edge clutter: spare logs and a store barrel, not grey cubes.
-	var spare := Kit.add_log(geometry, Vector3(-3.15, 0.78, 7.55), 1.15, 0.07, 82.0, 78.0)
-	spare.get_parent().rotation_degrees = Vector3(82, 28, 0)
-	Kit.barrel(geometry, Vector3(-3.05, 0.7, 6.45))
-	Kit.crate(geometry, Vector3(-2.85, 0.96, 4.55), Vector3(0.52, 0.32, 0.46), 22.0)
-	_drape_hide(geometry, Vector3(-2.78, 1.18, 4.58), Vector2(0.62, 0.5))
+	var spare := Kit.add_log(geometry, Vector3(3.15, 0.78, 7.55), 1.15, 0.07, 82.0, 78.0)
+	spare.get_parent().rotation_degrees = Vector3(82, -28, 0)
+	Kit.barrel(geometry, Vector3(3.05, 0.7, 6.45))
+	Kit.crate(geometry, Vector3(2.85, 0.96, 4.55), Vector3(0.52, 0.32, 0.46), -22.0)
+	_drape_hide(geometry, Vector3(2.78, 1.18, 4.58), Vector2(0.62, 0.5))
 
 
 func _drape_hide(parent: Node3D, pos: Vector3, size: Vector2) -> void:
@@ -128,27 +128,27 @@ func _place_pieces() -> void:
 	add_child(tripod)
 
 	var a: Node3D = LEAN_A.instantiate()
-	a.position = Vector3(-2.45, 0.7, 3.15)
-	a.rotation_degrees = Vector3(0.0, 12.0, 0.0)
+	a.position = Vector3(2.45, 0.7, 3.15)
+	a.rotation_degrees = Vector3(0.0, -12.0, 0.0)
 	add_child(a)
 
 	var b: Node3D = LEAN_B.instantiate()
-	b.position = Vector3(-2.50, 0.7, 6.25)
-	b.rotation_degrees = Vector3(0.0, 20.0, 0.0)
+	b.position = Vector3(2.50, 0.7, 6.25)
+	b.rotation_degrees = Vector3(0.0, -20.0, 0.0)
 	add_child(b)
 
 	var plank: Node3D = PLANK.instantiate()
-	plank.position = Vector3(-1.55, 0.7, 4.75)
-	plank.rotation_degrees = Vector3(0.0, 8.0, 0.0)
+	plank.position = Vector3(1.55, 0.7, 4.75)
+	plank.rotation_degrees = Vector3(0.0, -8.0, 0.0)
 	add_child(plank)
 
 	var crate: Node3D = CRATE.instantiate()
-	crate.position = Vector3(-1.45, 0.95, 7.25)
+	crate.position = Vector3(1.45, 0.95, 7.25)
 	add_child(crate)
 
 	## Torch / brazier sits at the mist exit, warm against the purple drop.
 	var torch: Node3D = TORCH.instantiate()
-	torch.position = Vector3(1.22, 0.7, 8.55)
+	torch.position = Vector3(-1.22, 0.7, 8.55)
 	add_child(torch)
 
 	var mist: Node3D = MIST.instantiate()
@@ -162,11 +162,11 @@ func _place_markers() -> void:
 	_marker("palisade_ring", Vector3(0.0, 1.0, 4.7))
 	_marker("palisade_enter", Vector3(0.0, 1.0, 0.48))
 	_marker("tripod_central", Vector3(0.06, 1.0, 4.45))
-	_marker("lean_to_a", Vector3(-2.45, 1.0, 3.15))
-	_marker("lean_to_b", Vector3(-2.50, 1.0, 6.25))
-	_marker("guard_plank", Vector3(-1.55, 1.0, 4.75))
-	_marker("crate_loot", Vector3(-1.45, 1.0, 7.25))
-	_marker("torch_post", Vector3(1.22, 1.0, 8.55))
+	_marker("lean_to_a", Vector3(2.45, 1.0, 3.15))
+	_marker("lean_to_b", Vector3(2.50, 1.0, 6.25))
+	_marker("guard_plank", Vector3(1.55, 1.0, 4.75))
+	_marker("crate_loot", Vector3(1.45, 1.0, 7.25))
+	_marker("torch_post", Vector3(-1.22, 1.0, 8.55))
 	_marker("mist_drop", Vector3(0.0, 1.0, 9.15))
 
 
