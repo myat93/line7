@@ -14,8 +14,8 @@ var _state_time: float = 0.0
 var _attack: Dictionary = {}
 var _attack_hit: bool = false
 var _roll_dir: Vector3 = Vector3.FORWARD
-var _look_yaw: float = 0.0
-var _look_pitch: float = -0.18
+var _look_yaw: float = PI
+var _look_pitch: float = -0.12
 var _iframe: float = 0.0
 
 @onready var camera_pivot: Node3D = $CameraPivot
@@ -40,6 +40,8 @@ func _ready() -> void:
 	hurt.host = self
 	hurt.hit_received.connect(_on_hurt)
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	mesh_root.rotation.y = PI
+	camera_pivot.rotation = Vector3(_look_pitch, _look_yaw, 0.0)
 	_refresh_stance_visual()
 	floor_snap_length = 0.3
 

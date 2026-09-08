@@ -33,13 +33,13 @@ func _style_environment() -> void:
 	env.background_color = Color(0.035, 0.045, 0.055)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.16, 0.2, 0.24)
-	env.ambient_light_energy = 0.42
+	env.ambient_light_energy = 0.85
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.1, 0.16, 0.18)
-	env.fog_density = 0.02
+	env.fog_light_color = Color(0.18, 0.26, 0.28)
+	env.fog_density = 0.012
 	env.volumetric_fog_enabled = true
-	env.volumetric_fog_density = 0.035
-	env.volumetric_fog_albedo = Color(0.16, 0.22, 0.24)
+	env.volumetric_fog_density = 0.018
+	env.volumetric_fog_albedo = Color(0.22, 0.3, 0.32)
 	env.glow_enabled = true
 	env.glow_intensity = 0.45
 	env.adjustment_enabled = true
@@ -65,9 +65,9 @@ func _build_volume() -> void:
 		_box(geometry, Vector3(6.6, 2.4, z), Vector3(0.7, 5.2, 0.7), CONCRETE, true)
 		var lamp := OmniLight3D.new()
 		lamp.position = Vector3(0, 5.6, z)
-		lamp.light_color = Color(0.72, 0.78, 0.7)
-		lamp.light_energy = 1.15
-		lamp.omni_range = 9.0
+		lamp.light_color = Color(0.82, 0.86, 0.78)
+		lamp.light_energy = 2.6
+		lamp.omni_range = 12.0
 		lamp.shadow_enabled = true
 		lights.add_child(lamp)
 

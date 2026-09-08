@@ -17,8 +17,8 @@ environment = SubResource("Environment_base")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.86, -0.36, 0.36, 0, 0.71, 0.71, -0.51, -0.61, 0.61, 0, 14, 6)
-light_color = Color(0.55, 0.62, 0.7, 1)
-light_energy = 0.35
+light_color = Color(0.7, 0.78, 0.82, 1)
+light_energy = 0.85
 shadow_enabled = true
 
 [node name="Geometry" type="Node3D" parent="."]
