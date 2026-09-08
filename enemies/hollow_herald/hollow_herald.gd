@@ -331,9 +331,9 @@ func _pose_swipe_wind() -> void:
 	_part_rot("Hips", Vector3(-0.06, -0.22, 0.04) * coil)
 	_part_rot("Torso", Vector3(0.08, -0.55, 0.10) * coil)
 	_part_rot("Head", Vector3(0.10, 0.35, 0.0) * coil)
-	_part_rot("R_UpperArm", Vector3(-0.95, -0.85, -1.55) * coil + Vector3(0.08, 0.0, -0.12))
-	_part_rot("R_Forearm", Vector3(0.85, 0.15, -0.20) * coil)
-	_part_rot("R_Fist", Vector3(0.25, 0.0, 0.0) * coil)
+	_part_rot("R_UpperArm", Vector3(-1.15, -1.05, -1.85) * coil + Vector3(0.08, 0.0, -0.12))
+	_part_rot("R_Forearm", Vector3(0.55, 0.20, -0.15) * coil)
+	_part_rot("R_Fist", Vector3(0.30, 0.0, 0.0) * coil)
 	_part_rot("L_UpperArm", Vector3(0.15, 0.28, 0.55) * coil + Vector3(0.12, 0.0, 0.18))
 	_part_rot("L_Forearm", Vector3(0.35, 0.0, 0.0))
 

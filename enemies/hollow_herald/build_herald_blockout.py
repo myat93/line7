@@ -21,20 +21,20 @@ OUT = Path(__file__).with_name("herald_blockout.glb")
 
 MATERIALS = {
     ## Mid values so the coat reads in the dim undercroft, not a grey capsule.
-    "coat": {"color": [0.46, 0.48, 0.56, 1.0], "rough": 0.74, "metal": 0.04},
+    "coat": {"color": [0.58, 0.60, 0.70, 1.0], "rough": 0.70, "metal": 0.06},
     "lining": {
-        "color": [0.42, 0.18, 0.22, 1.0],
-        "rough": 0.62,
+        "color": [0.52, 0.22, 0.26, 1.0],
+        "rough": 0.58,
         "metal": 0.0,
-        "emissive": [0.10, 0.02, 0.03],
+        "emissive": [0.18, 0.04, 0.05],
     },
-    "pants": {"color": [0.20, 0.20, 0.24, 1.0], "rough": 0.86, "metal": 0.0},
-    "hollow": {"color": [0.66, 0.62, 0.58, 1.0], "rough": 0.62, "metal": 0.0},
+    "pants": {"color": [0.28, 0.28, 0.34, 1.0], "rough": 0.84, "metal": 0.0},
+    "hollow": {"color": [0.78, 0.72, 0.66, 1.0], "rough": 0.58, "metal": 0.0},
     "gauntlet": {
-        "color": [0.40, 0.34, 0.38, 1.0],
-        "rough": 0.48,
-        "metal": 0.12,
-        "emissive": [0.10, 0.04, 0.05],
+        "color": [0.52, 0.40, 0.42, 1.0],
+        "rough": 0.44,
+        "metal": 0.14,
+        "emissive": [0.18, 0.06, 0.07],
     },
     "crown": {
         "color": [0.82, 0.76, 0.50, 1.0],
@@ -285,10 +285,11 @@ def build() -> bytes:
 
     hips_mesh = box("HipsMesh", "pants", (0.0, 0.0, 0.0), (0.36, 0.16, 0.22))
     belt = box("Belt", "brass", (0.0, 0.08, 0.0), (0.40, 0.07, 0.24))
-    coat_skirt = box("CoatSkirt", "coat", (0.0, -0.52, 0.04), (0.58, 1.08, 0.34))
-    coat_flare_l = box("CoatFlareL", "coat", (-0.26, -0.58, 0.02), (0.16, 0.96, 0.22))
-    coat_flare_r = box("CoatFlareR", "coat", (0.26, -0.58, 0.02), (0.16, 0.96, 0.22))
-    hem_lining = box("HemLining", "lining", (0.0, -0.98, -0.12), (0.50, 0.18, 0.06))
+    ## Open transit coat: long back + side flaps so swipe/lunge limbs stay readable.
+    coat_back = box("CoatBack", "coat", (0.0, -0.54, 0.12), (0.50, 1.10, 0.12))
+    coat_flare_l = box("CoatFlareL", "coat", (-0.28, -0.52, 0.02), (0.14, 1.02, 0.28))
+    coat_flare_r = box("CoatFlareR", "coat", (0.28, -0.52, 0.02), (0.14, 1.02, 0.28))
+    hem_lining = box("HemLining", "lining", (0.0, -1.02, 0.06), (0.46, 0.16, 0.08))
     hips = add(
         node(
             "Hips",
@@ -296,7 +297,7 @@ def build() -> bytes:
             children=[
                 hips_mesh,
                 belt,
-                coat_skirt,
+                coat_back,
                 coat_flare_l,
                 coat_flare_r,
                 hem_lining,

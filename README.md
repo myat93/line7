@@ -81,7 +81,7 @@ godot --headless --path . --script res://tools/slice_check.gd
 godot --headless --path . -- --slice-sim
 ```
 
-`godot --path . -- --pose-shots` writes stills of HE idle / jab / heavy / roll / sprint and Herald idle / swipe-wind / swipe / lunge-wind.
+`godot --path . -- --pose-shots` writes HE idle / jab / heavy / roll / sprint stills. `godot --path . -- --herald-shots` writes Herald idle / swipe-wind / swipe / lunge-wind.
 
 Prints `LINE7_SLICE_OK` / `LINE7_PLAY_SIM_OK` when the layout, fist-first rules, shrine bind contract, and `main.tscn` wiring hold.
 

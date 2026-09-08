@@ -155,6 +155,20 @@ func _run() -> void:
 		## APPROACH is acceptable if still closing; swipe wind+ is the tell.
 		if herald.phase != HollowHerald.Phase.APPROACH:
 			_fail("Herald is not in the swipe/lunge loop (phase %s)." % herald.phase)
+	herald.velocity = Vector3.ZERO
+	herald._begin(HollowHerald.Phase.SWIPE_WIND)
+	var swipe_wait := 0.0
+	while herald.phase == HollowHerald.Phase.SWIPE_WIND and swipe_wait < 2.4:
+		await get_tree().physics_frame
+		swipe_wait += get_process_delta_time()
+	if herald.phase != HollowHerald.Phase.SWIPE and herald.phase != HollowHerald.Phase.PAUSE:
+		_fail("Herald swipe wind did not enter swipe (phase %s)." % herald.phase)
+	var lunge_wait := 0.0
+	while herald.phase < HollowHerald.Phase.LUNGE_WIND and herald.phase != HollowHerald.Phase.DEAD and lunge_wait < 2.8:
+		await get_tree().physics_frame
+		lunge_wait += get_process_delta_time()
+	if herald.phase < HollowHerald.Phase.LUNGE_WIND:
+		_fail("Herald swipe did not continue into lunge wind (phase %s)." % herald.phase)
 
 	if Game.bind_ashpike():
 		_fail("Bind succeeded before the shrine take.")
