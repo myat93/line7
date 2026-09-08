@@ -33,6 +33,6 @@ Drop-in file: **`res://characters/he/he_realistic.glb`** (~1.8 m civilian, origi
 
 `he.tscn` / `he.gd` instance `he_realistic.glb` under the existing `HEBlockout` MeshRoot node. Combat, capsule `r=0.32 h=1.8`, and locked fist reach are unchanged.
 
-**Joints:** pose names live on the **Skeleton3D**. `MeshPoseRig` undoes the 0.01 armature so the authored 100× IBM skins `Body` at 1.8 m (do not replace binds with inverse(rest) — that explodes vertices). Idle is the bind A-pose. Jab / heavy / roll / sprint use `Skeleton3D.set_bone_pose_rotation`.
+**Joints:** pose names live on the **Skeleton3D**. `MeshPoseRig` undoes the 0.01 armature so the authored 100× IBM skins `Body` at 1.8 m (do not replace binds with inverse(rest) — that explodes vertices). The Bip01 armature is authored −90° Y (Max +X → Godot +Z); `MeshPoseRig` adds π so the chest matches MeshRoot −Z / move yaw. Idle is the bind A-pose. Jab / heavy / roll / sprint use character-space extras and `aim_along_y` (Bip01 +Y is along-bone — box-joint X extras rolled the torso).
 
 Licenses: `ATTRIBUTION.md` + `LICENSE.rocketbox.md`. Not an Elden Ring / commercial rip.

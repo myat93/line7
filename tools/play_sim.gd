@@ -91,6 +91,10 @@ func _run() -> void:
 	he._face_direction(Vector3(0.0, 0.0, 1.0), 1.0)
 	if absf(angle_difference(he.mesh_root.rotation.y, PI)) > 0.25:
 		_fail("HE does not face movement direction (+Z).")
+	var mesh_fwd := -he.mesh_root.global_transform.basis.z
+	var chest_fwd := he._rig.character_forward()
+	if chest_fwd.length() < 0.2 or chest_fwd.dot(mesh_fwd) < 0.65:
+		_fail("HE realistic mesh does not face MeshRoot / move forward (moonwalk).")
 	var blockout := he.mesh_root.get_node_or_null("HEBlockout")
 	if blockout == null:
 		_fail("HE realistic mesh is not instanced under MeshRoot.")
@@ -106,7 +110,23 @@ func _run() -> void:
 		var jab_q := he._rig.bone_pose_rotation("L_UpperArm")
 		if idle_q.is_equal_approx(jab_q):
 			_fail("HE jab must rotate L_UpperArm off the A-pose rest.")
+		var jab_arm := he._rig.bone_world_axis("L_UpperArm", 1)
+		if jab_arm.dot(mesh_fwd) < 0.40:
+			_fail("HE jab L_UpperArm does not point along MeshRoot forward.")
+		he.state = HE.State.ATTACK
+		he._attack = Combat.fists_heavy()
+		he._state_time = 0.40
+		he._update_visual_pose()
+		var heavy_arm := he._rig.bone_world_axis("R_UpperArm", 1)
+		if heavy_arm.dot(mesh_fwd) < 0.40:
+			_fail("HE heavy R_UpperArm does not commit along MeshRoot forward.")
 		he.state = HE.State.FREE
+		he._sprinting = true
+		he._update_visual_pose()
+		var sprint_up := he._rig.bone_world_axis("Torso", 1)
+		if sprint_up.dot(mesh_fwd) < 0.12:
+			_fail("HE sprint must lean the torso toward move forward.")
+		he._sprinting = false
 		he._update_visual_pose()
 	var body_col := he.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if body_col == null or not (body_col.shape is CapsuleShape3D):

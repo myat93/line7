@@ -54,6 +54,10 @@ func _ready() -> void:
 		var camp_shots := Node.new()
 		camp_shots.set_script(load("res://tools/camp_shots.gd"))
 		add_child(camp_shots)
+	elif OS.get_cmdline_user_args().has("--pose-dump"):
+		var dump := Node.new()
+		dump.set_script(load("res://tools/pose_dump.gd"))
+		add_child(dump)
 
 
 func restart() -> void:
