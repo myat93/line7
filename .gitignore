@@ -1,0 +1,13 @@
+.godot/
+*.translation
+*.apk
+*.aab
+*.exe
+*.x86_64
+*.app
+*.pck
+*.zip
+export/
+.import/
+*.swp
+.DS_Store
