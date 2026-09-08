@@ -203,6 +203,21 @@ func _run() -> void:
 		_fail("Guard plank missing.")
 	if get_tree().get_nodes_in_group("mist_exit").is_empty():
 		_fail("Mist exit missing.")
+	for stand in [
+		Vector3(0.0, 1.0, 2.6),
+		Vector3(0.0, 1.0, 10.8),
+		Vector3(-6.1, 1.0, 8.4),
+		Vector3(5.4, 1.85, 12.2),
+		Vector3(1.7, 1.2, 15.2),
+		Vector3(0.0, 1.0, 22.8),
+	]:
+		he.global_position = stand
+		he.velocity = Vector3.ZERO
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		if he.global_position.y < 0.4:
+			_fail("Camp path dropped HE at %s (y=%.2f)." % [stand, he.global_position.y])
 	var crates := get_tree().get_nodes_in_group("camp_crate")
 	if crates.is_empty():
 		_fail("Camp crate missing.")

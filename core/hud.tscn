@@ -149,7 +149,7 @@ text = "WASD walk  ·  Shift sprint  ·  Space jump  ·  Mouse look
 LMB / J jab  ·  RMB / K heavy  ·  Ctrl roll
 E interact  ·  1 bind  ·  2 fists  ·  R restart
 Ruins left (E)  ·  Service door: duel right (E)
-8 castle  ·  9 tunnel"
+8 castle  ·  9 tunnel  ·  0 camp"
 horizontal_alignment = 2
 
 [node name="DeathVeil" type="ColorRect" parent="Root"]

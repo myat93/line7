@@ -22,16 +22,17 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().create_timer(3.4).timeout
-	await _view(Vector3(0.0, 1.15, 37.2), 0.0, -0.08, "camp_door_at_tunnel_exit")
+	## PI looks +Z (same as tunnel pocket_shots).
+	await _view(Vector3(0.0, 1.15, 37.2), PI, -0.08, "camp_door_facing_plaque")
 	Game.travel_to("guard_camp")
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().create_timer(3.4).timeout
-	await _view(Vector3(0.0, 1.0, 2.6), 0.0, -0.1, "palisade_enter_looking_at_tripod")
-	await _view(Vector3(-4.2, 1.0, 7.2), -0.6, -0.12, "lean_to_shelter_and_torch")
-	await _view(Vector3(3.4, 1.0, 11.4), -1.1, -0.18, "guard_plank_raised_watch")
-	await _view(Vector3(0.6, 1.0, 14.2), -0.35, -0.15, "optional_camp_crate")
-	await _view(Vector3(0.0, 1.0, 21.4), 0.0, -0.08, "mist_exit_fog_wall")
+	await _view(Vector3(0.0, 1.0, 2.8), PI, -0.1, "yard_from_enter_gap_to_tripod")
+	await _view(Vector3(-4.2, 1.0, 6.6), PI + 0.35, -0.1, "check_a_lean_to_and_torch")
+	await _view(Vector3(3.2, 1.0, 10.6), PI - 0.55, -0.16, "check_b_raised_guard_plank")
+	await _view(Vector3(0.4, 1.0, 14.0), PI - 0.4, -0.12, "optional_crate_in_yard")
+	await _view(Vector3(0.0, 1.0, 21.6), PI, -0.06, "mist_exit_look_only_wall")
 	print("LINE7_CAMP_SHOTS_OK")
 	get_tree().quit(0)
 
