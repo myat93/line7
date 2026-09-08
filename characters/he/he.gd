@@ -508,10 +508,11 @@ func _pose_jab() -> void:
 	_part_rot("Torso", Vector3(-0.06, 0.20, 0.0) * snap)
 	_part_rot("Hips", Vector3(-0.03, 0.08, 0.0) * snap)
 	_part_rot("Head", Vector3(0.04, -0.08, 0.0) * snap)
-	_part_rot("L_UpperArm", Vector3(1.05, 0.18, 0.22) * snap)
-	_part_rot("L_Forearm", Vector3(0.22, 0.0, 0.0) * snap)
+	## Negative local X swings Bip01 +Y (along-bone) toward MeshRoot −Z.
+	_part_rot("L_UpperArm", Vector3(-0.95, 0.12, 0.16) * snap)
+	_part_rot("L_Forearm", Vector3(0.28, 0.0, 0.0) * snap)
 	_part_rot("L_Fist", Vector3(0.10, 0.0, 0.0) * snap)
-	_part_rot("R_UpperArm", Vector3(0.12, -0.10, -0.10))
+	_part_rot("R_UpperArm", Vector3(0.10, -0.08, -0.08))
 
 
 func _pose_heavy() -> void:
@@ -526,9 +527,9 @@ func _pose_heavy() -> void:
 		_part_rot("Torso", Vector3(0.08, -0.18, 0.04) * coil)
 		_part_rot("Hips", Vector3(0.04, -0.08, 0.0) * coil)
 		_part_rot("Head", Vector3(-0.04, -0.10, 0.0) * coil)
-		_part_rot("R_UpperArm", Vector3(-0.55, -0.35, -0.42) * coil)
+		_part_rot("R_UpperArm", Vector3(0.42, 0.22, 0.28) * coil)
 		_part_rot("R_Forearm", Vector3(0.45, 0.0, 0.0) * coil)
-		_part_rot("L_UpperArm", Vector3(0.16, 0.10, 0.12) * coil)
+		_part_rot("L_UpperArm", Vector3(0.12, 0.08, 0.10) * coil)
 	else:
 		var commit := 1.0 - pow(1.0 - clampf((_state_time - wind) / 0.10, 0.0, 1.0), 2.0)
 		if _state_time > wind + active:
@@ -536,10 +537,10 @@ func _pose_heavy() -> void:
 		_part_rot("Torso", Vector3(-0.10, 0.18, 0.0) * commit)
 		_part_rot("Hips", Vector3(-0.05, 0.08, 0.0) * commit)
 		_part_rot("Head", Vector3(0.06, -0.06, 0.0) * commit)
-		_part_rot("R_UpperArm", Vector3(1.20, -0.12, -0.10) * commit)
-		_part_rot("R_Forearm", Vector3(0.12, 0.0, 0.0))
+		_part_rot("R_UpperArm", Vector3(-1.05, -0.10, -0.12) * commit)
+		_part_rot("R_Forearm", Vector3(0.16, 0.0, 0.0))
 		_part_rot("R_Fist", Vector3(0.10, 0.0, 0.0) * commit)
-		_part_rot("L_UpperArm", Vector3(0.14, 0.08, 0.12))
+		_part_rot("L_UpperArm", Vector3(0.12, 0.08, 0.10))
 
 
 func _pose_roll() -> void:
