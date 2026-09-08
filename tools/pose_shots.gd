@@ -94,10 +94,17 @@ func _run() -> void:
 
 
 func _shot(name: String, setup: Callable) -> void:
+	_he.global_position = Vector3(0.0, 1.05, 0.0)
+	_he.velocity = Vector3.ZERO
+	_he.state = HE.State.FREE
 	setup.call()
 	await get_tree().process_frame
+	_he.global_position = Vector3(0.0, 1.05, 0.0)
+	_he.velocity = Vector3.ZERO
 	await get_tree().process_frame
-	await get_tree().create_timer(0.08).timeout
+	_he.global_position = Vector3(0.0, 1.05, 0.0)
+	_he.velocity = Vector3.ZERO
+	await get_tree().create_timer(0.05).timeout
 	var img: Image = get_viewport().get_texture().get_image()
 	if img == null:
 		push_error("POSE_SHOTS: empty viewport for %s" % name)
