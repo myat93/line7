@@ -377,8 +377,7 @@ func _bind_blockout() -> void:
 		_blockout = BLOCKOUT_SCENE.instantiate() as Node3D
 		_blockout.name = "HEBlockout"
 		mesh_root.add_child(_blockout)
-	## Keep the 0.01 armature from collapsing the Rocketbox skin: rebuild IBM
-	## from rest and scale Body to the 1.8 m capsule. Pose via Skeleton3D.
+	## Undo the 0.01 armature so the authored 100× IBM skins Body at 1.8 m.
 	_rig.prepare_realistic(_blockout, 1.8)
 	_rig.bind_parts(_blockout, POSE_PARTS)
 	## PosePlayer is the hook for authored clips. The GLB has none yet, so
@@ -432,6 +431,9 @@ func _update_visual_pose() -> void:
 
 
 func _pose_idle() -> void:
+	if _rig.skeleton:
+		_rig.reset_to_bind()
+		return
 	_part_pos("Hips", Vector3.ZERO)
 	_part_rot("Hips", Vector3.ZERO)
 	_part_rot("Torso", Vector3.ZERO)

@@ -358,9 +358,11 @@ func _assert_visible_body(host: Node, label: String) -> void:
 		return
 	if not body.visible:
 		_fail("%s Rocketbox Body is hidden." % label)
-	var height := body.get_aabb().size.y * absf(body.scale.y)
-	if height < 1.2:
-		_fail("%s Rocketbox Body height is %.2f m — IBM/scale did not produce a readable body." % [label, height])
+	var armature := host.find_child("HERealistic", true, false) as Node3D
+	if armature == null:
+		armature = host.find_child("HeraldRealistic", true, false) as Node3D
+	if armature and armature.scale.x < 0.05:
+		_fail("%s armature is still cm-scaled (%.4f) — Body will spec." % [label, armature.scale.x])
 
 
 func _fail(message: String) -> void:

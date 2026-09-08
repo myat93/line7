@@ -189,8 +189,8 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	if not herald_script.contains("_apply_realistic_meters"):
 		failures.append("Herald must keep _apply_realistic_meters so coat/crown stay meter-scaled.")
 	var pose_rig := FileAccess.get_file_as_string("res://core/mesh_pose_rig.gd")
-	if not pose_rig.contains("set_bone_pose_rotation") or not pose_rig.contains("set_bind_pose"):
-		failures.append("MeshPoseRig must rebuild Skin IBM and pose via set_bone_pose_rotation.")
+	if not pose_rig.contains("set_bone_pose_rotation") or not pose_rig.contains("_unscale_cm_armature"):
+		failures.append("MeshPoseRig must unscale the 0.01 armature and pose via set_bone_pose_rotation.")
 	var official_glb := load("res://enemies/hollow_herald/hollow_herald_realistic.glb") as PackedScene
 	if official_glb == null:
 		failures.append("hollow_herald_realistic.glb did not import as a PackedScene.")

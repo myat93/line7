@@ -232,8 +232,7 @@ func _bind_blockout() -> void:
 
 func _apply_realistic_meters() -> void:
 	## Coat / crown are authored in meters on a 0.01 armature. Undo that scale
-	## so the raincoat and horns stay ~2 m, then rebuild IBM from rest so the
-	## Rocketbox Body can show at 2.05 m instead of collapsing.
+	## so raincoat, horns, and the 100×-IBM Rocketbox Body all read at ~2 m.
 	if _blockout == null:
 		return
 	_rig.prepare_realistic(_blockout, 2.05)
@@ -281,6 +280,9 @@ func _update_visual_pose() -> void:
 
 
 func _pose_idle() -> void:
+	if _rig.skeleton:
+		_rig.reset_to_bind()
+		return
 	_part_pos("Hips", Vector3.ZERO)
 	_part_rot("Hips", Vector3.ZERO)
 	_part_rot("Torso", Vector3(0.06, 0.0, 0.0))
