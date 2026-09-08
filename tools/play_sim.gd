@@ -153,15 +153,23 @@ func _run() -> void:
 		he._sprinting = false
 		he._update_visual_pose()
 		var idle_thigh := he._rig.bone_pose_rotation("L_Thigh")
+		he._sprinting = false
+		he._moving = true
+		if not _assert_leg_stride(he, mesh_fwd, false):
+			pass
 		he._sprinting = true
+		he._moving = true
 		he._stride = 0.6
 		he._update_visual_pose()
 		var sprint_thigh := he._rig.bone_pose_rotation("L_Thigh")
 		if idle_thigh.is_equal_approx(sprint_thigh):
 			_fail("HE sprint must stride the legs (foot read).")
+		if not _assert_leg_stride(he, mesh_fwd, true):
+			pass
 		if _fist_span(he, "L_Fist") > 1.35 or _fist_span(he, "R_Fist") > 1.35:
 			_fail("HE sprint pose exploded an arm (IBM skin).")
 		he._sprinting = false
+		he._moving = false
 		he._update_visual_pose()
 	var body_col := he.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if body_col == null or not (body_col.shape is CapsuleShape3D):
@@ -403,6 +411,32 @@ func _has_named_bones(root: Node, names: PackedStringArray) -> bool:
 	for bone_name in names:
 		if skel.find_bone(bone_name) < 0:
 			return false
+	return true
+
+
+func _assert_leg_stride(he: HE, mesh_fwd: Vector3, sprinting: bool) -> bool:
+	## Bone origins sit in the 100×-IBM centimeter nest; the visible stride is
+	## thigh +Y leaning along MeshRoot forward, not a 10 cm world translation.
+	var label := "sprint" if sprinting else "walk"
+	var min_sep := 0.22 if sprinting else 0.16
+	he._stride = PI * 0.5
+	he._update_visual_pose()
+	var left_fwd := he._rig.bone_world_axis("L_Thigh", 1).dot(mesh_fwd)
+	var right_fwd := he._rig.bone_world_axis("R_Thigh", 1).dot(mesh_fwd)
+	var left_shin_q := he._rig.bone_pose_rotation("L_Shin")
+	he._stride = PI * 1.5
+	he._update_visual_pose()
+	var left_back := he._rig.bone_world_axis("L_Thigh", 1).dot(mesh_fwd)
+	var right_back := he._rig.bone_world_axis("R_Thigh", 1).dot(mesh_fwd)
+	if left_fwd < left_back + min_sep:
+		_fail("HE %s must swing L_Thigh along MeshRoot forward (planted/slide). fwd=%.3f back=%.3f" % [label, left_fwd, left_back])
+		return false
+	if right_back < right_fwd + min_sep:
+		_fail("HE %s must swing R_Thigh opposite L_Thigh (no hop). fwd=%.3f back=%.3f" % [label, right_fwd, right_back])
+		return false
+	if left_shin_q.is_equal_approx(he._rig.bone_pose_rotation("L_Shin")):
+		_fail("HE %s must fold L_Shin (calf) on the recovering stride." % label)
+		return false
 	return true
 
 

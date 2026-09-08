@@ -49,7 +49,19 @@ func _run() -> void:
 	_dump_bones(he, "heavy")
 	_print_forward(he, "heavy")
 	he.state = HE.State.FREE
+	he._sprinting = false
+	he._moving = true
+	he._stride = PI * 0.5
+	he._update_visual_pose()
+	_dump_bones(he, "walk_left")
+	_print_forward(he, "walk_left")
+	he._stride = PI * 1.5
+	he._update_visual_pose()
+	_dump_bones(he, "walk_right")
+	_print_forward(he, "walk_right")
 	he._sprinting = true
+	he._moving = true
+	he._stride = PI * 0.5
 	he._update_visual_pose()
 	_dump_bones(he, "sprint")
 	_print_forward(he, "sprint")

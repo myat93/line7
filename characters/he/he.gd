@@ -471,24 +471,25 @@ func _pose_idle() -> void:
 func _pose_walk() -> void:
 	## Distance-driven stride so feet read against walk speed (no clock skate).
 	_pose_idle()
-	var swing := sin(_stride)
-	## Legs only — torso extras stretch the 100×-IBM sleeves.
-	_part_rot("L_Thigh", Vector3(swing * 0.12, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.12, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.10, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.10, 0.0, 0.0))
+	_pose_stride_legs(0.58, 0.46)
 
 
 func _pose_sprint() -> void:
 	## No hip/torso lean — those extras flatten the IBM skin and read as a back-lean.
 	## Legs + a tiny head nod so the run still aims down the move.
 	_pose_idle()
-	var swing := sin(_stride)
 	_part_rot("Head", Vector3(0.05, 0.0, 0.0))
-	_part_rot("L_Thigh", Vector3(swing * 0.14, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.14, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.11, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.11, 0.0, 0.0))
+	_pose_stride_legs(0.74, 0.58)
+
+
+func _pose_stride_legs(thigh_amp: float, shin_amp: float) -> void:
+	## Rocketbox thigh local X ≈ MeshRoot forward, so Euler X abducts (planted slide).
+	## swing_along_y pitches +Y (down the IBM leg) toward MeshRoot −Z / +Z.
+	var swing := sin(_stride)
+	_rig.swing_along_y("L_Thigh", Vector3(0.06, -0.22, -1.0), swing * thigh_amp)
+	_rig.swing_along_y("R_Thigh", Vector3(-0.06, -0.22, -1.0), -swing * thigh_amp)
+	_rig.swing_along_y("L_Shin", Vector3(0.0, -0.12, 1.0), maxf(-swing, 0.0) * shin_amp)
+	_rig.swing_along_y("R_Shin", Vector3(0.0, -0.12, 1.0), maxf(swing, 0.0) * shin_amp)
 
 
 func _pose_jab() -> void:
