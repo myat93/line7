@@ -73,6 +73,7 @@ func reset_to_bind() -> void:
 
 func set_rot(part_name: String, extra: Vector3) -> void:
 	## Bone-local extras. Herald swipe/lunge still use this path.
+	## Thigh local X ≈ MeshRoot forward on this bind — Euler X abducts (F5 slide).
 	if skeleton and _bones.has(part_name):
 		var idx: int = _bones[part_name]
 		var rest_q := skeleton.get_bone_rest(idx).basis.get_rotation_quaternion()
