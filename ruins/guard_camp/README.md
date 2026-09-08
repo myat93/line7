@@ -1,24 +1,22 @@
 # Wooden guard camp
 
-Separate exploration pocket. Linked off the service-tunnel far end — not part of `ruins/fallen_castle/`.
+Separate exploration pocket off the service-tunnel far end. Not part of the fallen-castle ruins pocket (that pocket is also a camp on `main`).
 
-Cramped palisade ring (Elden Ring roadside-camp scale). Authored wood/cloth meshes — cylinder logs, sagging canvas, rope wraps. Kenney/Quaternius packs are CC0 but cartoon-lowpoly, so they were not dropped in.
+Props come from Jake’s **`CampKit`** (`ruins/fallen_castle/camp_kit.gd`) — generated bark/cloth/mud/rope meshes. Kenney CC0 kits were evaluated on main and not used (cartoon town pieces). Same kit, named pieces here.
 
-**Enter:** walk the tunnel past the locker. Sealed **CAMP** door on the far wall. **E** to travel.
+**Enter:** tunnel past the locker → sealed **CAMP** door → **E**.
 
 **Loop (~45–60s, no fight)**
 
-1. `palisade_log` ring / `palisade_enter` — jagged rope-lashed gap
+1. `palisade_log` / `palisade_ring` — jagged rope-lashed stakes, enter gap
 2. `tripod_central` — cook tripod orients the yard
-3. Check A — `lean_to_a` (cloth) + `torch_post` (look / walk-through)
-4. Check B — `guard_plank` (short jump or roll from the step). `lean_to_b` sits beside it. Slow on the plank is an exposed silhouette; cones later.
-5. Optional `crate_loot` — **E** stub loot (linen wrap / watch scrap). Skip = faster exit.
-6. `mist_drop` — far gap, look-only fog / forest silhouettes. No softlock.
+3. Check A — `lean_to_a` (cloth) + `torch_post`
+4. Check B — `guard_plank` (short jump). `lean_to_b` beside it.
+5. Optional `crate_loot` — **E** wrap / scrap. Skip = faster exit.
+6. `mist_drop` — look-only fog / forest. No softlock.
 
-Same path back. **E** at **TUNNEL**. Combat / shrine state is kept. No new enemy. No live guards.
+**E** at **TUNNEL** returns to the service corridor far end. No new enemy. Combat / HE untouched.
 
-Same HE controls: Shift sprint, Space jump, Ctrl roll.
+Debug: **0** camp · **9** tunnel · **8** ruins camp.
 
-Debug: **0** toggles this pocket. **9** still toggles the tunnel. **8** still toggles the castle.
-
-**Mesh vs placeholder:** every prop is a `MeshInstance3D` (tapered `CylinderMesh`, board `BoxMesh`, `TorusMesh` rope, `SurfaceTool` cloth sail). No CSG. No imported Kenney GLB. Ground is a dirt/mud mesh slab, not a grey cube.
+**Mesh vs placeholder:** every prop is a CampKit `MeshInstance3D` (tapered logs, cloth planes, plank boxes, rope bands). No CSG. Ground is `Kit.mud_ground`.

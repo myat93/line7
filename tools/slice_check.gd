@@ -177,7 +177,7 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	if FileAccess.file_exists("res://ruins/line7_pocket/README.md") == false:
 		failures.append("ruins/line7_pocket/README.md is missing.")
 	var camp_text := FileAccess.get_file_as_string("res://ruins/guard_camp/guard_camp.gd")
-	for piece in ["palisade_log", "lean_to_a", "lean_to_b", "guard_plank", "tripod_central", "crate_loot", "torch_post", "mist_drop"]:
+	for piece in ["palisade_log", "palisade_ring", "lean_to_a", "lean_to_b", "guard_plank", "tripod_central", "crate_loot", "torch_post", "mist_drop"]:
 		if not camp_text.contains(piece):
 			failures.append("guard_camp does not place named piece %s." % piece)
 	if FileAccess.file_exists("res://ruins/guard_camp/README.md") == false:
