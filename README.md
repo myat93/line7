@@ -39,6 +39,18 @@ Props and bark/cloth/mud textures are original (`ruins/fallen_castle/camp_kit.gd
 
 F5 never opens the castle as the main scene — it is instanced from `main.tscn`.
 
+## Service tunnel pocket
+
+A third linked scene at `ruins/line7_pocket/` — flooded service corridor, not part of the fallen castle.
+
+**How to enter**
+
+1. Walk onto the **duel platform** (z > 8). The **SERVICE** door is on the right wall, south of the Herald’s leash.
+2. Press **E** at `door_gap`. Leaving mid-fight means walking back through swipe range.
+3. Jump the flood gap in `tunnel_flood`, use the flicker **TUBES** and angel-stone **RELIEF** as landmarks, **E** the **LOCKER** for stub loot.
+4. Reverse the same path. **E** at **LINE 7** to return.
+5. Optional debug: press **9** to toggle this pocket. **8** still toggles the castle.
+
 ## Controls
 
 | Action | Input |
@@ -65,6 +77,7 @@ characters/he/                 protagonist + blockout GLB (visual only)
 enemies/hollow_herald/         slow telegraph duel + transit-coat blockout
 ruins/line7_undercroft/        flooded subway + angel stone
 ruins/fallen_castle/           fallen keep exploration pocket
+ruins/line7_pocket/            service-tunnel exploration pocket
 weapons/                       stance table
 weapons/ashpike/               shrine pickup + held mesh
 core/                          Game autoload, combat, HUD, hit/hurt

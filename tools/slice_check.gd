@@ -33,6 +33,12 @@ func _check_layout(failures: PackedStringArray) -> void:
 		"res://ruins/fallen_castle/fallen_castle.tscn",
 		"res://ruins/fallen_castle/fallen_castle.gd",
 		"res://ruins/fallen_castle/camp_kit.gd",
+		"res://ruins/line7_pocket/line7_pocket.tscn",
+		"res://ruins/line7_pocket/door_gap.tscn",
+		"res://ruins/line7_pocket/tunnel_flood.tscn",
+		"res://ruins/line7_pocket/tube_cluster.tscn",
+		"res://ruins/line7_pocket/relief_wall.tscn",
+		"res://ruins/line7_pocket/maint_locker.tscn",
 		"res://core/area_gate.gd",
 		"res://weapons/ashpike/ashpike.tscn",
 		"res://weapons/ashpike/ashpike_pickup.tscn",
@@ -86,6 +92,7 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		"res://enemies/hollow_herald/hollow_herald.tscn",
 		"res://ruins/line7_undercroft/line7_undercroft.tscn",
 		"res://ruins/fallen_castle/fallen_castle.tscn",
+		"res://ruins/line7_pocket/line7_pocket.tscn",
 		"res://weapons/ashpike/ashpike.tscn",
 		"res://weapons/ashpike/ashpike_pickup.tscn",
 		"res://core/hud.tscn",
@@ -147,3 +154,12 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		if herald_visual.find_child("Crown", true, false) == null:
 			failures.append("herald_blockout.glb is missing the Crown joint.")
 		herald_visual.free()
+	var under_text := FileAccess.get_file_as_string("res://ruins/line7_undercroft/line7_undercroft.gd")
+	if not under_text.contains("line7_pocket") or not under_text.contains("door_gap"):
+		failures.append("Undercroft does not link the service-tunnel door_gap.")
+	var pocket_text := FileAccess.get_file_as_string("res://ruins/line7_pocket/line7_pocket.gd")
+	for piece in ["door_gap", "tunnel_flood", "tube_cluster", "relief_wall", "maint_locker"]:
+		if not pocket_text.contains(piece):
+			failures.append("line7_pocket does not place named piece %s." % piece)
+	if FileAccess.file_exists("res://ruins/line7_pocket/README.md") == false:
+		failures.append("ruins/line7_pocket/README.md is missing.")

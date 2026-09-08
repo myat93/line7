@@ -20,6 +20,11 @@ var herald: Node3D
 var shrine_pickup: Node3D
 var current_pocket: String = "undercroft"
 var undercroft_return: Vector3 = Vector3(-3.2, 1.05, -1.4)
+var pocket_note_taken: bool = false
+var pocket_kit_taken: bool = false
+
+const RETURN_FROM_CASTLE := Vector3(-3.2, 1.05, -1.4)
+const RETURN_FROM_POCKET := Vector3(6.4, 1.05, 14.2)
 
 
 func _ready() -> void:
@@ -45,13 +50,21 @@ func restart() -> void:
 	herald_dead = false
 	player_dead = false
 	near_shrine = false
+	pocket_note_taken = false
+	pocket_kit_taken = false
 	current_pocket = "undercroft"
+	undercroft_return = RETURN_FROM_CASTLE
 	get_tree().reload_current_scene()
 
 
 func travel_to(pocket_id: String) -> void:
 	if pocket_id == current_pocket:
 		return
+	match pocket_id:
+		"fallen_castle":
+			undercroft_return = RETURN_FROM_CASTLE
+		"line7_pocket":
+			undercroft_return = RETURN_FROM_POCKET
 	current_pocket = pocket_id
 	pocket_requested.emit(pocket_id)
 
@@ -133,6 +146,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			travel_to("fallen_castle")
 		get_viewport().set_input_as_handled()
 		return
+	if event.is_action_pressed("debug_tunnel"):
+		if current_pocket == "line7_pocket":
+			travel_to("undercroft")
+		else:
+			travel_to("line7_pocket")
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("toggle_mouse"):
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -157,6 +177,7 @@ func _ensure_input_map() -> void:
 	_action("bind_fists", [_key(KEY_2)])
 	_action("restart", [_key(KEY_R)])
 	_action("debug_ruins", [_key(KEY_8)])
+	_action("debug_tunnel", [_key(KEY_9)])
 	_action("toggle_mouse", [_key(KEY_ESCAPE)])
 
 

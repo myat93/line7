@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ruins/line7_pocket/door_gap.gd" id="1_door"]
+
+[node name="door_gap" type="Node3D"]
+script = ExtResource("1_door")
