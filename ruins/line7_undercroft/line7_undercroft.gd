@@ -25,6 +25,7 @@ func _ready() -> void:
 	_build_angel_stone()
 	_place_pickup()
 	_place_ruins_breach()
+	_place_service_door()
 	_place_markers()
 
 
@@ -163,10 +164,24 @@ func _place_ruins_breach() -> void:
 	add_child(gate)
 
 
+func _place_service_door() -> void:
+	## Duel-platform +X edge, south of the Herald home. z > 8 (safe ground).
+	## Herald leash is x ±6.2 / z 10–26 — the door sits just outside x, in aggro.
+	var door: DoorGap = preload("res://ruins/line7_pocket/door_gap.tscn").instantiate()
+	door.destination = "line7_pocket"
+	door.prompt_text = "E  —  enter the service tunnel"
+	door.arrive_banner = ""
+	door.plaque_text = "SERVICE"
+	door.position = Vector3(7.2, 0.0, 14.2)
+	door.rotation_degrees = Vector3(0.0, -90.0, 0.0)
+	add_child(door)
+
+
 func _place_markers() -> void:
 	_marker("PlayerSpawn", player_spawn)
 	_marker("HeraldSpawn", herald_spawn)
 	_marker("Shrine", shrine_pos)
+	_marker("ServiceDoor", Vector3(7.2, 1.05, 14.2))
 
 
 func _marker(marker_name: String, pos: Vector3) -> void:

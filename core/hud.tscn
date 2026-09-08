@@ -140,7 +140,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -520.0
-offset_top = -118.0
+offset_top = -136.0
 offset_right = -28.0
 offset_bottom = -20.0
 theme_override_colors/font_color = Color(0.72, 0.74, 0.7, 0.75)
@@ -148,7 +148,8 @@ theme_override_font_sizes/font_size = 13
 text = "WASD walk  ·  Shift sprint  ·  Space jump  ·  Mouse look
 LMB / J jab  ·  RMB / K heavy  ·  Ctrl roll
 E interact  ·  1 bind  ·  2 fists  ·  R restart
-Ruins breach: spawn left (E)  ·  8 debug toggle"
+Ruins left (E)  ·  Service door: duel right (E)
+8 castle  ·  9 tunnel"
 horizontal_alignment = 2
 
 [node name="DeathVeil" type="ColorRect" parent="Root"]
