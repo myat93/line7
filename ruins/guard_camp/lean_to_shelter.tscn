@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://ruins/guard_camp/lean_to_shelter.gd" id="1_lean"]
-
-[node name="lean_to_shelter" type="Node3D"]
-script = ExtResource("1_lean")

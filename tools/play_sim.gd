@@ -197,19 +197,23 @@ func _run() -> void:
 			extra_enemies += 1
 	if extra_enemies > 0:
 		_fail("Guard camp must not add a new enemy.")
-	if get_tree().get_nodes_in_group("camp_tripod").is_empty():
+	if get_tree().get_nodes_in_group("tripod_central").is_empty():
 		_fail("Camp tripod landmark missing.")
 	if get_tree().get_nodes_in_group("guard_plank").is_empty():
 		_fail("Guard plank missing.")
-	if get_tree().get_nodes_in_group("mist_exit").is_empty():
-		_fail("Mist exit missing.")
+	if get_tree().get_nodes_in_group("mist_drop").is_empty():
+		_fail("Mist drop missing.")
+	if get_tree().get_nodes_in_group("lean_to_a").is_empty() or get_tree().get_nodes_in_group("lean_to_b").is_empty():
+		_fail("Cloth lean-tos missing.")
+	if get_tree().get_nodes_in_group("torch_post").is_empty():
+		_fail("Torch post missing.")
 	for stand in [
-		Vector3(0.0, 1.0, 2.6),
-		Vector3(0.0, 1.0, 10.8),
-		Vector3(-6.1, 1.0, 8.4),
-		Vector3(5.4, 1.85, 12.2),
-		Vector3(1.7, 1.2, 15.2),
-		Vector3(0.0, 1.0, 22.8),
+		Vector3(0.0, 1.0, 2.0),
+		Vector3(0.0, 1.0, 6.6),
+		Vector3(-3.4, 1.0, 5.4),
+		Vector3(3.15, 1.85, 6.9),
+		Vector3(1.15, 1.2, 8.6),
+		Vector3(0.0, 1.0, 13.0),
 	]:
 		he.global_position = stand
 		he.velocity = Vector3.ZERO
@@ -218,7 +222,7 @@ func _run() -> void:
 		await get_tree().physics_frame
 		if he.global_position.y < 0.4:
 			_fail("Camp path dropped HE at %s (y=%.2f)." % [stand, he.global_position.y])
-	var crates := get_tree().get_nodes_in_group("camp_crate")
+	var crates := get_tree().get_nodes_in_group("crate_loot")
 	if crates.is_empty():
 		_fail("Camp crate missing.")
 	else:

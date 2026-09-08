@@ -40,12 +40,15 @@ func _check_layout(failures: PackedStringArray) -> void:
 		"res://ruins/line7_pocket/relief_wall.tscn",
 		"res://ruins/line7_pocket/maint_locker.tscn",
 		"res://ruins/guard_camp/guard_camp.tscn",
+		"res://ruins/guard_camp/palisade_log.tscn",
 		"res://ruins/guard_camp/palisade_enter.tscn",
-		"res://ruins/guard_camp/camp_tripod.tscn",
-		"res://ruins/guard_camp/lean_to_shelter.tscn",
+		"res://ruins/guard_camp/tripod_central.tscn",
+		"res://ruins/guard_camp/lean_to_a.tscn",
+		"res://ruins/guard_camp/lean_to_b.tscn",
 		"res://ruins/guard_camp/guard_plank.tscn",
-		"res://ruins/guard_camp/camp_crate.tscn",
-		"res://ruins/guard_camp/mist_exit.tscn",
+		"res://ruins/guard_camp/crate_loot.tscn",
+		"res://ruins/guard_camp/torch_post.tscn",
+		"res://ruins/guard_camp/mist_drop.tscn",
 		"res://core/area_gate.gd",
 		"res://weapons/ashpike/ashpike.tscn",
 		"res://weapons/ashpike/ashpike_pickup.tscn",
@@ -174,7 +177,7 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	if FileAccess.file_exists("res://ruins/line7_pocket/README.md") == false:
 		failures.append("ruins/line7_pocket/README.md is missing.")
 	var camp_text := FileAccess.get_file_as_string("res://ruins/guard_camp/guard_camp.gd")
-	for piece in ["palisade_enter", "camp_tripod", "lean_to_shelter", "guard_plank", "camp_crate", "mist_exit"]:
+	for piece in ["palisade_log", "lean_to_a", "lean_to_b", "guard_plank", "tripod_central", "crate_loot", "torch_post", "mist_drop"]:
 		if not camp_text.contains(piece):
 			failures.append("guard_camp does not place named piece %s." % piece)
 	if FileAccess.file_exists("res://ruins/guard_camp/README.md") == false:

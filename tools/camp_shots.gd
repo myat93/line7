@@ -28,11 +28,11 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().create_timer(3.4).timeout
-	await _view(Vector3(0.0, 1.0, 2.8), PI, -0.1, "yard_from_enter_gap_to_tripod")
-	await _view(Vector3(-4.2, 1.0, 6.6), PI + 0.35, -0.1, "check_a_lean_to_and_torch")
-	await _view(Vector3(3.2, 1.0, 10.6), PI - 0.55, -0.16, "check_b_raised_guard_plank")
-	await _view(Vector3(0.4, 1.0, 14.0), PI - 0.4, -0.12, "optional_crate_in_yard")
-	await _view(Vector3(0.0, 1.0, 21.6), PI, -0.06, "mist_exit_look_only_wall")
+	await _view(Vector3(0.0, 1.0, 2.1), PI, -0.12, "tight_yard_from_enter_to_tripod")
+	await _view(Vector3(-2.4, 1.0, 4.2), PI + 0.4, -0.12, "cloth_lean_to_a_and_brazier")
+	await _view(Vector3(1.8, 1.0, 5.8), PI - 0.55, -0.18, "raised_plank_and_lean_to_b")
+	await _view(Vector3(0.2, 1.0, 7.8), PI - 0.35, -0.12, "crate_loot_in_clutter")
+	await _view(Vector3(0.0, 1.0, 12.2), PI, -0.06, "mist_drop_forest_tease")
 	print("LINE7_CAMP_SHOTS_OK")
 	get_tree().quit(0)
 

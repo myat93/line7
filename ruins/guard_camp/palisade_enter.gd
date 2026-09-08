@@ -5,6 +5,7 @@ extends Node3D
 
 const BARK := preload("res://ruins/guard_camp/materials/wood_bark.tres")
 const BOARD := preload("res://ruins/guard_camp/materials/wood_board.tres")
+const ROPE := preload("res://ruins/guard_camp/materials/rope.tres")
 const GATE := preload("res://core/area_gate.gd")
 
 
@@ -15,15 +16,13 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	## Thick gate posts — the ring leaves this gap open.
-	PocketGeo.cylinder(self, Vector3(-1.35, 1.45, 0.0), 0.2, 2.9, BARK, true)
-	PocketGeo.cylinder(self, Vector3(1.35, 1.45, 0.0), 0.2, 2.9, BARK, true)
-	## Lintel board so the gap reads as a cut, not a missing wall.
-	PocketGeo.box(self, Vector3(0.0, 2.85, 0.0), Vector3(2.9, 0.12, 0.28), BOARD, true)
-	PocketGeo.box(self, Vector3(-1.35, 2.55, 0.0), Vector3(0.12, 0.55, 0.12), BOARD, false)
-	PocketGeo.box(self, Vector3(1.35, 2.55, 0.0), Vector3(0.12, 0.55, 0.12), BOARD, false)
-	PocketGeo.label(self, Vector3(0.0, 2.15, 0.55), "TUNNEL", Color(0.82, 0.74, 0.52), 30)
-	PocketGeo.omni(self, Vector3(0.0, 2.4, 0.8), Color(0.85, 0.62, 0.35), 1.2, 6.0)
+	CampProp.tapered_log(self, Vector3(-1.15, 1.35, 0.0), 0.18, 0.08, 2.7, BARK, true)
+	CampProp.tapered_log(self, Vector3(1.15, 1.35, 0.0), 0.18, 0.08, 2.7, BARK, true)
+	CampProp.rope_wrap(self, Vector3(-1.15, 1.7, 0.0), 0.19, ROPE)
+	CampProp.rope_wrap(self, Vector3(1.15, 1.7, 0.0), 0.19, ROPE)
+	PocketGeo.box(self, Vector3(0.0, 2.65, 0.0), Vector3(2.5, 0.1, 0.22), BOARD, true)
+	PocketGeo.label(self, Vector3(0.0, 2.05, 0.45), "TUNNEL", Color(0.82, 0.74, 0.52), 26)
+	PocketGeo.omni(self, Vector3(0.0, 2.2, 0.6), Color(0.85, 0.58, 0.3), 1.0, 5.0)
 
 
 func _place_gate() -> void:
@@ -32,5 +31,5 @@ func _place_gate() -> void:
 	gate.destination = "line7_pocket"
 	gate.prompt_text = "E  —  return to the service tunnel"
 	gate.arrive_banner = "SERVICE TUNNEL"
-	gate.position = Vector3(0.0, 1.15, 0.2)
+	gate.position = Vector3(0.0, 1.15, 0.15)
 	add_child(gate)
