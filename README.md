@@ -48,8 +48,20 @@ A third linked scene at `ruins/line7_pocket/` — flooded service corridor, not 
 1. Walk onto the **duel platform** (z > 8). The **SERVICE** door is on the right wall, south of the Herald’s leash.
 2. Press **E** at `door_gap`. Leaving mid-fight means walking back through swipe range.
 3. Jump the flood gap in `tunnel_flood`, use the flicker **TUBES** and angel-stone **RELIEF** as landmarks, **E** the **LOCKER** for stub loot.
-4. Reverse the same path. **E** at **LINE 7** to return.
+4. Reverse the same path. **E** at **LINE 7** to return. Or press **E** at the far **CAMP** door into the wooden guard camp.
 5. Optional debug: press **9** to toggle this pocket. **8** still toggles the castle.
+
+## Wooden guard camp
+
+A fourth linked scene at `ruins/guard_camp/` — palisade yard off the tunnel exit. Exploration only.
+
+**How to enter**
+
+1. Walk the service tunnel to the far wall. A sealed **CAMP** door sits past the locker.
+2. Press **E**. The yard opens at a gap in the palisade logs. The cook **TRIPOD** orients the space.
+3. Check A: walk through the lean-to and torch post. Check B: short jump (or roll from the step crate) onto the raised guard plank. Optional **E** on the crate for a wrap / scrap.
+4. Far gap is look-only mist — fog wall, no drop softlock. **E** at **TUNNEL** to return to the service corridor.
+5. Optional debug: press **0** to toggle this pocket.
 
 ## Controls
 
@@ -78,6 +90,7 @@ enemies/hollow_herald/         slow telegraph duel + transit-coat blockout
 ruins/line7_undercroft/        flooded subway + angel stone
 ruins/fallen_castle/           fallen keep exploration pocket
 ruins/line7_pocket/            service-tunnel exploration pocket
+ruins/guard_camp/              wooden palisade-yard pocket (off the tunnel)
 weapons/                       stance table
 weapons/ashpike/               shrine pickup + held mesh
 core/                          Game autoload, combat, HUD, hit/hurt

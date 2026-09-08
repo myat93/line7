@@ -178,6 +178,51 @@ func _run() -> void:
 			_fail("Locker should be one-shot.")
 		if not Game.pocket_note_taken and not Game.pocket_kit_taken:
 			_fail("Locker interact did not record stub loot.")
+	if not ResourceLoader.exists("res://ruins/guard_camp/guard_camp.tscn"):
+		_fail("Guard camp scene missing.")
+	Game.travel_to("guard_camp")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if Game.current_pocket != "guard_camp":
+		_fail("travel_to did not enter guard_camp.")
+	if he.global_position.y < 0.4:
+		_fail("HE spawned in the void at the camp (y=%.2f)." % he.global_position.y)
+	if he.global_position.z < 1.5 or he.global_position.z > 5.0:
+		_fail("HE did not teleport into the palisade enter (z=%.2f)." % he.global_position.z)
+	if herald.visible or herald.process_mode != Node.PROCESS_MODE_DISABLED:
+		_fail("Herald must stay disabled in the guard camp.")
+	extra_enemies = 0
+	for node in get_tree().get_nodes_in_group("enemy"):
+		if node != herald:
+			extra_enemies += 1
+	if extra_enemies > 0:
+		_fail("Guard camp must not add a new enemy.")
+	if get_tree().get_nodes_in_group("camp_tripod").is_empty():
+		_fail("Camp tripod landmark missing.")
+	if get_tree().get_nodes_in_group("guard_plank").is_empty():
+		_fail("Guard plank missing.")
+	if get_tree().get_nodes_in_group("mist_exit").is_empty():
+		_fail("Mist exit missing.")
+	var crates := get_tree().get_nodes_in_group("camp_crate")
+	if crates.is_empty():
+		_fail("Camp crate missing.")
+	else:
+		var crate: Node = crates[0]
+		he.global_position = (crate as Node3D).global_position
+		if not crate.has_method("interact") or not crate.interact():
+			_fail("Camp crate E did not give stub loot.")
+		if crate.has_method("can_interact") and crate.can_interact():
+			_fail("Camp crate should be one-shot.")
+		if not Game.camp_loot_taken:
+			_fail("Camp crate interact did not record stub loot.")
+	Game.travel_to("line7_pocket")
+	await get_tree().process_frame
+	if Game.current_pocket != "line7_pocket":
+		_fail("Return from the camp did not restore the tunnel.")
+	if he.global_position.z < 35.0:
+		_fail("Camp return must land at the tunnel far end (z > 35), got z=%.2f." % he.global_position.z)
+	if he.global_position.y < 0.4:
+		_fail("Camp return dropped HE in the tunnel void (y=%.2f)." % he.global_position.y)
 	Game.travel_to("undercroft")
 	await get_tree().process_frame
 	if Game.current_pocket != "undercroft":

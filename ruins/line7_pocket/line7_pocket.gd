@@ -76,6 +76,16 @@ func _place_pieces() -> void:
 	locker.position = Vector3(0.0, 1.15, 36.6)
 	add_child(locker)
 
+	## Far-end exit — sealed CAMP door onto the wooden yard. Wall stays.
+	var camp_door: DoorGap = DOOR.instantiate()
+	camp_door.destination = "guard_camp"
+	camp_door.prompt_text = "E  —  climb to the guard camp"
+	camp_door.arrive_banner = ""
+	camp_door.plaque_text = "CAMP"
+	camp_door.position = Vector3(0.0, 0.0, 39.35)
+	camp_door.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	add_child(camp_door)
+
 
 func _place_markers() -> void:
 	_marker("PlayerSpawn", player_spawn)
@@ -84,6 +94,7 @@ func _place_markers() -> void:
 	_marker("tube_cluster", Vector3(0.0, 1.0, 21.8))
 	_marker("relief_wall", Vector3(0.0, 1.0, 29.4))
 	_marker("maint_locker", Vector3(0.0, 1.0, 36.6))
+	_marker("camp_door", Vector3(0.0, 1.0, 39.35))
 
 
 func _marker(marker_name: String, pos: Vector3) -> void:

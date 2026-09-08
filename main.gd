@@ -4,6 +4,7 @@ extends Node3D
 
 const CASTLE_SCENE := preload("res://ruins/fallen_castle/fallen_castle.tscn")
 const POCKET_SCENE := preload("res://ruins/line7_pocket/line7_pocket.tscn")
+const CAMP_SCENE := preload("res://ruins/guard_camp/guard_camp.tscn")
 
 @onready var level: Line7Undercroft = $Line7Undercroft
 @onready var he: HE = $HE
@@ -11,9 +12,11 @@ const POCKET_SCENE := preload("res://ruins/line7_pocket/line7_pocket.tscn")
 
 var castle
 var pocket
+var camp
 var _under_env: Environment
 var _castle_env: Environment
 var _pocket_env: Environment
+var _camp_env: Environment
 
 
 func _ready() -> void:
@@ -26,13 +29,17 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	castle = CASTLE_SCENE.instantiate()
 	pocket = POCKET_SCENE.instantiate()
+	camp = CAMP_SCENE.instantiate()
 	_stash(castle)
 	_stash(pocket)
+	_stash(camp)
 	_under_env = level.world_env.environment
 	_castle_env = castle.get_node("WorldEnvironment").environment
 	_pocket_env = pocket.get_node("WorldEnvironment").environment
+	_camp_env = camp.get_node("WorldEnvironment").environment
 	castle.get_node("WorldEnvironment").environment = null
 	pocket.get_node("WorldEnvironment").environment = null
+	camp.get_node("WorldEnvironment").environment = null
 	Game.pocket_requested.connect(_on_pocket)
 
 
@@ -48,6 +55,8 @@ func _on_pocket(pocket_id: String) -> void:
 			_show_castle()
 		"line7_pocket":
 			_show_tunnel()
+		"guard_camp":
+			_show_camp()
 		_:
 			_show_undercroft()
 
@@ -72,9 +81,16 @@ func _hide_tunnel() -> void:
 	pocket.get_node("WorldEnvironment").environment = null
 
 
+func _hide_camp() -> void:
+	camp.visible = false
+	camp.process_mode = Node.PROCESS_MODE_DISABLED
+	camp.get_node("WorldEnvironment").environment = null
+
+
 func _show_castle() -> void:
 	_hide_level()
 	_hide_tunnel()
+	_hide_camp()
 	castle.visible = true
 	castle.process_mode = Node.PROCESS_MODE_INHERIT
 	castle.get_node("WorldEnvironment").environment = _castle_env
@@ -89,17 +105,31 @@ func _show_castle() -> void:
 func _show_tunnel() -> void:
 	_hide_level()
 	_hide_castle()
+	_hide_camp()
 	pocket.visible = true
 	pocket.process_mode = Node.PROCESS_MODE_INHERIT
 	pocket.get_node("WorldEnvironment").environment = _pocket_env
-	he.global_position = pocket.player_spawn
+	he.global_position = Game.tunnel_return
 	he.velocity = Vector3.ZERO
 	Game.banner("SERVICE TUNNEL\nFlooded corridor. Watch the gap.")
+
+
+func _show_camp() -> void:
+	_hide_level()
+	_hide_castle()
+	_hide_tunnel()
+	camp.visible = true
+	camp.process_mode = Node.PROCESS_MODE_INHERIT
+	camp.get_node("WorldEnvironment").environment = _camp_env
+	he.global_position = camp.player_spawn
+	he.velocity = Vector3.ZERO
+	Game.banner("GUARD CAMP\nPalisade yard. The tripod marks the center.")
 
 
 func _show_undercroft() -> void:
 	_hide_castle()
 	_hide_tunnel()
+	_hide_camp()
 	level.visible = true
 	level.process_mode = Node.PROCESS_MODE_INHERIT
 	herald.visible = true
