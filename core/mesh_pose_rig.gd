@@ -86,14 +86,18 @@ func set_rot(part_name: String, extra: Vector3) -> void:
 
 
 func set_char_rot(part_name: String, extra: Vector3) -> void:
-	## Pitch / yaw / roll in skeleton space (X right, Y up, −Z forward).
-	## Bip01 hips +X is character forward, so bone-local X extras rolled the
-	## torso instead of leaning. Character-space extras keep sprint/jab readable.
+	## Pitch / yaw / roll in Godot character space (X right, Y up, −Z forward).
+	## After the +90° Bip01 align, skeleton +X is chest-forward, so a raw
+	## from_euler in skeleton space rolled the torso. Map extras through hips.
 	if skeleton and _bones.has(part_name):
 		var idx: int = _bones[part_name]
 		var parent_b := _parent_rest_basis(idx)
 		var rest_global: Basis = _rest_global.get(part_name, skeleton.get_bone_rest(idx).basis)
-		var extra_b := Basis.from_euler(extra)
+		var char_b := _char_basis()
+		## Godot +X pitch tilts up toward +Z (back). Box extras used +X as
+		## forward lean, so flip pitch here and keep he.gd numbers readable.
+		var godot_extra := Vector3(-extra.x, extra.y, extra.z)
+		var extra_b := char_b * Basis.from_euler(godot_extra) * char_b.inverse()
 		var new_local := parent_b.inverse() * extra_b * rest_global
 		skeleton.set_bone_pose_rotation(idx, new_local.get_rotation_quaternion())
 		return
@@ -101,7 +105,8 @@ func set_char_rot(part_name: String, extra: Vector3) -> void:
 
 
 func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0) -> void:
-	## Swing the bone so rest +Y (Bip01 along-bone) points at char_dir.
+	## Swing the bone so rest +Y (Bip01 along-bone) points at a Godot
+	## character-space direction (X right, Y up, −Z forward).
 	if skeleton == null or not _bones.has(part_name):
 		return
 	if char_dir.length() < 0.05 or weight <= 0.001:
@@ -109,10 +114,9 @@ func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0) -> v
 	var idx: int = _bones[part_name]
 	var rest_global: Basis = _rest_global.get(part_name, skeleton.get_bone_rest(idx).basis)
 	var current_y := rest_global.y.normalized()
-	var want := char_dir.normalized()
+	var want := (_char_basis() * char_dir).normalized()
 	var swing := Basis.IDENTITY
-	var align := current_y.dot(want)
-	if align < 0.999:
+	if current_y.dot(want) < 0.999:
 		var axis := current_y.cross(want)
 		if axis.length() < 0.001:
 			axis = rest_global.x
@@ -167,6 +171,15 @@ func character_forward() -> Vector3:
 	if skeleton == null or not _bones.has("Hips"):
 		return Vector3.ZERO
 	return bone_world_axis("Hips", 0)
+
+
+func _char_basis() -> Basis:
+	## Godot character basis expressed in skeleton space.
+	## Bip01 hips: +X chest-forward, +Y up, +Z left → right / up / back.
+	if _rest_global.has("Hips"):
+		var hips: Basis = _rest_global["Hips"]
+		return Basis((-hips.z).normalized(), hips.y.normalized(), (-hips.x).normalized())
+	return Basis(Vector3(0.0, 0.0, -1.0), Vector3.UP, Vector3(-1.0, 0.0, 0.0))
 
 
 func _cache_rest_globals() -> void:

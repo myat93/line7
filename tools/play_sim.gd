@@ -102,29 +102,37 @@ func _run() -> void:
 		_fail("HE realistic Skeleton3D bones (Hips / L_Fist) were not imported.")
 	else:
 		_assert_visible_body(he, "HE")
-		var idle_q := he._rig.bone_pose_rotation("L_UpperArm")
+		he.state = HE.State.FREE
+		he._sprinting = false
+		he._update_visual_pose()
+		var idle_l := he._rig.bone_pose_rotation("L_UpperArm")
+		var idle_r := he._rig.bone_pose_rotation("R_UpperArm")
+		var idle_l_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
+		var idle_r_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
 		he.state = HE.State.ATTACK
 		he._attack = Combat.fists_light()
 		he._state_time = 0.12
 		he._update_visual_pose()
 		var jab_q := he._rig.bone_pose_rotation("L_UpperArm")
-		if idle_q.is_equal_approx(jab_q):
+		if idle_l.is_equal_approx(jab_q):
 			_fail("HE jab must rotate L_UpperArm off the A-pose rest.")
-		var jab_arm := he._rig.bone_world_axis("L_UpperArm", 1)
-		if jab_arm.dot(mesh_fwd) < 0.40:
-			_fail("HE jab L_UpperArm does not point along MeshRoot forward.")
-		he.state = HE.State.ATTACK
+		var jab_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
+		if jab_fwd < idle_l_fwd + 0.08:
+			_fail("HE jab L_UpperArm must swing toward MeshRoot forward.")
 		he._attack = Combat.fists_heavy()
 		he._state_time = 0.40
 		he._update_visual_pose()
-		var heavy_arm := he._rig.bone_world_axis("R_UpperArm", 1)
-		if heavy_arm.dot(mesh_fwd) < 0.40:
-			_fail("HE heavy R_UpperArm does not commit along MeshRoot forward.")
+		var heavy_q := he._rig.bone_pose_rotation("R_UpperArm")
+		if idle_r.is_equal_approx(heavy_q):
+			_fail("HE heavy must rotate R_UpperArm off the A-pose rest.")
+		var heavy_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
+		if heavy_fwd < idle_r_fwd + 0.08:
+			_fail("HE heavy R_UpperArm must commit toward MeshRoot forward.")
 		he.state = HE.State.FREE
 		he._sprinting = true
 		he._update_visual_pose()
 		var sprint_up := he._rig.bone_world_axis("Torso", 1)
-		if sprint_up.dot(mesh_fwd) < 0.12:
+		if sprint_up.dot(mesh_fwd) < 0.10:
 			_fail("HE sprint must lean the torso toward move forward.")
 		he._sprinting = false
 		he._update_visual_pose()
