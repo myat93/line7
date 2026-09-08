@@ -106,6 +106,21 @@ func _run() -> void:
 		_fail("Jab reach changed from locked 1.32.")
 	if not is_equal_approx(float(Combat.fists_heavy().reach), 1.52):
 		_fail("Heavy reach changed from locked 1.52.")
+	var herald_blockout := herald.mesh_root.get_node_or_null("HeraldBlockout")
+	if herald_blockout == null:
+		_fail("Herald blockout mesh is not instanced under MeshRoot.")
+	elif herald_blockout.find_child("Hips", true, false) == null or herald_blockout.find_child("R_UpperArm", true, false) == null:
+		_fail("Herald blockout joints (Hips / R_UpperArm) were not imported.")
+	var herald_col := herald.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if herald_col == null or not (herald_col.shape is CapsuleShape3D):
+		_fail("Herald world collision must stay a capsule.")
+	else:
+		var herald_shape := herald_col.shape as CapsuleShape3D
+		if not is_equal_approx(herald_shape.radius, 0.48) or not is_equal_approx(herald_shape.height, 2.35):
+			_fail("Herald capsule size changed from r=0.48 h=2.35.")
+	var herald_hurt := herald.hurt.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if herald_hurt == null or not (herald_hurt.shape is CapsuleShape3D):
+		_fail("Herald hurtbox must stay a capsule.")
 	if not ResourceLoader.exists("res://ruins/fallen_castle/fallen_castle.tscn"):
 		_fail("Fallen castle scene missing.")
 	var kit_script := load("res://ruins/fallen_castle/camp_kit.gd")
@@ -140,6 +155,20 @@ func _run() -> void:
 		## APPROACH is acceptable if still closing; swipe wind+ is the tell.
 		if herald.phase != HollowHerald.Phase.APPROACH:
 			_fail("Herald is not in the swipe/lunge loop (phase %s)." % herald.phase)
+	herald.velocity = Vector3.ZERO
+	herald._begin(HollowHerald.Phase.SWIPE_WIND)
+	var swipe_wait := 0.0
+	while herald.phase == HollowHerald.Phase.SWIPE_WIND and swipe_wait < 2.4:
+		await get_tree().physics_frame
+		swipe_wait += get_process_delta_time()
+	if herald.phase != HollowHerald.Phase.SWIPE and herald.phase != HollowHerald.Phase.PAUSE:
+		_fail("Herald swipe wind did not enter swipe (phase %s)." % herald.phase)
+	var lunge_wait := 0.0
+	while herald.phase < HollowHerald.Phase.LUNGE_WIND and herald.phase != HollowHerald.Phase.DEAD and lunge_wait < 2.8:
+		await get_tree().physics_frame
+		lunge_wait += get_process_delta_time()
+	if herald.phase < HollowHerald.Phase.LUNGE_WIND:
+		_fail("Herald swipe did not continue into lunge wind (phase %s)." % herald.phase)
 
 	if Game.bind_ashpike():
 		_fail("Bind succeeded before the shrine take.")

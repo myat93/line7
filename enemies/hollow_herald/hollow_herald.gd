@@ -2,22 +2,36 @@ class_name HollowHerald
 extends CharacterBody3D
 
 ## Slow, readable bosslet. Telegraph swipe, then telegraph lunge.
+## Visual is the transit-coat blockout under MeshRoot. Capsule collision is unchanged.
 
 enum Phase { WAIT, APPROACH, SWIPE_WIND, SWIPE, PAUSE, LUNGE_WIND, LUNGE, REST, DEAD }
+
+const BLOCKOUT_SCENE: PackedScene = preload("res://enemies/hollow_herald/herald_blockout.glb")
+const POSE_PARTS: PackedStringArray = [
+	"Hips", "Torso", "Head", "Crown",
+	"L_UpperArm", "L_Forearm", "L_Fist",
+	"R_UpperArm", "R_Forearm", "R_Fist",
+	"L_Thigh", "L_Shin", "R_Thigh", "R_Shin",
+]
 
 var hp: int = Combat.HERALD_MAX_HP
 var phase: Phase = Phase.WAIT
 var _time: float = 0.0
 var _home: Vector3 = Vector3.ZERO
 var _lunge_dir: Vector3 = Vector3.FORWARD
+var _crown_pulse: float = 1.0
 
 @onready var mesh_root: Node3D = $MeshRoot
 @onready var swipe_box: Hitbox = $Hitboxes/Swipe
 @onready var lunge_box: Hitbox = $Hitboxes/Lunge
 @onready var hurt: Hurtbox = $Hurtbox
 @onready var telegraph: OmniLight3D = $Telegraph
-@onready var arm: MeshInstance3D = $MeshRoot/Arm
-@onready var crown: MeshInstance3D = $MeshRoot/Crown
+@onready var pose_player: AnimationPlayer = $MeshRoot/PosePlayer
+
+var _blockout: Node3D
+var _pose: Dictionary = {}
+var _pose_rest: Dictionary = {}
+var _pose_rest_pos: Dictionary = {}
 
 
 func _ready() -> void:
@@ -30,6 +44,7 @@ func _ready() -> void:
 	_home = global_position
 	telegraph.light_energy = 0.15
 	telegraph.light_color = Color(0.55, 0.5, 0.7)
+	_bind_blockout()
 
 
 func get_hp() -> int:
@@ -69,6 +84,7 @@ func _physics_process(delta: float) -> void:
 			_brake(delta)
 	_clamp_arena()
 	move_and_slide()
+	_update_visual_pose()
 
 
 func take_hit(damage: int, knockback: float, from: Vector3) -> void:
@@ -79,7 +95,7 @@ func take_hit(damage: int, knockback: float, from: Vector3) -> void:
 	push.y = 0.0
 	if push.length() > 0.01:
 		velocity += push.normalized() * knockback * 0.45
-	crown.scale = Vector3(1.15, 1.15, 1.15)
+	_crown_pulse = 1.18
 	if hp <= 0:
 		_die()
 	Game.hud_dirty.emit()
@@ -120,8 +136,6 @@ func _tick_seek(delta: float) -> void:
 func _tick_swipe_wind() -> void:
 	telegraph.light_color = Color(0.85, 0.28, 0.18)
 	telegraph.light_energy = 1.6 + sin(_time * 14.0) * 0.4
-	arm.rotation_degrees.y = lerpf(arm.rotation_degrees.y, 95.0, 0.12)
-	arm.scale = Vector3(1.2, 1.2, 1.4)
 	_face_player()
 	if _time >= 1.15:
 		_begin(Phase.SWIPE)
@@ -129,10 +143,8 @@ func _tick_swipe_wind() -> void:
 
 
 func _tick_swipe() -> void:
-	arm.rotation_degrees.y = move_toward(arm.rotation_degrees.y, -80.0, 9.0)
 	if _time >= 0.38:
 		swipe_box.disarm()
-		arm.scale = Vector3.ONE
 		telegraph.light_energy = 0.2
 		_begin(Phase.PAUSE)
 
@@ -140,7 +152,6 @@ func _tick_swipe() -> void:
 func _tick_lunge_wind() -> void:
 	telegraph.light_color = Color(0.85, 0.78, 0.45)
 	telegraph.light_energy = 2.0 + sin(_time * 16.0) * 0.5
-	mesh_root.scale = Vector3(1.05, 0.82, 1.05)
 	_face_player()
 	var target := Game.player
 	if target:
@@ -150,7 +161,6 @@ func _tick_lunge_wind() -> void:
 			_lunge_dir = -mesh_root.global_transform.basis.z
 		_lunge_dir = _lunge_dir.normalized()
 	if _time >= 1.25:
-		mesh_root.scale = Vector3.ONE
 		_begin(Phase.LUNGE)
 		_place_and_arm(lunge_box, Combat.HERALD_LUNGE_DAMAGE, 1.4, 0.8, 2.6)
 
@@ -206,3 +216,177 @@ func _clamp_arena() -> void:
 	global_position.z = clampf(global_position.z, 10.0, 26.0)
 	if global_position.distance_to(_home) > 14.0 and phase == Phase.WAIT:
 		global_position = _home
+
+
+func _bind_blockout() -> void:
+	_blockout = mesh_root.get_node_or_null("HeraldBlockout") as Node3D
+	if _blockout == null:
+		_blockout = BLOCKOUT_SCENE.instantiate() as Node3D
+		_blockout.name = "HeraldBlockout"
+		mesh_root.add_child(_blockout)
+	_cache_pose_nodes()
+	if pose_player:
+		pose_player.active = true
+
+
+func _cache_pose_nodes() -> void:
+	_pose.clear()
+	_pose_rest.clear()
+	_pose_rest_pos.clear()
+	if _blockout == null:
+		return
+	for part_name in POSE_PARTS:
+		var node := _blockout.find_child(part_name, true, false) as Node3D
+		if node == null:
+			continue
+		_pose[part_name] = node
+		_pose_rest[part_name] = node.rotation
+		_pose_rest_pos[part_name] = node.position
+
+
+func _part_rot(part_name: String, extra: Vector3) -> void:
+	var node: Node3D = _pose.get(part_name) as Node3D
+	if node == null:
+		return
+	var rest: Vector3 = _pose_rest.get(part_name, Vector3.ZERO)
+	node.rotation = rest + extra
+
+
+func _part_pos(part_name: String, extra: Vector3) -> void:
+	var node: Node3D = _pose.get(part_name) as Node3D
+	if node == null:
+		return
+	var rest: Vector3 = _pose_rest_pos.get(part_name, node.position)
+	node.position = rest + extra
+
+
+func _update_visual_pose() -> void:
+	mesh_root.rotation.x = 0.0
+	mesh_root.scale = Vector3.ONE
+	_crown_pulse = move_toward(_crown_pulse, 1.0, 0.02)
+	var crown: Node3D = _pose.get("Crown") as Node3D
+	if crown:
+		crown.scale = Vector3.ONE * _crown_pulse
+	match phase:
+		Phase.SWIPE_WIND:
+			_pose_swipe_wind()
+		Phase.SWIPE:
+			_pose_swipe()
+		Phase.PAUSE:
+			_pose_pause()
+		Phase.LUNGE_WIND:
+			_pose_lunge_wind()
+		Phase.LUNGE:
+			_pose_lunge()
+		Phase.REST:
+			_pose_idle()
+			_part_rot("Torso", Vector3(0.08, 0.0, 0.0))
+		Phase.DEAD:
+			_part_pos("Hips", Vector3(0.0, -0.12, 0.0))
+			_part_rot("Hips", Vector3(1.15, 0.0, 0.28))
+			_part_rot("Torso", Vector3(0.35, 0.0, 0.18))
+			_part_rot("Head", Vector3(0.4, 0.2, 0.0))
+			_part_rot("R_UpperArm", Vector3(0.4, 0.5, -0.3))
+			_part_rot("L_UpperArm", Vector3(0.35, -0.4, 0.3))
+		Phase.APPROACH:
+			_pose_walk()
+		_:
+			_pose_idle()
+
+
+func _pose_idle() -> void:
+	_part_pos("Hips", Vector3.ZERO)
+	_part_rot("Hips", Vector3.ZERO)
+	_part_rot("Torso", Vector3(0.06, 0.0, 0.0))
+	_part_rot("Head", Vector3(-0.04, 0.0, 0.0))
+	_part_rot("L_UpperArm", Vector3(0.22, 0.06, 0.28))
+	_part_rot("L_Forearm", Vector3(0.22, 0.0, 0.0))
+	_part_rot("L_Fist", Vector3.ZERO)
+	_part_rot("R_UpperArm", Vector3(0.22, -0.06, -0.28))
+	_part_rot("R_Forearm", Vector3(0.22, 0.0, 0.0))
+	_part_rot("R_Fist", Vector3.ZERO)
+	_part_rot("L_Thigh", Vector3.ZERO)
+	_part_rot("L_Shin", Vector3.ZERO)
+	_part_rot("R_Thigh", Vector3.ZERO)
+	_part_rot("R_Shin", Vector3.ZERO)
+
+
+func _pose_walk() -> void:
+	var swing := sin(_time * 6.0)
+	_pose_idle()
+	_part_rot("Torso", Vector3(0.10, swing * 0.04, 0.0))
+	_part_rot("L_UpperArm", Vector3(0.28 + swing * 0.22, 0.06, 0.24))
+	_part_rot("R_UpperArm", Vector3(0.28 - swing * 0.22, -0.06, -0.24))
+	_part_rot("L_Thigh", Vector3(swing * 0.28, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(-swing * 0.28, 0.0, 0.0))
+	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.22, 0.0, 0.0))
+	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.22, 0.0, 0.0))
+
+
+func _pose_swipe_wind() -> void:
+	## Chamber the long right arm high and back for the full 1.15s punish window.
+	var coil := clampf(_time / 0.28, 0.0, 1.0)
+	coil = coil * coil
+	_pose_idle()
+	_part_rot("Hips", Vector3(-0.06, -0.22, 0.04) * coil)
+	_part_rot("Torso", Vector3(0.08, -0.55, 0.10) * coil)
+	_part_rot("Head", Vector3(0.10, 0.35, 0.0) * coil)
+	_part_rot("R_UpperArm", Vector3(-1.15, -1.05, -1.85) * coil + Vector3(0.08, 0.0, -0.12))
+	_part_rot("R_Forearm", Vector3(0.55, 0.20, -0.15) * coil)
+	_part_rot("R_Fist", Vector3(0.30, 0.0, 0.0) * coil)
+	_part_rot("L_UpperArm", Vector3(0.15, 0.28, 0.55) * coil + Vector3(0.12, 0.0, 0.18))
+	_part_rot("L_Forearm", Vector3(0.35, 0.0, 0.0))
+
+
+func _pose_swipe() -> void:
+	var slash := clampf(_time / 0.20, 0.0, 1.0)
+	slash = 1.0 - pow(1.0 - slash, 2.0)
+	_pose_idle()
+	_part_rot("Hips", Vector3(0.10, 0.28, 0.0) * slash)
+	_part_rot("Torso", Vector3(0.16, 0.72, -0.08) * slash)
+	_part_rot("Head", Vector3(-0.06, -0.18, 0.0) * slash)
+	_part_rot("R_UpperArm", Vector3(0.55, 1.45, 0.15) * slash + Vector3(0.2, 0.0, -0.1))
+	_part_rot("R_Forearm", Vector3(0.18, 0.0, 0.0))
+	_part_rot("R_Fist", Vector3(0.2, 0.0, 0.0) * slash)
+	_part_rot("L_UpperArm", Vector3(0.35, 0.15, 0.42))
+
+
+func _pose_pause() -> void:
+	_pose_idle()
+	_part_rot("Torso", Vector3(0.10, 0.12, 0.0))
+	_part_rot("R_UpperArm", Vector3(0.35, 0.18, -0.22))
+	_part_rot("L_UpperArm", Vector3(0.28, 0.10, 0.32))
+
+
+func _pose_lunge_wind() -> void:
+	## Crouch-coil on joints (do not squash MeshRoot — that flattened the capsule tell).
+	var coil := clampf(_time / 0.32, 0.0, 1.0)
+	coil = coil * coil
+	_pose_idle()
+	_part_pos("Hips", Vector3(0.0, -0.22, 0.10) * coil)
+	_part_rot("Hips", Vector3(0.28, 0.0, 0.0) * coil)
+	_part_rot("Torso", Vector3(0.42, 0.0, 0.0) * coil)
+	_part_rot("Head", Vector3(-0.18, 0.0, 0.0) * coil)
+	_part_rot("L_Thigh", Vector3(-0.85, 0.0, 0.08) * coil)
+	_part_rot("R_Thigh", Vector3(-0.90, 0.0, -0.08) * coil)
+	_part_rot("L_Shin", Vector3(1.05, 0.0, 0.0) * coil)
+	_part_rot("R_Shin", Vector3(1.10, 0.0, 0.0) * coil)
+	_part_rot("L_UpperArm", Vector3(-0.55, 0.35, 0.55) * coil + Vector3(0.1, 0.0, 0.15))
+	_part_rot("R_UpperArm", Vector3(-0.62, -0.35, -0.55) * coil + Vector3(0.1, 0.0, -0.15))
+	_part_rot("L_Forearm", Vector3(0.75, 0.0, 0.0) * coil)
+	_part_rot("R_Forearm", Vector3(0.80, 0.0, 0.0) * coil)
+
+
+func _pose_lunge() -> void:
+	var commit := 1.0 - pow(1.0 - clampf(_time / 0.10, 0.0, 1.0), 2.0)
+	_pose_idle()
+	_part_pos("Hips", Vector3(0.0, 0.04, -0.08) * commit)
+	_part_rot("Hips", Vector3(0.22, 0.0, 0.0) * commit)
+	_part_rot("Torso", Vector3(0.55, 0.0, 0.0) * commit)
+	_part_rot("Head", Vector3(-0.12, 0.0, 0.0) * commit)
+	_part_rot("L_UpperArm", Vector3(1.35, 0.12, 0.08) * commit)
+	_part_rot("R_UpperArm", Vector3(1.42, -0.10, -0.08) * commit)
+	_part_rot("L_Forearm", Vector3(0.15, 0.0, 0.0))
+	_part_rot("R_Forearm", Vector3(0.12, 0.0, 0.0))
+	_part_rot("L_Thigh", Vector3(0.35, 0.0, 0.0) * commit)
+	_part_rot("R_Thigh", Vector3(-0.15, 0.0, 0.0) * commit)

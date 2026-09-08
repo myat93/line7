@@ -27,6 +27,8 @@ func _check_layout(failures: PackedStringArray) -> void:
 		"res://characters/he/build_he_blockout.py",
 		"res://enemies/hollow_herald/hollow_herald.tscn",
 		"res://enemies/hollow_herald/hollow_herald.gd",
+		"res://enemies/hollow_herald/herald_blockout.glb",
+		"res://enemies/hollow_herald/build_herald_blockout.py",
 		"res://ruins/line7_undercroft/line7_undercroft.tscn",
 		"res://ruins/fallen_castle/fallen_castle.tscn",
 		"res://ruins/fallen_castle/fallen_castle.gd",
@@ -117,3 +119,31 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	var castle_src := FileAccess.get_file_as_string("res://ruins/fallen_castle/fallen_castle.gd")
 	if castle_src.contains("CSGBox") or castle_src.contains("CSGCylinder"):
 		failures.append("Guard camp must not be CSG greybox.")
+	var herald_text := FileAccess.get_file_as_string("res://enemies/hollow_herald/hollow_herald.tscn")
+	if not herald_text.contains("herald_blockout.glb"):
+		failures.append("hollow_herald.tscn must instance enemies/hollow_herald/herald_blockout.glb under MeshRoot.")
+	if not herald_text.contains("CapsuleShape3D"):
+		failures.append("Herald capsule collision/hurtbox must remain.")
+	if herald_text.contains("CapsuleMesh"):
+		failures.append("Herald visual must not be a capsule mesh; instance the blockout GLB.")
+	if not herald_text.contains("radius = 0.48") or not herald_text.contains("height = 2.35"):
+		failures.append("Herald body capsule must stay r=0.48 h=2.35.")
+	var herald_script := FileAccess.get_file_as_string("res://enemies/hollow_herald/hollow_herald.gd")
+	if not herald_script.contains("_place_and_arm(swipe_box, Combat.HERALD_SWIPE_DAMAGE, 2.4, 1.6, 2.2)"):
+		failures.append("Herald swipe reach/width/knock must stay 2.4 / 1.6 / 2.2.")
+	if not herald_script.contains("_place_and_arm(lunge_box, Combat.HERALD_LUNGE_DAMAGE, 1.4, 0.8, 2.6)"):
+		failures.append("Herald lunge reach/width/knock must stay 1.4 / 0.8 / 2.6.")
+	if not herald_script.contains("_time >= 1.15") or not herald_script.contains("_time >= 0.38"):
+		failures.append("Herald swipe wind/active clocks must stay 1.15 / 0.38.")
+	if not herald_script.contains("_time >= 1.25") or not herald_script.contains("_time >= 0.42"):
+		failures.append("Herald lunge wind/active clocks must stay 1.25 / 0.42.")
+	var herald_glb := load("res://enemies/hollow_herald/herald_blockout.glb") as PackedScene
+	if herald_glb == null:
+		failures.append("herald_blockout.glb did not import as a PackedScene.")
+	else:
+		var herald_visual: Node = herald_glb.instantiate()
+		if herald_visual.find_child("Hips", true, false) == null or herald_visual.find_child("R_UpperArm", true, false) == null:
+			failures.append("herald_blockout.glb is missing pose joints (Hips / R_UpperArm).")
+		if herald_visual.find_child("Crown", true, false) == null:
+			failures.append("herald_blockout.glb is missing the Crown joint.")
+		herald_visual.free()

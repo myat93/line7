@@ -1,6 +1,7 @@
 extends Node
 
 ## Launch with `-- --pose-shots`. Writes idle / jab / heavy / roll / sprint stills.
+## Herald stills: `-- --herald-shots` (tools/herald_shots.gd).
 
 const OUT_DIR := "/opt/cursor/artifacts/screenshots"
 
@@ -67,7 +68,7 @@ func _shot(name: String, setup: Callable) -> void:
 	setup.call()
 	await get_tree().process_frame
 	await get_tree().process_frame
-	await RenderingServer.frame_post_draw
+	await get_tree().create_timer(0.08).timeout
 	var img: Image = get_viewport().get_texture().get_image()
 	if img == null:
 		push_error("POSE_SHOTS: empty viewport for %s" % name)

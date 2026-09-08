@@ -33,6 +33,10 @@ func _ready() -> void:
 		var shots := Node.new()
 		shots.set_script(load("res://tools/pose_shots.gd"))
 		add_child(shots)
+	if OS.get_cmdline_user_args().has("--herald-shots"):
+		var hshots := Node.new()
+		hshots.set_script(load("res://tools/herald_shots.gd"))
+		add_child(hshots)
 
 
 func restart() -> void:
