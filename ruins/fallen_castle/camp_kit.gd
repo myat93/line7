@@ -1,8 +1,31 @@
 class_name CampKit
 extends RefCounted
 
-## Original camp props: cylinders/planes with generated bark, plank, cloth, mud.
-## Not CSG greybox. Not third-party game rips.
+## Camp props: Poly Haven CC0 PBR + glTF where it reads better than cylinders.
+## Generated bark/cloth/mud stay as fallback. Not CSG greybox. No ripped game files.
+
+const TEX_BARK := "res://third_party/polyhaven/textures/pine_bark/pine_bark_diff_1k.jpg"
+const TEX_BARK_N := "res://third_party/polyhaven/textures/pine_bark/pine_bark_nor_gl_1k.jpg"
+const TEX_BARK_R := "res://third_party/polyhaven/textures/pine_bark/pine_bark_rough_1k.jpg"
+const TEX_PLANK := "res://third_party/polyhaven/textures/brown_planks_07/brown_planks_07_diff_1k.jpg"
+const TEX_PLANK_N := "res://third_party/polyhaven/textures/brown_planks_07/brown_planks_07_nor_gl_1k.jpg"
+const TEX_PLANK_R := "res://third_party/polyhaven/textures/brown_planks_07/brown_planks_07_rough_1k.jpg"
+const TEX_MUD := "res://third_party/polyhaven/textures/mud_forest/mud_forest_diff_1k.jpg"
+const TEX_MUD_N := "res://third_party/polyhaven/textures/mud_forest/mud_forest_nor_gl_1k.jpg"
+const TEX_MUD_R := "res://third_party/polyhaven/textures/mud_forest/mud_forest_rough_1k.jpg"
+const TEX_CLOTH := "res://third_party/polyhaven/textures/hessian_380/hessian_380_diff_1k.jpg"
+const TEX_CLOTH_N := "res://third_party/polyhaven/textures/hessian_380/hessian_380_nor_gl_1k.jpg"
+const TEX_CLOTH_R := "res://third_party/polyhaven/textures/hessian_380/hessian_380_rough_1k.jpg"
+const TEX_LEATHER := "res://third_party/polyhaven/textures/brown_leather/brown_leather_diff_1k.jpg"
+const TEX_LEATHER_N := "res://third_party/polyhaven/textures/brown_leather/brown_leather_nor_gl_1k.jpg"
+const TEX_LEATHER_R := "res://third_party/polyhaven/textures/brown_leather/brown_leather_rough_1k.jpg"
+
+const PROP_CRATE := "res://third_party/polyhaven/models/wooden_crate_01/wooden_crate_01_1k.gltf"
+const PROP_BARREL := "res://third_party/polyhaven/models/wine_barrel_01/wine_barrel_01_1k.gltf"
+const PROP_LANTERN := "res://third_party/polyhaven/models/wooden_lantern_01/wooden_lantern_01_1k.gltf"
+const PROP_BUCKET := "res://third_party/polyhaven/models/wooden_bucket_01/wooden_bucket_01_1k.gltf"
+const PROP_AXE := "res://third_party/polyhaven/models/wooden_axe_02/wooden_axe_02_1k.gltf"
+const PROP_POT := "res://third_party/polyhaven/models/brass_pot_01/brass_pot_01_1k.gltf"
 
 static var _mats: Dictionary = {}
 
@@ -10,9 +33,68 @@ static var _mats: Dictionary = {}
 static func mat(kind: String) -> StandardMaterial3D:
 	if _mats.has(kind):
 		return _mats[kind]
-	var made := _build_mat(kind)
+	var made := _load_pbr(kind)
+	if made == null:
+		made = _build_mat(kind)
 	_mats[kind] = made
 	return made
+
+
+static func _tex(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
+
+
+static func _pbr(diff: String, nor: String, rough: String) -> StandardMaterial3D:
+	var albedo := _tex(diff)
+	if albedo == null:
+		return null
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = albedo
+	m.roughness = 0.86
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	var ntex := _tex(nor)
+	if ntex:
+		m.normal_enabled = true
+		m.normal_texture = ntex
+		m.normal_scale = 0.85
+	var rtex := _tex(rough)
+	if rtex:
+		m.roughness_texture = rtex
+	return m
+
+
+static func _load_pbr(kind: String) -> StandardMaterial3D:
+	var m: StandardMaterial3D
+	match kind:
+		"bark":
+			m = _pbr(TEX_BARK, TEX_BARK_N, TEX_BARK_R)
+			if m:
+				m.uv1_scale = Vector3(1.8, 2.8, 1.8)
+		"plank":
+			m = _pbr(TEX_PLANK, TEX_PLANK_N, TEX_PLANK_R)
+			if m:
+				m.uv1_scale = Vector3(1.4, 1.4, 1.4)
+		"cloth":
+			m = _pbr(TEX_CLOTH, TEX_CLOTH_N, TEX_CLOTH_R)
+			if m:
+				m.cull_mode = BaseMaterial3D.CULL_DISABLED
+				m.roughness = 0.82
+				m.uv1_scale = Vector3(2.2, 2.2, 2.2)
+		"mud":
+			m = _pbr(TEX_MUD, TEX_MUD_N, TEX_MUD_R)
+			if m:
+				m.uv1_scale = Vector3(5.5, 5.5, 5.5)
+				m.albedo_color = Color(0.78, 0.68, 0.52)
+		"leather":
+			m = _pbr(TEX_LEATHER, TEX_LEATHER_N, TEX_LEATHER_R)
+			if m:
+				m.cull_mode = BaseMaterial3D.CULL_DISABLED
+				m.uv1_scale = Vector3(1.6, 1.6, 1.6)
+		_:
+			m = null
+	return m
 
 
 static func _build_mat(kind: String) -> StandardMaterial3D:
@@ -50,6 +132,23 @@ static func _build_mat(kind: String) -> StandardMaterial3D:
 	if kind == "bark":
 		m.uv1_scale = Vector3(1.6, 2.4, 1.6)
 	return m
+
+
+static func instance_prop(parent: Node3D, path: String, pos: Vector3, yaw: float = 0.0, scale: float = 1.0) -> Node3D:
+	if not ResourceLoader.exists(path):
+		return null
+	var packed := load(path) as PackedScene
+	if packed == null:
+		return null
+	var node := packed.instantiate() as Node3D
+	if node == null:
+		return null
+	node.position = pos
+	node.rotation_degrees.y = yaw
+	if not is_equal_approx(scale, 1.0):
+		node.scale = Vector3.ONE * scale
+	parent.add_child(node)
+	return node
 
 
 static func _fill_bark(img: Image) -> void:
@@ -140,7 +239,7 @@ static func add_log(parent: Node3D, pos: Vector3, height: float, radius: float, 
 	cyl.top_radius = radius * 0.92
 	cyl.bottom_radius = radius
 	cyl.height = height
-	cyl.radial_segments = 8
+	cyl.radial_segments = 16
 	shaft.mesh = cyl
 	shaft.material_override = mat("bark")
 	shaft.position = Vector3(0, height * 0.5, 0)
@@ -150,7 +249,7 @@ static func add_log(parent: Node3D, pos: Vector3, height: float, radius: float, 
 	cone.top_radius = 0.012
 	cone.bottom_radius = radius * 0.95
 	cone.height = radius * 2.4
-	cone.radial_segments = 7
+	cone.radial_segments = 12
 	tip.mesh = cone
 	tip.material_override = mat("bark")
 	tip.position = Vector3(0, height + radius * 1.1, 0)
@@ -161,7 +260,7 @@ static func add_log(parent: Node3D, pos: Vector3, height: float, radius: float, 
 	band.top_radius = radius * 1.12
 	band.bottom_radius = radius * 1.12
 	band.height = 0.07
-	band.radial_segments = 8
+	band.radial_segments = 12
 	lash.mesh = band
 	lash.material_override = mat("rope")
 	lash.position = Vector3(0, height * 0.62, 0)
@@ -217,7 +316,7 @@ static func lash_rail(parent: Node3D, from: Vector3, to: Vector3, y: float, radi
 	cyl.top_radius = radius
 	cyl.bottom_radius = radius
 	cyl.height = a.distance_to(b)
-	cyl.radial_segments = 6
+	cyl.radial_segments = 10
 	rail.mesh = cyl
 	rail.material_override = mat("rope")
 	rail.transform = _orient_along(a, b)
@@ -225,6 +324,15 @@ static func lash_rail(parent: Node3D, from: Vector3, to: Vector3, y: float, radi
 
 
 static func crate(parent: Node3D, pos: Vector3, size: Vector3 = Vector3(0.72, 0.55, 0.72), yaw: float = 0.0) -> MeshInstance3D:
+	## wooden_crate_01 is ~0.82 x 0.32 x 0.41, origin at the floor.
+	var scale := maxf(size.x / 0.82, size.z / 0.41)
+	scale = clampf(scale, 0.85, 2.2)
+	var imported := instance_prop(parent, PROP_CRATE, pos + Vector3(0.0, -size.y * 0.5, 0.0), yaw, scale)
+	if imported:
+		var dummy := MeshInstance3D.new()
+		dummy.visible = false
+		imported.add_child(dummy)
+		return dummy
 	var mi := MeshInstance3D.new()
 	var box := BoxMesh.new()
 	box.size = size
@@ -245,12 +353,15 @@ static func crate(parent: Node3D, pos: Vector3, size: Vector3 = Vector3(0.72, 0.
 
 
 static func barrel(parent: Node3D, pos: Vector3) -> void:
+	## wine_barrel_01 is ~0.74 across and 0.87 tall, origin at the floor.
+	if instance_prop(parent, PROP_BARREL, pos, 12.0, 0.72):
+		return
 	var body := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = 0.28
 	cyl.bottom_radius = 0.3
 	cyl.height = 0.62
-	cyl.radial_segments = 10
+	cyl.radial_segments = 16
 	body.mesh = cyl
 	body.material_override = mat("plank")
 	body.position = pos + Vector3(0, 0.31, 0)
@@ -271,8 +382,8 @@ static func cloth_sheet(parent: Node3D, pos: Vector3, size: Vector2, rot: Vector
 	var mi := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
 	plane.size = size
-	plane.subdivide_width = 3
-	plane.subdivide_depth = 2
+	plane.subdivide_width = 6
+	plane.subdivide_depth = 4
 	mi.mesh = plane
 	mi.material_override = mat("cloth")
 	mi.position = pos
@@ -302,6 +413,8 @@ static func lean_to(parent: Node3D, origin: Vector3, yaw: float) -> void:
 	crate(root, Vector3(-0.55, 0.28, 0.15), Vector3(0.7, 0.5, 0.62), 12.0)
 	crate(root, Vector3(0.35, 0.22, 0.35), Vector3(0.55, 0.4, 0.5), -18.0)
 	barrel(root, Vector3(0.95, 0.0, -0.15))
+	instance_prop(root, PROP_BUCKET, Vector3(0.15, 0.0, 0.55), -22.0, 1.0)
+	instance_prop(root, PROP_AXE, Vector3(-0.95, 0.28, -0.35), 70.0, 1.0)
 	## Orange-brown hide drape on the front crate (reference camp clutter).
 	var hide := MeshInstance3D.new()
 	var hide_mesh := PlaneMesh.new()
@@ -326,6 +439,7 @@ static func tripod(parent: Node3D, origin: Vector3) -> void:
 		cyl.top_radius = 0.045
 		cyl.bottom_radius = 0.055
 		cyl.height = length
+		cyl.radial_segments = 12
 		pole.mesh = cyl
 		pole.material_override = mat("bark")
 		pole.transform = _orient_along(foot, apex)
@@ -339,6 +453,8 @@ static func tripod(parent: Node3D, origin: Vector3) -> void:
 	lash.material_override = mat("rope")
 	lash.position = apex + Vector3(0, -0.08, 0)
 	root.add_child(lash)
+	instance_prop(root, PROP_POT, Vector3(0.0, 0.72, 0.0), 8.0, 1.15)
+	instance_prop(root, PROP_BUCKET, Vector3(0.55, 0.0, 0.35), 18.0, 1.0)
 	for s in [Vector3(-0.45, 0.18, 0.35), Vector3(0.25, 0.16, 0.15), Vector3(0.05, 0.14, -0.35)]:
 		var sack := MeshInstance3D.new()
 		var sph := SphereMesh.new()
@@ -362,7 +478,7 @@ static func torch_post(parent: Node3D, pos: Vector3, lights: Node3D) -> void:
 	bowl.top_radius = 0.17
 	bowl.bottom_radius = 0.055
 	bowl.height = 0.14
-	bowl.radial_segments = 8
+	bowl.radial_segments = 12
 	basket.mesh = bowl
 	basket.material_override = iron
 	basket.position = pos + Vector3(0.05, 1.88, 0.0)
@@ -378,6 +494,7 @@ static func torch_post(parent: Node3D, pos: Vector3, lights: Node3D) -> void:
 		var ang := float(i) * TAU / 4.0
 		bar.position = pos + Vector3(0.05 + cos(ang) * 0.12, 1.82, sin(ang) * 0.12)
 		parent.add_child(bar)
+	instance_prop(parent, PROP_LANTERN, pos + Vector3(0.18, 1.55, 0.08), 16.0, 1.15)
 	var flame := MeshInstance3D.new()
 	var sph := SphereMesh.new()
 	sph.radius = 0.11

@@ -2,7 +2,7 @@
 
 `hollow_herald.tscn` is still the playable capsule body (`CharacterBody3D` + `hollow_herald.gd`). Do **not** swap that capsule for the mesh.
 
-The official humanoid blockout is a visual child only:
+The official transit-coat humanoid is a visual child only:
 
 ```
 HollowHerald (CharacterBody3D)   collision / movement
@@ -18,7 +18,7 @@ Hitboxes stay siblings of `MeshRoot`, not sockets on the GLB. Swipe **2.4** / lu
 
 ## Official blockout
 
-`hollow_herald_blockout.glb` is the official ~2.05 m lesser-demon transit-coat blockout (origin at the feet, Y-up meters, clawed wind-up arms). Pose joints (`Hips`, `Torso`, `R_UpperArm`, `Crown`, …) stay the names `hollow_herald.gd` already looks up. The instance node stays named `HeraldBlockout`.
+`hollow_herald_blockout.glb` is the official ~2.05 m lesser-demon transit-coat humanoid (origin at the feet, Y-up meters, clawed wind-up arms, hollow visor, crown). Capsule / cloth meshes replace the old box blockout. Pose joints (`Hips`, `Torso`, `R_UpperArm`, `Crown`, …) stay the names `hollow_herald.gd` already looks up. The instance node stays named `HeraldBlockout`. No Elden Ring files.
 
 ## Rebuild the GLB
 
@@ -26,4 +26,4 @@ Hitboxes stay siblings of `MeshRoot`, not sockets on the GLB. Swipe **2.4** / lu
 python3 enemies/hollow_herald/build_hollow_herald_blockout.py
 ```
 
-That writes `hollow_herald_blockout.glb`. It is Godot-forward (−Z visor / lapels / fists) so it matches `MeshRoot` yaw and hitbox forward without rotating the capsule. The GLB has no clips yet; when it does, hook them on `MeshRoot/PosePlayer`.
+That writes `hollow_herald_blockout.glb`. Capsule limbs and a long transit coat, Godot-forward (−Z visor / lapels / fists) so it matches `MeshRoot` yaw and hitbox forward without rotating the capsule. The GLB has no clips yet; when it does, hook them on `MeshRoot/PosePlayer`.
