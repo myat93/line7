@@ -22,6 +22,21 @@ If Godot asks to generate import files, accept. `.godot/` is local cache and is 
 - The Hollow Herald telegraphs a **swipe**, then a **lunge**. Roll the tells; punish with short-reach fists.
 - Continue to the angel stone. **E** takes Ashpike into inventory. It stays **unequipped** until you bind.
 
+## Fallen castle ruins
+
+A second pocket sits beside the undercroft — a **fallen keep** with three **guard posts** (gatehouse, west watch, east watch), rubble stairs, and an empty loot crate. Same HE controls; no extra enemy.
+
+**How to enter**
+
+1. F5 still starts in the Line 7 undercroft.
+2. From the **spawn wake**, turn left (away from the Herald). An angel-stone arch is labeled **RUINS BREACH**.
+3. Press **E** to step into `ruins/fallen_castle/`.
+4. Explore, jump the rubble climb, search the crate in the keep.
+5. Press **E** at the **LINE 7** arch in the courtyard to return (combat/shrine state is kept).
+6. Optional debug: press **8** to toggle pockets.
+
+F5 never opens the castle as the main scene — it is instanced from `main.tscn`.
+
 ## Controls
 
 | Action | Input |
@@ -47,6 +62,7 @@ Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING
 characters/he/                 protagonist
 enemies/hollow_herald/         slow telegraph duel
 ruins/line7_undercroft/        flooded subway + angel stone
+ruins/fallen_castle/           fallen keep exploration pocket
 weapons/                       stance table
 weapons/ashpike/               shrine pickup + held mesh
 core/                          Game autoload, combat, HUD, hit/hurt

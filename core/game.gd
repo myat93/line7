@@ -7,6 +7,7 @@ signal prompt_changed(text: String)
 signal hud_dirty
 signal player_died
 signal herald_felled
+signal pocket_requested(pocket_id: String)
 
 var ashpike_taken: bool = false
 var ashpike_bound: bool = false
@@ -17,6 +18,8 @@ var near_shrine: bool = false
 var player: Node3D
 var herald: Node3D
 var shrine_pickup: Node3D
+var current_pocket: String = "undercroft"
+var undercroft_return: Vector3 = Vector3(-3.2, 1.05, -1.4)
 
 
 func _ready() -> void:
@@ -34,7 +37,15 @@ func restart() -> void:
 	herald_dead = false
 	player_dead = false
 	near_shrine = false
+	current_pocket = "undercroft"
 	get_tree().reload_current_scene()
+
+
+func travel_to(pocket_id: String) -> void:
+	if pocket_id == current_pocket:
+		return
+	current_pocket = pocket_id
+	pocket_requested.emit(pocket_id)
 
 
 func banner(text: String, duration: float = 3.2) -> void:
@@ -107,6 +118,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		restart()
 		get_viewport().set_input_as_handled()
 		return
+	if event.is_action_pressed("debug_ruins"):
+		if current_pocket == "fallen_castle":
+			travel_to("undercroft")
+		else:
+			travel_to("fallen_castle")
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("toggle_mouse"):
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -130,6 +148,7 @@ func _ensure_input_map() -> void:
 	_action("bind_ashpike", [_key(KEY_1)])
 	_action("bind_fists", [_key(KEY_2)])
 	_action("restart", [_key(KEY_R)])
+	_action("debug_ruins", [_key(KEY_8)])
 	_action("toggle_mouse", [_key(KEY_ESCAPE)])
 
 

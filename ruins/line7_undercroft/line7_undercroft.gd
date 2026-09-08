@@ -24,6 +24,7 @@ func _ready() -> void:
 	_build_loop()
 	_build_angel_stone()
 	_place_pickup()
+	_place_ruins_breach()
 	_place_markers()
 
 
@@ -131,6 +132,35 @@ func _place_pickup() -> void:
 	var pickup: Node3D = PICKUP.instantiate()
 	pickup.position = Vector3(0.85, 1.55, 37.15)
 	add_child(pickup)
+
+
+func _place_ruins_breach() -> void:
+	## Side alcove on the spawn wake (left when facing the Herald).
+	var tile := CONCRETE.duplicate() as StandardMaterial3D
+	tile.albedo_color = Color(0.28, 0.27, 0.26)
+	_box(geometry, Vector3(-3.6, 0.95, -2.2), Vector3(2.4, 0.2, 2.6), tile, true)
+	_box(geometry, Vector3(-4.35, 2.05, -2.55), Vector3(0.32, 2.2, 0.32), ANGEL, true)
+	_box(geometry, Vector3(-2.85, 2.05, -2.55), Vector3(0.32, 2.2, 0.32), ANGEL, true)
+	_box(geometry, Vector3(-3.6, 3.2, -2.55), Vector3(1.9, 0.24, 0.32), ANGEL, true)
+	var plaque := Label3D.new()
+	plaque.text = "RUINS BREACH"
+	plaque.font_size = 36
+	plaque.position = Vector3(-3.6, 2.55, -2.1)
+	plaque.modulate = Color(0.75, 0.88, 0.9)
+	geometry.add_child(plaque)
+	var glow := OmniLight3D.new()
+	glow.position = Vector3(-3.6, 2.8, -2.2)
+	glow.light_color = Color(0.55, 0.85, 0.9)
+	glow.light_energy = 2.2
+	glow.omni_range = 6.0
+	lights.add_child(glow)
+	var gate := Area3D.new()
+	gate.set_script(preload("res://core/area_gate.gd"))
+	gate.destination = "fallen_castle"
+	gate.prompt_text = "E  —  enter the fallen castle"
+	gate.arrive_banner = ""
+	gate.position = Vector3(-3.6, 1.2, -2.3)
+	add_child(gate)
 
 
 func _place_markers() -> void:

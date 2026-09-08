@@ -93,6 +93,21 @@ func _run() -> void:
 		_fail("HE does not face movement direction (+Z).")
 	if he.mesh_root.get_node_or_null("Visor") == null:
 		_fail("Facing visor missing.")
+	if not ResourceLoader.exists("res://ruins/fallen_castle/fallen_castle.tscn"):
+		_fail("Fallen castle scene missing.")
+	Game.travel_to("fallen_castle")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if Game.current_pocket != "fallen_castle":
+		_fail("travel_to did not enter fallen_castle.")
+	if he.global_position.y < 0.4:
+		_fail("HE spawned in the void at the castle (y=%.2f)." % he.global_position.y)
+	if he.global_position.z < 1.5:
+		_fail("HE did not teleport into the castle courtyard (z=%.2f)." % he.global_position.z)
+	Game.travel_to("undercroft")
+	await get_tree().process_frame
+	if Game.current_pocket != "undercroft":
+		_fail("Return travel did not restore the undercroft.")
 
 	he.global_position = Vector3(0.0, 1.05, 17.2)
 	await get_tree().create_timer(1.6).timeout
