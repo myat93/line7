@@ -1,10 +1,11 @@
 extends Node
 
-## Launch with `-- --pose-shots`. Writes idle / jab / heavy / roll / sprint stills.
+## Launch with `-- --pose-shots`. Writes HE and Herald stills.
 
 const OUT_DIR := "/opt/cursor/artifacts/screenshots"
 
 var _he: HE
+var _herald: HollowHerald
 var _cam: Camera3D
 
 
@@ -14,6 +15,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	_he = Game.player as HE
+	_herald = Game.herald as HollowHerald
 	if _he == null:
 		push_error("POSE_SHOTS: no HE")
 		get_tree().quit(1)
@@ -60,7 +62,56 @@ func _run() -> void:
 		_he._update_visual_pose()
 	)
 	print("HE_POSE_SHOTS_OK")
+	if _herald:
+		await _herald_shots(spring)
+	print("HERALD_POSE_SHOTS_OK")
 	get_tree().quit(0)
+
+
+func _herald_shots(spring: SpringArm3D) -> void:
+	Game.player_dead = true
+	_herald.velocity = Vector3.ZERO
+	_herald.global_position = Vector3(0.8, 1.05, 3.6)
+	_herald.mesh_root.look_at(_he.global_position, Vector3.UP)
+	_he.global_position = Vector3(0.0, 1.05, 0.0)
+	_he.state = HE.State.FREE
+	_he._sprinting = false
+	_he.mesh_root.rotation.y = 0.0
+	_he._look_yaw = 0.42
+	_he._look_pitch = -0.10
+	_he.camera_pivot.rotation = Vector3(_he._look_pitch, _he._look_yaw, 0.0)
+	_he._update_visual_pose()
+	if _cam:
+		_cam.h_offset = 0.15
+	if spring:
+		spring.spring_length = 3.4
+	await _shot("herald_idle_readable", func() -> void:
+		_herald.phase = HollowHerald.Phase.WAIT
+		_herald._time = 0.0
+		_herald._update_visual_pose()
+	)
+	await _shot("herald_swipe_wind_readable", func() -> void:
+		_herald.phase = HollowHerald.Phase.SWIPE_WIND
+		_herald._time = 0.85
+		_herald.telegraph.light_color = Color(0.85, 0.28, 0.18)
+		_herald.telegraph.light_energy = 1.8
+		_herald._update_visual_pose()
+	)
+	await _shot("herald_swipe_readable", func() -> void:
+		_herald.phase = HollowHerald.Phase.SWIPE
+		_herald._time = 0.18
+		_herald.telegraph.light_color = Color(0.85, 0.28, 0.18)
+		_herald.telegraph.light_energy = 1.2
+		_herald._update_visual_pose()
+	)
+	await _shot("herald_lunge_wind_readable", func() -> void:
+		_herald.phase = HollowHerald.Phase.LUNGE_WIND
+		_herald._time = 0.90
+		_herald.telegraph.light_color = Color(0.85, 0.78, 0.45)
+		_herald.telegraph.light_energy = 2.0
+		_herald._update_visual_pose()
+	)
+	Game.player_dead = false
 
 
 func _shot(name: String, setup: Callable) -> void:
