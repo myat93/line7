@@ -24,15 +24,16 @@ func _run() -> void:
 	_he.global_position = Vector3(0.0, 1.05, 0.0)
 	_he.velocity = Vector3.ZERO
 	_he.mesh_root.rotation.y = PI
-	## Three-quarter over the shoulder so fist arcs and the roll tuck read.
-	_he._look_yaw = PI + 0.72
-	_he._look_pitch = -0.18
+	## Directly behind HE, looking along MeshRoot −Z / +Z travel so facing is
+	## unambiguous (three-quarter hid the 90° chest error as "over-shoulder").
+	_he._look_yaw = PI
+	_he._look_pitch = -0.16
 	_he.camera_pivot.rotation = Vector3(_he._look_pitch, _he._look_yaw, 0.0)
 	if _cam:
-		_cam.h_offset = 0.05
+		_cam.h_offset = 0.08
 	var spring := _he.get_node_or_null("CameraPivot/SpringArm3D") as SpringArm3D
 	if spring:
-		spring.spring_length = 2.6
+		spring.spring_length = 3.0
 	await _shot("he_idle_readable", func() -> void:
 		_he.state = HE.State.FREE
 		_he._sprinting = false
@@ -58,6 +59,7 @@ func _run() -> void:
 	await _shot("he_sprint_lean_readable", func() -> void:
 		_he.state = HE.State.FREE
 		_he._sprinting = true
+		_he._stride = 0.85
 		_he._update_visual_pose()
 	)
 	print("HE_POSE_SHOTS_OK")

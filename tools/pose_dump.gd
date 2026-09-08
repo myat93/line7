@@ -28,6 +28,7 @@ func _run() -> void:
 	print("MESHROOT_YAW ", he.mesh_root.rotation.y)
 	if visual:
 		print("HERealistic rot ", visual.rotation, " scale ", visual.scale, " pos ", visual.position)
+	print("CHAR_FWD ", he._rig.character_forward(), " MESH_FWD ", -he.mesh_root.global_transform.basis.z)
 	he.state = HE.State.FREE
 	he._sprinting = false
 	he._update_visual_pose()

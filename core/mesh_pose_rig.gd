@@ -10,10 +10,11 @@ extends RefCounted
 ## them with inverse(rest) explodes vertices. Idle stays bind-pose (A-pose is
 ## the authored rest). Combat extras go through set_bone_pose_rotation.
 ##
-## Rocketbox Bip01 faces Max +X. The armature is authored -90° Y, which turns
-## that into Godot +Z. MeshRoot / hitboxes are Godot-forward (−Z). Adding PI
-## yaw on the armature lines the chest up with movement without touching
-## MeshRoot yaw or reach numbers.
+## Bind-pose mesh chest is Godot −Z (the skinned shirt/face). The armature is
+## authored −90° Y so Bip01 +X (Max-forward) sits on Godot +Z — that is 90°
+## from the mesh chest. Chasing Bip01 +X made HE face perpendicular to travel.
+## Clear the import yaw so mesh −Z == MeshRoot −Z. Capsules / MeshRoot yaw /
+## reach stay untouched.
 
 var skeleton: Skeleton3D
 var body: MeshInstance3D
@@ -86,21 +87,8 @@ func set_rot(part_name: String, extra: Vector3) -> void:
 
 
 func set_char_rot(part_name: String, extra: Vector3) -> void:
-	## Pitch / yaw / roll in Godot character space (X right, Y up, −Z forward).
-	## After the +90° Bip01 align, skeleton +X is chest-forward, so a raw
-	## from_euler in skeleton space rolled the torso. Map extras through hips.
-	if skeleton and _bones.has(part_name):
-		var idx: int = _bones[part_name]
-		var parent_b := _parent_rest_basis(idx)
-		var rest_global: Basis = _rest_global.get(part_name, skeleton.get_bone_rest(idx).basis)
-		var char_b := _char_basis()
-		## Godot +X pitch tilts up toward +Z (back). Box extras used +X as
-		## forward lean, so flip pitch here and keep he.gd numbers readable.
-		var godot_extra := Vector3(-extra.x, extra.y, extra.z)
-		var extra_b := char_b * Basis.from_euler(godot_extra) * char_b.inverse()
-		var new_local := parent_b.inverse() * extra_b * rest_global
-		skeleton.set_bone_pose_rotation(idx, new_local.get_rotation_quaternion())
-		return
+	## Rest-relative only. The old hips-basis remap was a reflected frame
+	## (det −1) and exploded the 100×-IBM skin on jab / run-stop.
 	set_rot(part_name, extra)
 
 
@@ -167,19 +155,15 @@ func bone_world_axis(part_name: String, axis: int) -> Vector3:
 
 
 func character_forward() -> Vector3:
-	## Bip01 hips +X is the authored chest/face direction.
-	if skeleton == null or not _bones.has("Hips"):
+	## After _align_godot_forward, the skinned chest is skeleton −Z.
+	if skeleton == null:
 		return Vector3.ZERO
-	return bone_world_axis("Hips", 0)
+	return (-skeleton.global_transform.basis.z).normalized()
 
 
 func _char_basis() -> Basis:
-	## Godot character basis expressed in skeleton space.
-	## Bip01 hips: +X chest-forward, +Y up, +Z left → right / up / back.
-	if _rest_global.has("Hips"):
-		var hips: Basis = _rest_global["Hips"]
-		return Basis((-hips.z).normalized(), hips.y.normalized(), (-hips.x).normalized())
-	return Basis(Vector3(0.0, 0.0, -1.0), Vector3.UP, Vector3(-1.0, 0.0, 0.0))
+	## Skeleton space == Godot character space after the import yaw is cleared.
+	return Basis.IDENTITY
 
 
 func _cache_rest_globals() -> void:
@@ -230,9 +214,9 @@ func _align_godot_forward(root: Node) -> void:
 		var visual := root.find_child(node_name, true, false) as Node3D
 		if visual == null:
 			continue
-		## Authored −90° Y (Max +X → Godot +Z). Flip to +90° so Max +X → −Z.
-		if absf(angle_difference(visual.rotation.y, -PI * 0.5)) < 0.25:
-			visual.rotation.y += PI
+		## Authored −90° (or the old +90° Bip01 flip) puts mesh −Z on ±X.
+		if absf(angle_difference(visual.rotation.y, 0.0)) > 0.05:
+			visual.rotation.y = 0.0
 
 
 func _first_skeleton(node: Node) -> Skeleton3D:
