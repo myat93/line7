@@ -1,6 +1,8 @@
 .godot/
 __pycache__/
 *.pyc
+*_blockout_*.png
+*_blockout_*.png.import
 *.translation
 *.apk
 *.aab
