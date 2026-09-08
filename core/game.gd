@@ -34,14 +34,18 @@ func _ready() -> void:
 		var sim := Node.new()
 		sim.set_script(load("res://tools/play_sim.gd"))
 		add_child(sim)
-	if OS.get_cmdline_user_args().has("--pose-shots"):
+	elif OS.get_cmdline_user_args().has("--pose-shots"):
 		var shots := Node.new()
 		shots.set_script(load("res://tools/pose_shots.gd"))
 		add_child(shots)
-	if OS.get_cmdline_user_args().has("--herald-shots"):
+	elif OS.get_cmdline_user_args().has("--herald-shots"):
 		var hshots := Node.new()
 		hshots.set_script(load("res://tools/herald_shots.gd"))
 		add_child(hshots)
+	elif OS.get_cmdline_user_args().has("--pocket-shots"):
+		var shots := Node.new()
+		shots.set_script(load("res://tools/pocket_shots.gd"))
+		add_child(shots)
 
 
 func restart() -> void:

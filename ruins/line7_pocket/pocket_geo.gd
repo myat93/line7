@@ -52,6 +52,8 @@ static func label(parent: Node, pos: Vector3, text: String, color: Color = Color
 	plaque.font_size = font_size
 	plaque.position = pos
 	plaque.modulate = color
+	plaque.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	plaque.double_sided = true
 	parent.add_child(plaque)
 	return plaque
 

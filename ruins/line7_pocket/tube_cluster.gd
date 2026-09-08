@@ -27,11 +27,16 @@ func _process(delta: float) -> void:
 
 func _build() -> void:
 	PocketGeo.box(self, Vector3(0.0, 0.48, 0.0), Vector3(3.2, 0.96, 3.6), TILE, true)
-	PocketGeo.box(self, Vector3(0.0, 3.2, 0.0), Vector3(2.6, 0.12, 2.2), RUST, false)
-	var offsets := [Vector3(-0.55, 3.0, -0.35), Vector3(0.0, 3.0, 0.15), Vector3(0.55, 3.0, -0.2)]
+	PocketGeo.box(self, Vector3(0.0, 3.25, 0.0), Vector3(2.8, 0.14, 2.4), RUST, false)
+	var offsets := [
+		Vector3(-0.7, 2.85, -0.25),
+		Vector3(-0.15, 2.95, 0.2),
+		Vector3(0.4, 2.8, -0.15),
+		Vector3(0.85, 2.9, 0.35),
+	]
 	for i in offsets.size():
 		var pos: Vector3 = offsets[i]
-		PocketGeo.capsule(self, pos, 0.055, 1.85, TUBE, Vector3(0.0, 20.0 * float(i - 1), 90.0))
-		var lamp := PocketGeo.omni(self, pos + Vector3(0.0, -0.15, 0.0), Color(0.65, 0.95, 0.72), 2.4, 9.0)
+		PocketGeo.capsule(self, pos, 0.07, 2.1, TUBE, Vector3(0.0, 18.0 * float(i - 1), 90.0))
+		var lamp := PocketGeo.omni(self, pos + Vector3(0.0, -0.2, 0.0), Color(0.65, 0.95, 0.72), 2.8, 10.0)
 		_lamps.append(lamp)
-	PocketGeo.label(self, Vector3(0.0, 2.15, 0.9), "TUBES", Color(0.7, 0.95, 0.78), 34)
+	PocketGeo.label(self, Vector3(0.0, 1.85, 0.2), "TUBES", Color(0.7, 0.95, 0.78), 38)

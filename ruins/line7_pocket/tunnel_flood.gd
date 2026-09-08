@@ -52,10 +52,11 @@ func _build_gap() -> void:
 
 
 func _build_pipe() -> void:
-	## Decorative hanging main — clearance is walkable (roll does not crouch the capsule).
-	PocketGeo.capsule(self, Vector3(0.15, 2.55, 11.6), 0.16, 3.4, RUST, Vector3(0.0, 0.0, 90.0))
-	PocketGeo.capsule(self, Vector3(-0.35, 2.7, 5.2), 0.1, 2.2, RUST, Vector3(0.0, 18.0, 90.0))
-	PocketGeo.box(self, Vector3(0.15, 2.95, 11.6), Vector3(0.22, 0.35, 0.22), RUST, false)
+	## Ceiling mains only — roll does not crouch the capsule, so the verb is the jump.
+	PocketGeo.capsule(self, Vector3(0.0, 3.05, 12.4), 0.12, 3.2, RUST, Vector3(0.0, 0.0, 90.0))
+	PocketGeo.capsule(self, Vector3(0.4, 3.08, 4.6), 0.08, 2.4, RUST, Vector3(0.0, 12.0, 90.0))
+	PocketGeo.box(self, Vector3(0.0, 3.22, 12.4), Vector3(0.2, 0.22, 0.2), RUST, false)
+	PocketGeo.label(self, Vector3(0.0, 1.7, (GAP_START + GAP_END) * 0.5), "GAP", Color(0.55, 0.85, 0.82), 40)
 
 
 func _light() -> void:
