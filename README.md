@@ -24,9 +24,9 @@ If Godot asks to generate import files, accept. `.godot/` is local cache and is 
 
 ## Fallen castle ruins
 
-A second pocket sits beside the undercroft — a **wooden guard camp** (not CSG boxes): uneven sharpened palisade logs, cloth lean-tos, crates/barrels, a lashed-pole tripod, muddy path, torch posts, and three watch posts (gatehouse / west / east / keep). Same HE controls; no extra enemy.
+A second pocket sits beside the undercroft — a **wooden guard camp** dressed to read as a grim outpost: uneven sharpened palisade with rope lashes, sagging cloth/hide lean-tos, cloth-covered crates, barrels, a lashed-pole tripod, muddy path with sparse grass, warm torch posts, and a misty valley gap. Same HE controls; no extra enemy.
 
-Props and bark/cloth/mud textures are original (`ruins/fallen_castle/camp_kit.gd`). See `ruins/fallen_castle/ATTRIBUTION.md`.
+Meshes are original (`ruins/fallen_castle/camp_kit.gd`). PBR maps and dusk HDRI are **Poly Haven CC0**. See `ruins/fallen_castle/ATTRIBUTION.md`.
 
 **How to enter**
 

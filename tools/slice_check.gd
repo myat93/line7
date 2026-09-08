@@ -96,3 +96,7 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	var castle_src := FileAccess.get_file_as_string("res://ruins/fallen_castle/fallen_castle.gd")
 	if castle_src.contains("CSGBox") or castle_src.contains("CSGCylinder"):
 		failures.append("Guard camp must not be CSG greybox.")
+	if not FileAccess.file_exists("res://ruins/fallen_castle/textures/bark_diff.jpg"):
+		failures.append("Poly Haven bark albedo missing.")
+	if not FileAccess.file_exists("res://ruins/fallen_castle/textures/dusk.hdr"):
+		failures.append("Dusk HDRI missing.")
