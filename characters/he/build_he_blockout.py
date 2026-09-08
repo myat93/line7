@@ -53,17 +53,17 @@ POSE_JOINTS = (
 
 
 def _mats(b: GlbBuilder) -> None:
-    b.add_material("coat", [0.86, 0.80, 0.70, 1.0], 0.78, texture="coat")
-    b.add_material("shirt", [0.78, 0.88, 0.86, 1.0], 0.72, texture="shirt")
-    b.add_material("pants", [0.72, 0.76, 0.88, 1.0], 0.84, texture="pants")
-    b.add_material("skin", [0.96, 0.82, 0.70, 1.0], 0.52, texture="skin")
-    b.add_material("hair", [0.55, 0.42, 0.34, 1.0], 0.88, texture="hair")
+    b.add_material("coat", [0.72, 0.64, 0.54, 1.0], 0.82, texture="coat")
+    b.add_material("shirt", [0.55, 0.58, 0.54, 1.0], 0.78, texture="shirt")
+    b.add_material("pants", [0.42, 0.44, 0.50, 1.0], 0.86, texture="pants")
+    b.add_material("skin", [0.90, 0.74, 0.62, 1.0], 0.55, texture="skin")
+    b.add_material("hair", [0.28, 0.20, 0.16, 1.0], 0.90, texture="hair")
     b.add_material(
         "wrap",
-        [1.0, 0.72, 0.58, 1.0],
-        0.58,
+        [0.62, 0.38, 0.26, 1.0],
+        0.62,
         metal=0.02,
-        emissive=[0.10, 0.02, 0.01],
+        emissive=[0.04, 0.01, 0.00],
         texture="wrap",
     )
     b.add_material("boot", [0.70, 0.62, 0.52, 1.0], 0.48, metal=0.06, texture="boot")
@@ -126,21 +126,23 @@ def build() -> bytes:
     _mats(b)
 
     l_fist = b.add_node("L_Fist", translation=(0.0, -0.34, 0.0), children=_hand(b, "L", -1.0))
-    l_fore_mesh = b.mesh_node("L_ForearmMesh", translate_mesh(capsule("lf", 0.048, 0.30, 12, 4), (0.0, -0.14, -0.01)), "wrap")
+    l_fore_mesh = b.mesh_node("L_ForearmMesh", translate_mesh(capsule("lf", 0.052, 0.34, 14, 4), (0.0, -0.12, -0.01)), "wrap")
     l_fore = b.add_node("L_Forearm", translation=(0.0, -0.30, 0.0), children=[l_fore_mesh, l_fist])
-    l_up_mesh = b.mesh_node("L_UpperArmMesh", translate_mesh(capsule("lu", 0.046, 0.28, 12, 4), (0.0, -0.13, 0.0)), "coat")
-    l_up = b.add_node("L_UpperArm", translation=(-0.22, 0.38, 0.0), children=[l_up_mesh, l_fore])
+    l_up_mesh = b.mesh_node("L_UpperArmMesh", translate_mesh(capsule("lu", 0.055, 0.34, 14, 4), (0.0, -0.10, 0.0)), "coat")
+    l_shoulder = b.mesh_node("L_Shoulder", translate_mesh(sphere("ls", 0.055, 12, 8), (0.0, 0.02, 0.0)), "coat")
+    l_up = b.add_node("L_UpperArm", translation=(-0.20, 0.38, 0.0), children=[l_up_mesh, l_shoulder, l_fore])
 
     r_fist = b.add_node("R_Fist", translation=(0.0, -0.34, 0.0), children=_hand(b, "R", 1.0))
-    r_fore_mesh = b.mesh_node("R_ForearmMesh", translate_mesh(capsule("rf", 0.048, 0.30, 12, 4), (0.0, -0.14, -0.01)), "wrap")
+    r_fore_mesh = b.mesh_node("R_ForearmMesh", translate_mesh(capsule("rf", 0.052, 0.34, 14, 4), (0.0, -0.12, -0.01)), "wrap")
     r_fore = b.add_node("R_Forearm", translation=(0.0, -0.30, 0.0), children=[r_fore_mesh, r_fist])
-    r_up_mesh = b.mesh_node("R_UpperArmMesh", translate_mesh(capsule("ru", 0.046, 0.28, 12, 4), (0.0, -0.13, 0.0)), "coat")
-    r_up = b.add_node("R_UpperArm", translation=(0.22, 0.38, 0.0), children=[r_up_mesh, r_fore])
+    r_up_mesh = b.mesh_node("R_UpperArmMesh", translate_mesh(capsule("ru", 0.055, 0.34, 14, 4), (0.0, -0.10, 0.0)), "coat")
+    r_shoulder = b.mesh_node("R_Shoulder", translate_mesh(sphere("rs", 0.055, 12, 8), (0.0, 0.02, 0.0)), "coat")
+    r_up = b.add_node("R_UpperArm", translation=(0.20, 0.38, 0.0), children=[r_up_mesh, r_shoulder, r_fore])
 
     head = b.add_node("Head", translation=(0.0, 0.52, 0.0), children=_head_bits(b))
     neck = b.mesh_node("Neck", translate_mesh(capsule("neck", 0.042, 0.10, 10, 3), (0.0, 0.44, 0.0)), "skin")
-    torso_mesh = b.mesh_node("TorsoMesh", translate_mesh(capsule("torso", 0.145, 0.46, 16, 5), (0.0, 0.20, 0.01)), "coat")
-    chest = b.mesh_node("Chest", translate_mesh(ellipsoid("chest", 0.155, 0.14, 0.095, 14, 8), (0.0, 0.28, -0.01)), "coat")
+    torso_mesh = b.mesh_node("TorsoMesh", translate_mesh(capsule("torso", 0.155, 0.50, 16, 5), (0.0, 0.18, 0.01)), "coat")
+    chest = b.mesh_node("Chest", translate_mesh(ellipsoid("chest", 0.168, 0.16, 0.108, 14, 8), (0.0, 0.26, -0.01)), "coat")
     shirt = b.mesh_node("ShirtFront", translate_mesh(box("shirt", (0.16, 0.22, 0.03)), (0.0, 0.16, -0.10)), "shirt")
     collar = b.mesh_node("Collar", translate_mesh(cylinder("col", 0.08, 0.09, 0.06, 14, False), (0.0, 0.40, -0.01)), "coat")
     lapel_l = b.mesh_node("LapelL", translate_mesh(box("ll", (0.05, 0.26, 0.02)), (-0.05, 0.22, -0.12)), "shirt")
@@ -153,15 +155,15 @@ def build() -> bytes:
     )
 
     l_foot = b.mesh_node("L_Foot", translate_mesh(ellipsoid("lf", 0.055, 0.038, 0.12, 10, 6), (0.0, -0.42, -0.04)), "boot")
-    l_shin_mesh = b.mesh_node("L_ShinMesh", translate_mesh(capsule("ls", 0.048, 0.40, 12, 4), (0.0, -0.20, 0.0)), "pants")
+    l_shin_mesh = b.mesh_node("L_ShinMesh", translate_mesh(capsule("ls", 0.054, 0.44, 14, 4), (0.0, -0.18, 0.0)), "pants")
     l_shin = b.add_node("L_Shin", translation=(0.0, -0.42, 0.0), children=[l_shin_mesh, l_foot])
-    l_thigh_mesh = b.mesh_node("L_ThighMesh", translate_mesh(capsule("lt", 0.062, 0.40, 12, 4), (0.0, -0.18, 0.0)), "pants")
+    l_thigh_mesh = b.mesh_node("L_ThighMesh", translate_mesh(capsule("lt", 0.070, 0.44, 14, 4), (0.0, -0.16, 0.0)), "pants")
     l_thigh = b.add_node("L_Thigh", translation=(-0.10, -0.06, 0.0), children=[l_thigh_mesh, l_shin])
 
     r_foot = b.mesh_node("R_Foot", translate_mesh(ellipsoid("rf", 0.055, 0.038, 0.12, 10, 6), (0.0, -0.42, -0.04)), "boot")
-    r_shin_mesh = b.mesh_node("R_ShinMesh", translate_mesh(capsule("rs", 0.048, 0.40, 12, 4), (0.0, -0.20, 0.0)), "pants")
+    r_shin_mesh = b.mesh_node("R_ShinMesh", translate_mesh(capsule("rs", 0.054, 0.44, 14, 4), (0.0, -0.18, 0.0)), "pants")
     r_shin = b.add_node("R_Shin", translation=(0.0, -0.42, 0.0), children=[r_shin_mesh, r_foot])
-    r_thigh_mesh = b.mesh_node("R_ThighMesh", translate_mesh(capsule("rt", 0.062, 0.40, 12, 4), (0.0, -0.18, 0.0)), "pants")
+    r_thigh_mesh = b.mesh_node("R_ThighMesh", translate_mesh(capsule("rt", 0.070, 0.44, 14, 4), (0.0, -0.16, 0.0)), "pants")
     r_thigh = b.add_node("R_Thigh", translation=(0.10, -0.06, 0.0), children=[r_thigh_mesh, r_shin])
 
     hips_mesh = b.mesh_node("HipsMesh", translate_mesh(ellipsoid("hips", 0.14, 0.08, 0.10, 14, 8), (0.0, 0.0, 0.0)), "pants")

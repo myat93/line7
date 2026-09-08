@@ -55,7 +55,7 @@ POSE_JOINTS = (
 
 
 def _mats(b: GlbBuilder) -> None:
-    b.add_material("coat", [0.82, 0.80, 0.90, 1.0], 0.70, metal=0.06, texture="herald_coat")
+    b.add_material("coat", [0.58, 0.56, 0.66, 1.0], 0.74, metal=0.06, texture="herald_coat")
     b.add_material(
         "lining",
         [1.0, 0.42, 0.38, 1.0],
@@ -163,23 +163,23 @@ def build() -> bytes:
     _mats(b)
 
     l_fist = b.add_node("L_Fist", translation=(0.0, -0.40, 0.0), children=_gauntlet_hand(b, "L", False))
-    l_fore_mesh = b.mesh_node("L_ForearmMesh", translate_mesh(capsule("lf", 0.058, 0.36, 12, 4), (0.0, -0.16, -0.01)), "gauntlet")
+    l_fore_mesh = b.mesh_node("L_ForearmMesh", translate_mesh(capsule("lf", 0.062, 0.40, 14, 4), (0.0, -0.14, -0.01)), "gauntlet")
     l_fore = b.add_node("L_Forearm", translation=(0.0, -0.36, 0.0), children=[l_fore_mesh, l_fist])
-    l_up_mesh = b.mesh_node("L_UpperArmMesh", translate_mesh(capsule("lu", 0.058, 0.34, 12, 4), (0.0, -0.16, 0.0)), "coat")
+    l_up_mesh = b.mesh_node("L_UpperArmMesh", translate_mesh(capsule("lu", 0.068, 0.40, 14, 4), (0.0, -0.12, 0.0)), "coat")
     l_ep = b.mesh_node("L_Epaulette", translate_mesh(ellipsoid("le", 0.08, 0.03, 0.07, 10, 6), (0.0, 0.02, 0.0)), "brass")
     l_up = b.add_node("L_UpperArm", translation=(-0.28, 0.40, 0.0), children=[l_up_mesh, l_ep, l_fore])
 
     r_fist = b.add_node("R_Fist", translation=(0.0, -0.42, 0.0), children=_gauntlet_hand(b, "R", True))
-    r_fore_mesh = b.mesh_node("R_ForearmMesh", translate_mesh(capsule("rf", 0.062, 0.40, 12, 4), (0.0, -0.18, -0.02)), "gauntlet")
+    r_fore_mesh = b.mesh_node("R_ForearmMesh", translate_mesh(capsule("rf", 0.066, 0.44, 14, 4), (0.0, -0.16, -0.02)), "gauntlet")
     r_fore = b.add_node("R_Forearm", translation=(0.0, -0.38, 0.0), children=[r_fore_mesh, r_fist])
-    r_up_mesh = b.mesh_node("R_UpperArmMesh", translate_mesh(capsule("ru", 0.062, 0.36, 12, 4), (0.0, -0.17, 0.0)), "coat")
+    r_up_mesh = b.mesh_node("R_UpperArmMesh", translate_mesh(capsule("ru", 0.070, 0.42, 14, 4), (0.0, -0.14, 0.0)), "coat")
     r_ep = b.mesh_node("R_Epaulette", translate_mesh(ellipsoid("re", 0.08, 0.03, 0.07, 10, 6), (0.0, 0.02, 0.0)), "brass")
     r_up = b.add_node("R_UpperArm", translation=(0.28, 0.40, 0.0), children=[r_up_mesh, r_ep, r_fore])
 
     head = b.add_node("Head", translation=(0.0, 0.50, 0.0), children=_head_bits(b))
     neck = b.mesh_node("Neck", translate_mesh(capsule("neck", 0.048, 0.11, 10, 3), (0.0, 0.44, 0.0)), "hollow")
-    torso_mesh = b.mesh_node("TorsoMesh", translate_mesh(capsule("torso", 0.175, 0.50, 16, 5), (0.0, 0.20, 0.02)), "coat")
-    chest = b.mesh_node("Chest", translate_mesh(ellipsoid("chest", 0.185, 0.16, 0.12, 14, 8), (0.0, 0.26, 0.0)), "coat")
+    torso_mesh = b.mesh_node("TorsoMesh", translate_mesh(capsule("torso", 0.188, 0.54, 16, 5), (0.0, 0.18, 0.02)), "coat")
+    chest = b.mesh_node("Chest", translate_mesh(ellipsoid("chest", 0.198, 0.18, 0.128, 14, 8), (0.0, 0.26, 0.0)), "coat")
     collar = b.mesh_node("Collar", translate_mesh(cylinder("col", 0.10, 0.12, 0.08, 14, False), (0.0, 0.42, -0.01)), "coat")
     lapel_l = b.mesh_node("LapelL", translate_mesh(box("ll", (0.07, 0.30, 0.025)), (-0.06, 0.20, -0.13)), "lining")
     lapel_r = b.mesh_node("LapelR", translate_mesh(box("lr", (0.07, 0.30, 0.025)), (0.06, 0.20, -0.13)), "lining")
@@ -194,15 +194,15 @@ def build() -> bytes:
     )
 
     l_foot = b.mesh_node("L_Foot", translate_mesh(ellipsoid("lf", 0.058, 0.04, 0.13, 10, 6), (0.0, -0.44, -0.05)), "boot")
-    l_shin_mesh = b.mesh_node("L_ShinMesh", translate_mesh(capsule("ls", 0.052, 0.40, 12, 4), (0.0, -0.20, 0.0)), "pants")
+    l_shin_mesh = b.mesh_node("L_ShinMesh", translate_mesh(capsule("ls", 0.058, 0.44, 14, 4), (0.0, -0.18, 0.0)), "pants")
     l_shin = b.add_node("L_Shin", translation=(0.0, -0.44, 0.0), children=[l_shin_mesh, l_foot])
-    l_thigh_mesh = b.mesh_node("L_ThighMesh", translate_mesh(capsule("lt", 0.068, 0.40, 12, 4), (0.0, -0.18, 0.0)), "pants")
+    l_thigh_mesh = b.mesh_node("L_ThighMesh", translate_mesh(capsule("lt", 0.076, 0.44, 14, 4), (0.0, -0.16, 0.0)), "pants")
     l_thigh = b.add_node("L_Thigh", translation=(-0.11, -0.06, 0.0), children=[l_thigh_mesh, l_shin])
 
     r_foot = b.mesh_node("R_Foot", translate_mesh(ellipsoid("rf", 0.058, 0.04, 0.13, 10, 6), (0.0, -0.44, -0.05)), "boot")
-    r_shin_mesh = b.mesh_node("R_ShinMesh", translate_mesh(capsule("rs", 0.052, 0.40, 12, 4), (0.0, -0.20, 0.0)), "pants")
+    r_shin_mesh = b.mesh_node("R_ShinMesh", translate_mesh(capsule("rs", 0.058, 0.44, 14, 4), (0.0, -0.18, 0.0)), "pants")
     r_shin = b.add_node("R_Shin", translation=(0.0, -0.44, 0.0), children=[r_shin_mesh, r_foot])
-    r_thigh_mesh = b.mesh_node("R_ThighMesh", translate_mesh(capsule("rt", 0.068, 0.40, 12, 4), (0.0, -0.18, 0.0)), "pants")
+    r_thigh_mesh = b.mesh_node("R_ThighMesh", translate_mesh(capsule("rt", 0.076, 0.44, 14, 4), (0.0, -0.16, 0.0)), "pants")
     r_thigh = b.add_node("R_Thigh", translation=(0.11, -0.06, 0.0), children=[r_thigh_mesh, r_shin])
 
     hips_mesh = b.mesh_node("HipsMesh", translate_mesh(ellipsoid("hips", 0.16, 0.08, 0.11, 14, 8), (0.0, 0.0, 0.0)), "pants")

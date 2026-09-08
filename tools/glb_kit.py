@@ -73,29 +73,29 @@ def make_texture(kind: str, size: int = 128) -> bytes:
             u = x / size
             v = y / size
             if kind == "skin":
-                mott = 0.78 + 0.10 * math.sin(u * 18.0) * math.sin(v * 14.0) + n * 0.06
-                r, g, b = mott * 0.86, mott * 0.64, mott * 0.50
+                mott = 0.72 + 0.04 * math.sin(u * 6.0) * math.sin(v * 5.0) + n * 0.03
+                r, g, b = mott * 0.84, mott * 0.62, mott * 0.50
             elif kind == "hollow":
-                mott = 0.62 + 0.08 * n + 0.05 * math.sin(v * 20.0)
-                r, g, b = mott * 0.92, mott * 0.82, mott * 0.74
+                mott = 0.58 + 0.04 * n + 0.02 * math.sin(v * 8.0)
+                r, g, b = mott * 0.90, mott * 0.80, mott * 0.72
             elif kind == "coat":
-                weave = 0.34 + 0.10 * math.sin(u * 70.0) + 0.06 * math.sin(v * 40.0) + n * 0.05
-                r, g, b = weave * 0.95, weave * 0.82, weave * 0.68
+                weave = 0.30 + 0.03 * math.sin(u * 18.0) + 0.02 * math.sin(v * 10.0) + n * 0.03
+                r, g, b = weave * 0.78, weave * 0.68, weave * 0.56
             elif kind == "herald_coat":
-                weave = 0.28 + 0.08 * math.sin(u * 64.0) + 0.05 * n
-                r, g, b = weave * 1.05, weave * 0.98, weave * 1.18
+                weave = 0.22 + 0.03 * math.sin(u * 14.0) + 0.03 * n
+                r, g, b = weave * 0.92, weave * 0.88, weave * 1.05
             elif kind == "shirt":
-                t = 0.30 + 0.08 * math.sin(u * 48.0) + n * 0.05
-                r, g, b = t * 0.72, t * 1.05, t * 0.98
+                t = 0.22 + 0.03 * math.sin(u * 10.0) + n * 0.03
+                r, g, b = t * 0.62, t * 0.70, t * 0.66
             elif kind == "pants":
-                denim = 0.18 + 0.07 * math.sin(u * 90.0) + 0.04 * n2
-                r, g, b = denim * 0.70, denim * 0.78, denim * 0.95
+                denim = 0.16 + 0.03 * math.sin(u * 12.0) + 0.03 * n2
+                r, g, b = denim * 0.62, denim * 0.64, denim * 0.72
             elif kind == "hair":
-                t = 0.07 + 0.05 * abs(math.sin(u * 40.0 + v * 8.0)) + n * 0.03
-                r, g, b = t * 1.1, t * 0.85, t * 0.7
+                t = 0.08 + 0.03 * abs(math.sin(u * 16.0 + v * 4.0)) + n * 0.02
+                r, g, b = t * 1.05, t * 0.82, t * 0.68
             elif kind == "wrap":
-                t = 0.42 + 0.14 * math.sin((u + v) * 28.0) + n * 0.06
-                r, g, b = t * 1.35, t * 0.55, t * 0.32
+                t = 0.28 + 0.05 * math.sin((u + v) * 10.0) + n * 0.03
+                r, g, b = t * 1.05, t * 0.58, t * 0.40
             elif kind == "boot":
                 t = 0.12 + 0.05 * n + 0.03 * math.sin(v * 22.0)
                 r, g, b = t * 1.15, t * 0.9, t * 0.72
