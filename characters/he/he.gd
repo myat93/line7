@@ -479,9 +479,10 @@ func _pose_sprint() -> void:
 	## Modest extras only — large ones stretch the 100×-IBM skin.
 	_pose_idle()
 	var swing := sin(_stride)
-	_part_rot("Torso", Vector3(0.0, swing * 0.04, -0.14))
+	_part_rot("Hips", Vector3(0.0, 0.0, -0.08))
+	_part_rot("Torso", Vector3(0.0, swing * 0.04, -0.16))
 	_part_rot("Head", Vector3(0.05, 0.0, 0.0))
-	## No hip roll / arm extras — those pulled the IBM sleeve across the back.
+	## No arm extras — those pulled the IBM sleeve across the back.
 	_part_rot("L_Thigh", Vector3(swing * 0.42, 0.0, 0.0))
 	_part_rot("R_Thigh", Vector3(-swing * 0.42, 0.0, 0.0))
 	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.40, 0.0, 0.0))
@@ -551,10 +552,8 @@ func _pose_roll() -> void:
 	_part_rot("R_Thigh", Vector3(-0.44, 0.0, -0.05) * tuck)
 	_part_rot("L_Shin", Vector3(0.48, 0.0, 0.0) * tuck)
 	_part_rot("R_Shin", Vector3(0.46, 0.0, 0.0) * tuck)
-	_part_rot("L_UpperArm", Vector3(0.28, 0.16, 0.14) * tuck)
-	_part_rot("R_UpperArm", Vector3(0.28, -0.16, -0.14) * tuck)
-	_part_rot("L_Forearm", Vector3(0.28, 0.0, 0.0) * tuck)
-	_part_rot("R_Forearm", Vector3(0.28, 0.0, 0.0) * tuck)
+	_part_rot("L_Forearm", Vector3(0.18, 0.0, 0.0) * tuck)
+	_part_rot("R_Forearm", Vector3(0.18, 0.0, 0.0) * tuck)
 
 
 func _pose_jump() -> void:
