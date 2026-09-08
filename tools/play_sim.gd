@@ -93,9 +93,9 @@ func _run() -> void:
 		_fail("HE does not face movement direction (+Z).")
 	var blockout := he.mesh_root.get_node_or_null("HEBlockout")
 	if blockout == null:
-		_fail("HE blockout mesh is not instanced under MeshRoot.")
-	elif blockout.find_child("Hips", true, false) == null or blockout.find_child("L_Fist", true, false) == null:
-		_fail("HE blockout joints (Hips / L_Fist) were not imported.")
+		_fail("HE realistic mesh is not instanced under MeshRoot.")
+	elif not _has_named_bones(blockout, PackedStringArray(["Hips", "L_Fist"])):
+		_fail("HE realistic Skeleton3D bones (Hips / L_Fist) were not imported.")
 	var body_col := he.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if body_col == null or not (body_col.shape is CapsuleShape3D):
 		_fail("HE world collision must stay a capsule.")
@@ -108,9 +108,11 @@ func _run() -> void:
 		_fail("Heavy reach changed from locked 1.52.")
 	var herald_blockout := herald.mesh_root.get_node_or_null("HeraldBlockout")
 	if herald_blockout == null:
-		_fail("Herald blockout mesh is not instanced under MeshRoot.")
-	elif herald_blockout.find_child("Hips", true, false) == null or herald_blockout.find_child("R_UpperArm", true, false) == null:
-		_fail("Herald blockout joints (Hips / R_UpperArm) were not imported.")
+		_fail("Herald realistic mesh is not instanced under MeshRoot.")
+	elif not _has_named_bones(herald_blockout, PackedStringArray(["Hips", "R_UpperArm"])):
+		_fail("Herald realistic Skeleton3D bones (Hips / R_UpperArm) were not imported.")
+	elif herald_blockout.find_child("Crown", true, false) == null:
+		_fail("Herald Crown mesh was not imported.")
 	var herald_col := herald.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if herald_col == null or not (herald_col.shape is CapsuleShape3D):
 		_fail("Herald world collision must stay a capsule.")
@@ -303,6 +305,26 @@ func _run() -> void:
 		_fail("Herald did not fall after lethal damage.")
 
 	_finish()
+
+
+func _first_skeleton(node: Node) -> Skeleton3D:
+	if node is Skeleton3D:
+		return node as Skeleton3D
+	for child in node.get_children():
+		var found := _first_skeleton(child)
+		if found:
+			return found
+	return null
+
+
+func _has_named_bones(root: Node, names: PackedStringArray) -> bool:
+	var skel := _first_skeleton(root)
+	if skel == null:
+		return false
+	for bone_name in names:
+		if skel.find_bone(bone_name) < 0:
+			return false
+	return true
 
 
 func _fail(message: String) -> void:

@@ -19,7 +19,7 @@ var _look_pitch: float = -0.12
 var _iframe: float = 0.0
 var _roll_held: bool = false
 
-const BLOCKOUT_SCENE: PackedScene = preload("res://characters/he/he_blockout.glb")
+const BLOCKOUT_SCENE: PackedScene = preload("res://characters/he/he_realistic.glb")
 const POSE_PARTS: PackedStringArray = [
 	"Hips", "Torso", "Head",
 	"L_UpperArm", "L_Forearm", "L_Fist",

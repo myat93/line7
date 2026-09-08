@@ -23,4 +23,4 @@ Debug: **0** camp · **9** tunnel · **8** ruins camp.
 
 **Mesh vs placeholder:** named pieces instance PBR GLBs under `meshes/` (Poly Haven photogrammetry + Line 7 cloth/tripod). Palisade **collision boxes** stay CampKit so the ring does not change size. Ground is still `Kit.mud_ground`. See `ATTRIBUTION.md` / `meshes/README.md`. No CSG grey cubes. No Elden Ring rips.
 
-Andrew: camp scenes already point at the new GLBs. Character MeshRoot is still the blockout — swap paths in the HE / Herald READMEs.
+Camp named pieces instance the `meshes/*_realistic.glb` files. Character MeshRoot is the realistic HE / Herald GLBs.

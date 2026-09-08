@@ -8,7 +8,7 @@ The human blockout is a visual child only:
 HE (CharacterBody3D)          collision / movement
 ├── CollisionShape3D          CapsuleShape3D  r=0.32 h=1.8
 ├── MeshRoot                  facing yaw only
-│   ├── HEBlockout            instance of he_blockout.glb
+│   ├── HEBlockout            instance of he_realistic.glb
 │   ├── PosePlayer            AnimationPlayer hook (empty; poses are procedural)
 │   └── Ashpike
 ├── Hitboxes / Hurtbox        still capsule-driven, same locked reach
@@ -31,13 +31,8 @@ The GLB is authored Godot-forward (−Z visor / chest / fists) so it matches `Me
 
 Drop-in file: **`res://characters/he/he_realistic.glb`** (~1.8 m civilian, origin at feet, Y-up meters, Godot-forward).
 
-`he.tscn` / `he.gd` still instance `he_blockout.glb`. Combat, capsule `r=0.32 h=1.8`, and locked fist reach are unchanged.
+`he.tscn` / `he.gd` instance `he_realistic.glb` under the existing `HEBlockout` MeshRoot node. Combat, capsule `r=0.32 h=1.8`, and locked fist reach are unchanged.
 
-When you swap MeshRoot:
-
-1. In `he.tscn`, point the `HEBlockout` instance at `he_realistic.glb` (keep the node name `HEBlockout`).
-2. In `he.gd`, change `BLOCKOUT_SCENE` to the same path.
-3. **Joint note:** pose names exist on the **Skeleton3D** (`Hips`, `Torso`, `Head`, `L_UpperArm`, `L_Forearm`, `L_Fist`, `R_*`, thighs/shins). Godot does **not** expose those as `Node3D` children, so `_cache_pose_nodes()` / `find_child` will miss them and jab/roll/sprint poses will no-op (A-pose rest). Drive `Skeleton3D.set_bone_pose_rotation` with the same names, or leave the blockout until clips exist on `MeshRoot/PosePlayer`.
-4. Rest pose is A-pose, not hang-down. Euler offsets tuned for the box blockout will need a pass.
+**Joint note:** pose names exist on the **Skeleton3D** (`Hips`, `Torso`, `Head`, `L_UpperArm`, `L_Forearm`, `L_Fist`, `R_*`, thighs/shins). Godot does **not** expose those as `Node3D` children, so `_cache_pose_nodes()` / `find_child` miss them and jab/roll/sprint stay A-pose until `Skeleton3D.set_bone_pose_rotation` or clips on `MeshRoot/PosePlayer`. Rest pose is A-pose, not hang-down.
 
 Licenses: `ATTRIBUTION.md` + `LICENSE.rocketbox.md`. Not an Elden Ring / commercial rip.

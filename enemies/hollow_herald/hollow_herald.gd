@@ -2,11 +2,11 @@ class_name HollowHerald
 extends CharacterBody3D
 
 ## Slow, readable bosslet. Telegraph swipe, then telegraph lunge.
-## Visual is the transit-coat blockout under MeshRoot. Capsule collision is unchanged.
+## Visual is the realistic transit-coat mesh under MeshRoot. Capsule collision is unchanged.
 
 enum Phase { WAIT, APPROACH, SWIPE_WIND, SWIPE, PAUSE, LUNGE_WIND, LUNGE, REST, DEAD }
 
-const BLOCKOUT_SCENE: PackedScene = preload("res://enemies/hollow_herald/hollow_herald_blockout.glb")
+const BLOCKOUT_SCENE: PackedScene = preload("res://enemies/hollow_herald/hollow_herald_realistic.glb")
 const POSE_PARTS: PackedStringArray = [
 	"Hips", "Torso", "Head", "Crown",
 	"L_UpperArm", "L_Forearm", "L_Fist",

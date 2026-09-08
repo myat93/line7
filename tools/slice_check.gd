@@ -24,11 +24,22 @@ func _check_layout(failures: PackedStringArray) -> void:
 		"res://characters/he/he.tscn",
 		"res://characters/he/he.gd",
 		"res://characters/he/he_blockout.glb",
+		"res://characters/he/he_realistic.glb",
 		"res://characters/he/build_he_blockout.py",
 		"res://enemies/hollow_herald/hollow_herald.tscn",
 		"res://enemies/hollow_herald/hollow_herald.gd",
 		"res://enemies/hollow_herald/hollow_herald_blockout.glb",
+		"res://enemies/hollow_herald/hollow_herald_realistic.glb",
 		"res://enemies/hollow_herald/build_hollow_herald_blockout.py",
+		"res://ruins/guard_camp/meshes/palisade_log_realistic.glb",
+		"res://ruins/guard_camp/meshes/lean_to_a_realistic.glb",
+		"res://ruins/guard_camp/meshes/lean_to_b_realistic.glb",
+		"res://ruins/guard_camp/meshes/tripod_realistic.glb",
+		"res://ruins/guard_camp/meshes/crate_realistic.glb",
+		"res://ruins/guard_camp/meshes/barrel_realistic.glb",
+		"res://ruins/guard_camp/meshes/crate_loot_realistic.glb",
+		"res://ruins/guard_camp/meshes/torch_post_realistic.glb",
+		"res://ruins/guard_camp/meshes/mist_drop_realistic.glb",
 		"res://ruins/line7_undercroft/line7_undercroft.tscn",
 		"res://ruins/fallen_castle/fallen_castle.tscn",
 		"res://ruins/fallen_castle/fallen_castle.gd",
@@ -118,19 +129,24 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	var he_text := FileAccess.get_file_as_string("res://characters/he/he.tscn")
 	if not he_text.contains("Ashpike"):
 		failures.append("HE is missing the hidden Ashpike visual.")
-	if not he_text.contains("he_blockout.glb"):
-		failures.append("he.tscn must instance characters/he/he_blockout.glb under MeshRoot.")
+	if not he_text.contains("he_realistic.glb"):
+		failures.append("he.tscn must instance characters/he/he_realistic.glb under MeshRoot.")
+	if he_text.contains("he_blockout.glb"):
+		failures.append("he.tscn must not instance the box blockout as the live MeshRoot.")
 	if not he_text.contains("CapsuleShape3D"):
 		failures.append("HE capsule collision/hurtbox must remain.")
 	if he_text.contains("CapsuleMesh"):
-		failures.append("HE visual must not be a capsule mesh; instance the blockout GLB.")
-	var glb := load("res://characters/he/he_blockout.glb") as PackedScene
+		failures.append("HE visual must not be a capsule mesh; instance the realistic GLB.")
+	var he_script := FileAccess.get_file_as_string("res://characters/he/he.gd")
+	if not he_script.contains("res://characters/he/he_realistic.glb"):
+		failures.append("he.gd BLOCKOUT_SCENE must preload he_realistic.glb.")
+	var glb := load("res://characters/he/he_realistic.glb") as PackedScene
 	if glb == null:
-		failures.append("he_blockout.glb did not import as a PackedScene.")
+		failures.append("he_realistic.glb did not import as a PackedScene.")
 	else:
 		var visual: Node = glb.instantiate()
-		if visual.find_child("Hips", true, false) == null or visual.find_child("L_Fist", true, false) == null:
-			failures.append("he_blockout.glb is missing pose joints (Hips / L_Fist).")
+		if not _has_named_bones(visual, PackedStringArray(["Hips", "L_Fist"])):
+			failures.append("he_realistic.glb is missing Skeleton3D pose bones (Hips / L_Fist).")
 		visual.free()
 	if load("res://ruins/fallen_castle/camp_kit.gd") == null:
 		failures.append("camp_kit.gd failed to compile.")
@@ -138,19 +154,21 @@ func _check_scenes(failures: PackedStringArray) -> void:
 	if castle_src.contains("CSGBox") or castle_src.contains("CSGCylinder"):
 		failures.append("Guard camp must not be CSG greybox.")
 	var herald_text := FileAccess.get_file_as_string("res://enemies/hollow_herald/hollow_herald.tscn")
-	if not herald_text.contains("hollow_herald_blockout.glb"):
-		failures.append("hollow_herald.tscn must instance enemies/hollow_herald/hollow_herald_blockout.glb under MeshRoot.")
+	if not herald_text.contains("hollow_herald_realistic.glb"):
+		failures.append("hollow_herald.tscn must instance enemies/hollow_herald/hollow_herald_realistic.glb under MeshRoot.")
+	if herald_text.contains("hollow_herald_blockout.glb"):
+		failures.append("hollow_herald.tscn must not instance the box blockout as the live MeshRoot.")
 	if herald_text.contains("res://enemies/hollow_herald/herald_blockout.glb"):
 		failures.append("hollow_herald.tscn must not instance the temp herald_blockout.glb.")
 	if not herald_text.contains("CapsuleShape3D"):
 		failures.append("Herald capsule collision/hurtbox must remain.")
 	if herald_text.contains("CapsuleMesh"):
-		failures.append("Herald visual must not be a capsule mesh; instance the blockout GLB.")
+		failures.append("Herald visual must not be a capsule mesh; instance the realistic GLB.")
 	if not herald_text.contains("radius = 0.48") or not herald_text.contains("height = 2.35"):
 		failures.append("Herald body capsule must stay r=0.48 h=2.35.")
 	var herald_script := FileAccess.get_file_as_string("res://enemies/hollow_herald/hollow_herald.gd")
-	if not herald_script.contains("res://enemies/hollow_herald/hollow_herald_blockout.glb"):
-		failures.append("hollow_herald.gd BLOCKOUT_SCENE must preload hollow_herald_blockout.glb.")
+	if not herald_script.contains("res://enemies/hollow_herald/hollow_herald_realistic.glb"):
+		failures.append("hollow_herald.gd BLOCKOUT_SCENE must preload hollow_herald_realistic.glb.")
 	if herald_script.contains("res://enemies/hollow_herald/herald_blockout.glb"):
 		failures.append("hollow_herald.gd must not preload the temp herald_blockout.glb.")
 	if not herald_script.contains("_place_and_arm(swipe_box, Combat.HERALD_SWIPE_DAMAGE, 2.4, 1.6, 2.2)"):
@@ -161,15 +179,15 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		failures.append("Herald swipe wind/active clocks must stay 1.15 / 0.38.")
 	if not herald_script.contains("_time >= 1.25") or not herald_script.contains("_time >= 0.42"):
 		failures.append("Herald lunge wind/active clocks must stay 1.25 / 0.42.")
-	var official_glb := load("res://enemies/hollow_herald/hollow_herald_blockout.glb") as PackedScene
+	var official_glb := load("res://enemies/hollow_herald/hollow_herald_realistic.glb") as PackedScene
 	if official_glb == null:
-		failures.append("hollow_herald_blockout.glb did not import as a PackedScene.")
+		failures.append("hollow_herald_realistic.glb did not import as a PackedScene.")
 	else:
 		var official_visual: Node = official_glb.instantiate()
-		if official_visual.find_child("Hips", true, false) == null or official_visual.find_child("R_UpperArm", true, false) == null:
-			failures.append("hollow_herald_blockout.glb is missing pose joints (Hips / R_UpperArm).")
+		if not _has_named_bones(official_visual, PackedStringArray(["Hips", "R_UpperArm"])):
+			failures.append("hollow_herald_realistic.glb is missing Skeleton3D pose bones (Hips / R_UpperArm).")
 		if official_visual.find_child("Crown", true, false) == null:
-			failures.append("hollow_herald_blockout.glb is missing the Crown joint.")
+			failures.append("hollow_herald_realistic.glb is missing the Crown mesh.")
 		official_visual.free()
 	var under_text := FileAccess.get_file_as_string("res://ruins/line7_undercroft/line7_undercroft.gd")
 	if not under_text.contains("line7_pocket") or not under_text.contains("door_gap"):
@@ -188,6 +206,45 @@ func _check_scenes(failures: PackedStringArray) -> void:
 			failures.append("guard_camp does not place named piece %s." % piece)
 	if FileAccess.file_exists("res://ruins/guard_camp/README.md") == false:
 		failures.append("ruins/guard_camp/README.md is missing.")
+	for camp_mesh in [
+		"palisade_log_realistic.glb",
+		"lean_to_a_realistic.glb",
+		"lean_to_b_realistic.glb",
+		"tripod_realistic.glb",
+		"crate_realistic.glb",
+		"crate_loot_realistic.glb",
+		"barrel_realistic.glb",
+		"torch_post_realistic.glb",
+		"mist_drop_realistic.glb",
+	]:
+		var found_mesh := false
+		for script_name in ["guard_camp.gd", "palisade_log.gd", "palisade_enter.gd", "lean_to_a.gd", "lean_to_b.gd", "tripod_central.gd", "crate_loot.gd", "guard_plank.gd", "torch_post.gd", "mist_drop.gd"]:
+			var script_text := FileAccess.get_file_as_string("res://ruins/guard_camp/%s" % script_name)
+			if script_text.contains(camp_mesh):
+				found_mesh = true
+				break
+		if not found_mesh:
+			failures.append("guard camp scripts must instance meshes/%s." % camp_mesh)
 	var combat_text := FileAccess.get_file_as_string("res://core/combat.gd")
 	if not combat_text.contains("\"reach\": 1.32") or not combat_text.contains("\"reach\": 2.35"):
 		failures.append("Combat reach numbers must stay 1.32 (jab) / 2.35 (pike).")
+
+
+func _first_skeleton(node: Node) -> Skeleton3D:
+	if node is Skeleton3D:
+		return node as Skeleton3D
+	for child in node.get_children():
+		var found := _first_skeleton(child)
+		if found:
+			return found
+	return null
+
+
+func _has_named_bones(root: Node, names: PackedStringArray) -> bool:
+	var skel := _first_skeleton(root)
+	if skel == null:
+		return false
+	for bone_name in names:
+		if skel.find_bone(bone_name) < 0:
+			return false
+	return true
