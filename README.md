@@ -27,18 +27,19 @@ If Godot asks to generate import files, accept. `.godot/` is local cache and is 
 | Action | Input |
 | --- | --- |
 | Walk | WASD (weighty) |
-| Sprint | Shift (drains stamina) |
+| Sprint | Shift |
+| Jump | Space |
 | Look | Mouse |
 | Light jab | LMB or **J** |
 | Heavy punch | RMB or **K** |
-| Roll | Space or Ctrl |
+| Roll | Ctrl |
 | Take Ashpike | **E** at the shrine |
 | Bind Ashpike | **1** (after take) |
 | Fists | **2** |
 | Restart slice | **R** |
 | Free / recapture mouse | Esc |
 
-Whiffing a punch spends extra stamina and locks a longer recovery. Reach is short on purpose.
+Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still short.
 
 ## Folders
 

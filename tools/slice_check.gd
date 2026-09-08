@@ -52,6 +52,12 @@ func _check_combat_rules(failures: PackedStringArray) -> void:
 		failures.append("Bound Ashpike heavy is wrong.")
 	if Combat.HERALD_SWIPE_DAMAGE <= 0 or Combat.HERALD_LUNGE_DAMAGE <= Combat.HERALD_SWIPE_DAMAGE:
 		failures.append("Herald lunge must hit harder than the swipe.")
+	if Combat.STAMINA_GATING:
+		failures.append("Playtest default: STAMINA_GATING must be off.")
+	if Combat.WHIFF_PUNISH:
+		failures.append("Playtest default: WHIFF_PUNISH must be off.")
+	if Combat.JUMP_VELOCITY <= 0.0:
+		failures.append("Jump velocity must be set.")
 
 
 func _check_scenes(failures: PackedStringArray) -> void:

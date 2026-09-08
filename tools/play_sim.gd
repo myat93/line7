@@ -26,6 +26,29 @@ func _run() -> void:
 		_fail("Ashpike must start unowned and unbound.")
 	if he.hp != Combat.PLAYER_MAX_HP:
 		_fail("HE did not start at full HP.")
+	if Combat.STAMINA_GATING or Combat.WHIFF_PUNISH:
+		_fail("Playtest stamina gating / whiff punish must default off.")
+	if not InputMap.has_action("jump"):
+		_fail("jump action is missing.")
+	else:
+		var jump_is_space := false
+		for event in InputMap.action_get_events("jump"):
+			if event is InputEventKey and event.physical_keycode == KEY_SPACE:
+				jump_is_space = true
+		if not jump_is_space:
+			_fail("Space must be jump.")
+	if InputMap.has_action("roll"):
+		for event in InputMap.action_get_events("roll"):
+			if event is InputEventKey and event.physical_keycode == KEY_SPACE:
+				_fail("Space must not roll.")
+	he.stamina = 0.0
+	he._try_attack(false)
+	if he.state != HE.State.ATTACK:
+		_fail("Jab should not be stamina-gated.")
+	he.state = HE.State.FREE
+	he._try_jump()
+	if he.velocity.y < Combat.JUMP_VELOCITY * 0.9:
+		_fail("Jump did not apply upward velocity.")
 
 	he.global_position = Vector3(0.0, 1.05, 17.2)
 	await get_tree().create_timer(1.6).timeout

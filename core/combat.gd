@@ -3,6 +3,11 @@ extends RefCounted
 
 ## Shared numbers for the Line 7 first-playable combat slice.
 
+## Playtest: leave these false so HE can spam attacks and move freely.
+## Flip either back to true to restore spend/block and miss punish.
+const STAMINA_GATING := false
+const WHIFF_PUNISH := false
+
 const PLAYER_MAX_HP := 100
 const PLAYER_MAX_STAMINA := 100.0
 const STAMINA_REGEN := 24.0
@@ -18,6 +23,7 @@ const SPRINT_SPEED := 4.1
 const MOVE_ACCEL := 7.2
 const MOVE_DECEL := 11.5
 const GRAVITY := 28.0
+const JUMP_VELOCITY := 8.8
 
 const HERALD_MAX_HP := 72
 const HERALD_WALK := 1.15

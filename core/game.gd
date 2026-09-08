@@ -121,14 +121,24 @@ func _ensure_input_map() -> void:
 	_action("move_left", [_key(KEY_A)])
 	_action("move_right", [_key(KEY_D)])
 	_action("sprint", [_key(KEY_SHIFT)])
+	_action("jump", [_key(KEY_SPACE)])
 	_action("light_attack", [_mouse(MOUSE_BUTTON_LEFT), _key(KEY_J)])
 	_action("heavy_attack", [_mouse(MOUSE_BUTTON_RIGHT), _key(KEY_K)])
-	_action("roll", [_key(KEY_SPACE), _key(KEY_CTRL)])
+	_action("roll", [_key(KEY_CTRL)])
+	_unbind_key("roll", KEY_SPACE)
 	_action("interact", [_key(KEY_E)])
 	_action("bind_ashpike", [_key(KEY_1)])
 	_action("bind_fists", [_key(KEY_2)])
 	_action("restart", [_key(KEY_R)])
 	_action("toggle_mouse", [_key(KEY_ESCAPE)])
+
+
+func _unbind_key(action_name: String, physical: Key) -> void:
+	if not InputMap.has_action(action_name):
+		return
+	for existing in InputMap.action_get_events(action_name):
+		if existing is InputEventKey and existing.physical_keycode == physical:
+			InputMap.action_erase_event(action_name, existing)
 
 
 func _action(action_name: String, events: Array) -> void:

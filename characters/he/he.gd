@@ -1,7 +1,7 @@
 class_name HE
 extends CharacterBody3D
 
-## Protagonist. Starts unarmed. Weighty walk, short-reach fists, stamina whiff punish.
+## Protagonist. Starts unarmed. Weighty walk, short-reach fists. Jump on Space; roll on Ctrl.
 
 enum State { FREE, ATTACK, ROLL, HITSTUN, DEAD }
 
@@ -64,6 +64,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_attack(false)
 	elif event.is_action_pressed("heavy_attack"):
 		_try_attack(true)
+	elif event.is_action_pressed("jump"):
+		_try_jump()
 	elif event.is_action_pressed("roll"):
 		_try_roll()
 	elif event.is_action_pressed("interact"):
@@ -79,7 +81,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= Combat.GRAVITY * delta
-	else:
+	elif velocity.y < 0.0:
 		velocity.y = 0.0
 
 	if global_position.y < -2.0:
@@ -113,9 +115,12 @@ func _physics_process(delta: float) -> void:
 
 func _tick_free(delta: float) -> void:
 	var input_dir := _move_vector()
-	var sprinting := Input.is_action_pressed("sprint") and stamina > 4.0 and input_dir.length() > 0.1
+	var can_sprint := input_dir.length() > 0.1 and (
+		not Combat.STAMINA_GATING or stamina > 4.0
+	)
+	var sprinting := Input.is_action_pressed("sprint") and can_sprint
 	var speed := Combat.SPRINT_SPEED if sprinting else Combat.WALK_SPEED
-	if sprinting:
+	if sprinting and Combat.STAMINA_GATING:
 		stamina = maxf(stamina - Combat.SPRINT_DRAIN * delta, 0.0)
 		_stam_delay = 0.25
 	var target := input_dir * speed
@@ -150,7 +155,7 @@ func _tick_attack(delta: float) -> void:
 				box.landed.connect(_on_attack_landed)
 	elif box.monitoring:
 		box.disarm()
-		if not _attack_hit:
+		if not _attack_hit and Combat.WHIFF_PUNISH:
 			_apply_whiff()
 	if _state_time >= total:
 		box.disarm()
@@ -161,11 +166,12 @@ func _try_attack(heavy: bool) -> void:
 	if state != State.FREE:
 		return
 	var profile := Combat.attack_for(Game.ashpike_bound, heavy)
-	if stamina < profile.stamina:
-		Game.banner("Winded.")
-		return
-	stamina -= profile.stamina
-	_stam_delay = Combat.STAMINA_REGEN_DELAY
+	if Combat.STAMINA_GATING:
+		if stamina < profile.stamina:
+			Game.banner("Winded.")
+			return
+		stamina -= profile.stamina
+		_stam_delay = Combat.STAMINA_REGEN_DELAY
 	_attack = profile
 	_attack_hit = false
 	_state_time = 0.0
@@ -174,14 +180,23 @@ func _try_attack(heavy: bool) -> void:
 	_place_hitbox(_active_box(), float(profile.reach), float(profile.width))
 
 
+func _try_jump() -> void:
+	if state == State.DEAD or state == State.ROLL:
+		return
+	if not is_on_floor():
+		return
+	velocity.y = Combat.JUMP_VELOCITY
+
+
 func _try_roll() -> void:
 	if state != State.FREE:
 		return
-	if stamina < Combat.ROLL_COST:
-		Game.banner("Winded.")
-		return
-	stamina -= Combat.ROLL_COST
-	_stam_delay = Combat.STAMINA_REGEN_DELAY
+	if Combat.STAMINA_GATING:
+		if stamina < Combat.ROLL_COST:
+			Game.banner("Winded.")
+			return
+		stamina -= Combat.ROLL_COST
+		_stam_delay = Combat.STAMINA_REGEN_DELAY
 	var dir := _move_vector()
 	if dir.length() < 0.1:
 		dir = -mesh_root.global_transform.basis.z
@@ -230,6 +245,8 @@ func _on_attack_landed(_hurtbox: Hurtbox) -> void:
 
 
 func _apply_whiff() -> void:
+	if not Combat.WHIFF_PUNISH:
+		return
 	stamina = maxf(stamina - float(_attack.get("whiff_stamina", 12.0)), 0.0)
 	_stam_delay = Combat.WHIFF_REGEN_DELAY
 	_attack.recovery = float(_attack.recovery) + 0.28
