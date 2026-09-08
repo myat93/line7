@@ -1,33 +1,14 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://characters/he/he.gd" id="1_he"]
 [ext_resource type="Script" path="res://core/hitbox.gd" id="2_hit"]
 [ext_resource type="Script" path="res://core/hurtbox.gd" id="3_hurt"]
 [ext_resource type="PackedScene" path="res://weapons/ashpike/ashpike.tscn" id="4_pike"]
+[ext_resource type="PackedScene" path="res://characters/he/he_blockout.glb" id="5_blockout"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.32
 height = 1.8
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-radius = 0.32
-height = 1.8
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_he"]
-albedo_color = Color(0.42, 0.36, 0.32, 1)
-roughness = 0.78
-
-[sub_resource type="SphereMesh" id="SphereMesh_head"]
-radius = 0.2
-height = 0.4
-
-[sub_resource type="SphereMesh" id="SphereMesh_fist"]
-radius = 0.09
-height = 0.18
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fist"]
-albedo_color = Color(0.55, 0.44, 0.38, 1)
-roughness = 0.7
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
 size = Vector3(0.4, 0.5, 1.2)
@@ -48,25 +29,9 @@ shape = SubResource("CapsuleShape3D_body")
 
 [node name="MeshRoot" type="Node3D" parent="."]
 
-[node name="Body" type="MeshInstance3D" parent="MeshRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-mesh = SubResource("CapsuleMesh_body")
-surface_material_override/0 = SubResource("StandardMaterial3D_he")
+[node name="HEBlockout" parent="MeshRoot" instance=ExtResource("5_blockout")]
 
-[node name="Head" type="MeshInstance3D" parent="MeshRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.68, -0.02)
-mesh = SubResource("SphereMesh_head")
-surface_material_override/0 = SubResource("StandardMaterial3D_he")
-
-[node name="LeftFist" type="MeshInstance3D" parent="MeshRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.95, -0.18)
-mesh = SubResource("SphereMesh_fist")
-surface_material_override/0 = SubResource("StandardMaterial3D_fist")
-
-[node name="RightFist" type="MeshInstance3D" parent="MeshRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.95, -0.18)
-mesh = SubResource("SphereMesh_fist")
-surface_material_override/0 = SubResource("StandardMaterial3D_fist")
+[node name="PosePlayer" type="AnimationPlayer" parent="MeshRoot"]
 
 [node name="Ashpike" parent="MeshRoot" instance=ExtResource("4_pike")]
 transform = Transform3D(1, 0, 0, 0, 0.17, 0.985, 0, -0.985, 0.17, 0.22, 0.95, -0.1)

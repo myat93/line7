@@ -19,6 +19,14 @@ var _look_pitch: float = -0.12
 var _iframe: float = 0.0
 var _roll_held: bool = false
 
+const BLOCKOUT_SCENE: PackedScene = preload("res://characters/he/he_blockout.glb")
+const POSE_PARTS: PackedStringArray = [
+	"Hips", "Torso", "Head",
+	"L_UpperArm", "L_Forearm", "L_Fist",
+	"R_UpperArm", "R_Forearm", "R_Fist",
+	"L_Thigh", "L_Shin", "R_Thigh", "R_Shin",
+]
+
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var spring: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var mesh_root: Node3D = $MeshRoot
@@ -27,9 +35,12 @@ var _roll_held: bool = false
 @onready var pike_box: Hitbox = $Hitboxes/Pike
 @onready var hurt: Hurtbox = $Hurtbox
 @onready var ashpike_visual: Ashpike = $MeshRoot/Ashpike
-@onready var left_fist: MeshInstance3D = $MeshRoot/LeftFist
-@onready var right_fist: MeshInstance3D = $MeshRoot/RightFist
-@onready var body_mesh: MeshInstance3D = $MeshRoot/Body
+@onready var pose_player: AnimationPlayer = $MeshRoot/PosePlayer
+
+var _sprinting: bool = false
+var _blockout: Node3D
+var _pose: Dictionary = {}
+var _pose_rest: Dictionary = {}
 
 
 func _ready() -> void:
@@ -43,7 +54,7 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	mesh_root.rotation.y = PI
 	camera_pivot.rotation = Vector3(_look_pitch, _look_yaw, 0.0)
-	_build_facing_read()
+	_bind_blockout()
 	_refresh_stance_visual()
 	floor_snap_length = 0.3
 
@@ -145,12 +156,13 @@ func _physics_process(delta: float) -> void:
 
 	_regen(delta)
 	move_and_slide()
-	_animate_fists()
+	_update_visual_pose()
 
 
 func _tick_free(delta: float) -> void:
 	var input_dir := _move_vector()
 	var sprinting := is_sprint_held() and input_dir.length() > 0.1
+	_sprinting = sprinting
 	if sprinting and Combat.STAMINA_GATING:
 		if stamina <= 4.0:
 			sprinting = false
@@ -360,76 +372,52 @@ func _regen(delta: float) -> void:
 	stamina = minf(stamina + Combat.STAMINA_REGEN * delta, Combat.PLAYER_MAX_STAMINA)
 
 
-func _build_facing_read() -> void:
-	if mesh_root.get_node_or_null("Visor") != null:
+func _bind_blockout() -> void:
+	_blockout = mesh_root.get_node_or_null("HEBlockout") as Node3D
+	if _blockout == null:
+		_blockout = BLOCKOUT_SCENE.instantiate() as Node3D
+		_blockout.name = "HEBlockout"
+		mesh_root.add_child(_blockout)
+	_cache_pose_nodes()
+	## PosePlayer is the hook for authored clips. The GLB has none yet, so
+	## _update_visual_pose() drives jab / heavy / roll / sprint procedurally.
+	if pose_player:
+		pose_player.active = true
+
+
+func _cache_pose_nodes() -> void:
+	_pose.clear()
+	_pose_rest.clear()
+	if _blockout == null:
 		return
-	var visor_mat := StandardMaterial3D.new()
-	visor_mat.albedo_color = Color(0.12, 0.2, 0.26)
-	visor_mat.metallic = 0.35
-	visor_mat.roughness = 0.25
-	visor_mat.emission_enabled = true
-	visor_mat.emission = Color(0.2, 0.55, 0.62)
-	visor_mat.emission_energy_multiplier = 0.9
-	var visor := MeshInstance3D.new()
-	visor.name = "Visor"
-	var visor_mesh := BoxMesh.new()
-	visor_mesh.size = Vector3(0.26, 0.09, 0.07)
-	visor.mesh = visor_mesh
-	visor.material_override = visor_mat
-	visor.position = Vector3(0.0, 1.7, -0.16)
-	mesh_root.add_child(visor)
+	for part_name in POSE_PARTS:
+		var node := _blockout.find_child(part_name, true, false) as Node3D
+		if node == null:
+			continue
+		_pose[part_name] = node
+		_pose_rest[part_name] = node.rotation
 
-	var beak := MeshInstance3D.new()
-	beak.name = "Beak"
-	var beak_mesh := BoxMesh.new()
-	beak_mesh.size = Vector3(0.16, 0.12, 0.28)
-	beak.mesh = beak_mesh
-	var beak_mat := StandardMaterial3D.new()
-	beak_mat.albedo_color = Color(0.62, 0.48, 0.36)
-	beak_mat.roughness = 0.7
-	beak.material_override = beak_mat
-	beak.position = Vector3(0.0, 1.12, -0.38)
-	mesh_root.add_child(beak)
 
-	var mark := MeshInstance3D.new()
-	mark.name = "ChestMark"
-	var mark_mesh := BoxMesh.new()
-	mark_mesh.size = Vector3(0.1, 0.28, 0.04)
-	mark.mesh = mark_mesh
-	var mark_mat := StandardMaterial3D.new()
-	mark_mat.albedo_color = Color(0.78, 0.22, 0.2)
-	mark_mat.emission_enabled = true
-	mark_mat.emission = Color(0.55, 0.12, 0.1)
-	mark_mat.emission_energy_multiplier = 0.45
-	mark.material_override = mark_mat
-	mark.position = Vector3(0.1, 1.18, -0.3)
-	mesh_root.add_child(mark)
-
-	var chevron := MeshInstance3D.new()
-	chevron.name = "FacingChevron"
-	var prism := PrismMesh.new()
-	prism.size = Vector3(0.36, 0.05, 0.4)
-	chevron.mesh = prism
-	var chev_mat := StandardMaterial3D.new()
-	chev_mat.albedo_color = Color(0.85, 0.78, 0.45)
-	chev_mat.emission_enabled = true
-	chev_mat.emission = Color(0.55, 0.45, 0.18)
-	chev_mat.emission_energy_multiplier = 0.35
-	chevron.material_override = chev_mat
-	chevron.position = Vector3(0.0, 0.04, -0.32)
-	chevron.rotation_degrees = Vector3(90, 180, 0)
-	mesh_root.add_child(chevron)
+func _part_rot(part_name: String, extra: Vector3) -> void:
+	var node: Node3D = _pose.get(part_name) as Node3D
+	if node == null:
+		return
+	var rest: Vector3 = _pose_rest.get(part_name, Vector3.ZERO)
+	node.rotation = rest + extra
 
 
 func _refresh_stance_visual() -> void:
 	if ashpike_visual:
 		ashpike_visual.set_bound(Game.ashpike_bound)
-	if left_fist and right_fist:
-		left_fist.visible = not Game.ashpike_bound
-		right_fist.visible = not Game.ashpike_bound
+	var show_fists := not Game.ashpike_bound
+	for part_name in ["L_Fist", "R_Fist"]:
+		var node: Node3D = _pose.get(part_name) as Node3D
+		if node:
+			node.visible = show_fists
 
 
-func _animate_fists() -> void:
+func _update_visual_pose() -> void:
+	mesh_root.rotation.x = 0.0
 	if Game.ashpike_bound and ashpike_visual:
 		ashpike_visual.rotation_degrees = Vector3(-18, 0, 12)
 		if state == State.ATTACK:
@@ -437,15 +425,107 @@ func _animate_fists() -> void:
 			ashpike_visual.position = Vector3(0.22, 0.95, -0.15 - t * 0.35)
 		else:
 			ashpike_visual.position = Vector3(0.22, 0.95, -0.1)
-		return
-	if state == State.ATTACK:
-		var punch := right_fist if bool(_attack.get("heavy", false)) else left_fist
-		var t := clampf(_state_time * 8.0, 0.0, 1.0)
-		punch.position.z = -0.28 - t * 0.45
+	match state:
+		State.ROLL:
+			_pose_roll()
+		State.ATTACK:
+			if bool(_attack.get("heavy", false)):
+				_pose_heavy()
+			else:
+				_pose_jab()
+		State.HITSTUN:
+			_pose_idle()
+			_part_rot("Torso", Vector3(0.18, 0.12, 0.08))
+			_part_rot("Head", Vector3(-0.2, 0.15, 0.0))
+		State.DEAD:
+			_part_rot("Hips", Vector3(1.2, 0.0, 0.35))
+			_part_rot("Torso", Vector3(0.4, 0.0, 0.2))
+		_:
+			if _sprinting:
+				_pose_sprint()
+			else:
+				_pose_idle()
+
+
+func _pose_idle() -> void:
+	_part_rot("Hips", Vector3.ZERO)
+	_part_rot("Torso", Vector3.ZERO)
+	_part_rot("Head", Vector3.ZERO)
+	_part_rot("L_UpperArm", Vector3(0.28, 0.05, 0.22))
+	_part_rot("L_Forearm", Vector3(0.18, 0.0, 0.0))
+	_part_rot("L_Fist", Vector3.ZERO)
+	_part_rot("R_UpperArm", Vector3(0.28, -0.05, -0.22))
+	_part_rot("R_Forearm", Vector3(0.18, 0.0, 0.0))
+	_part_rot("R_Fist", Vector3.ZERO)
+	_part_rot("L_Thigh", Vector3.ZERO)
+	_part_rot("L_Shin", Vector3.ZERO)
+	_part_rot("R_Thigh", Vector3.ZERO)
+	_part_rot("R_Shin", Vector3.ZERO)
+
+
+func _pose_sprint() -> void:
+	var swing := sin(Time.get_ticks_msec() * 0.012)
+	_part_rot("Hips", Vector3(0.08, 0.0, 0.0))
+	_part_rot("Torso", Vector3(0.28, swing * 0.04, 0.0))
+	_part_rot("Head", Vector3(-0.08, 0.0, 0.0))
+	_part_rot("L_UpperArm", Vector3(0.55 + swing * 0.45, 0.05, 0.12))
+	_part_rot("L_Forearm", Vector3(0.35, 0.0, 0.0))
+	_part_rot("R_UpperArm", Vector3(0.55 - swing * 0.45, -0.05, -0.12))
+	_part_rot("R_Forearm", Vector3(0.35, 0.0, 0.0))
+	_part_rot("L_Thigh", Vector3(swing * 0.55, 0.0, 0.0))
+	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.4, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(-swing * 0.55, 0.0, 0.0))
+	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.4, 0.0, 0.0))
+
+
+func _pose_jab() -> void:
+	## Snap: fist is out almost immediately, then retracts in recovery.
+	var snap := 1.0 - pow(1.0 - clampf(_state_time / 0.10, 0.0, 1.0), 3.0)
+	if _state_time > 0.20:
+		snap = 1.0 - clampf((_state_time - 0.20) / 0.22, 0.0, 1.0)
+	_pose_idle()
+	_part_rot("Torso", Vector3(0.06, 0.14, 0.0) * snap)
+	_part_rot("L_UpperArm", Vector3(1.45, 0.18, 0.04) * snap + Vector3(0.12, 0.0, 0.08))
+	_part_rot("L_Forearm", Vector3(0.22, 0.0, 0.0))
+	_part_rot("L_Fist", Vector3(0.15, 0.0, 0.0) * snap)
+	_part_rot("R_UpperArm", Vector3(0.15, -0.08, -0.28))
+
+
+func _pose_heavy() -> void:
+	var wind: float = float(_attack.get("windup", 0.32))
+	_pose_idle()
+	if _state_time < wind:
+		var coil := clampf(_state_time / maxf(wind, 0.05), 0.0, 1.0)
+		coil = coil * coil
+		_part_rot("Torso", Vector3(0.12, -0.22, 0.06) * coil)
+		_part_rot("Hips", Vector3(-0.08, -0.08, 0.0) * coil)
+		_part_rot("R_UpperArm", Vector3(-0.65, -0.35, -0.42) * coil + Vector3(0.1, 0.0, -0.1))
+		_part_rot("R_Forearm", Vector3(0.55, 0.0, 0.0) * coil)
+		_part_rot("Head", Vector3(0.08, -0.12, 0.0) * coil)
 	else:
-		left_fist.position = Vector3(-0.28, 0.95, -0.18)
-		right_fist.position = Vector3(0.28, 0.95, -0.18)
-	if state == State.ROLL:
-		mesh_root.rotation.x = -0.45
-	else:
-		mesh_root.rotation.x = 0.0
+		var commit := 1.0 - pow(1.0 - clampf((_state_time - wind) / 0.12, 0.0, 1.0), 2.0)
+		if _state_time > wind + 0.16:
+			commit = 1.0 - clampf((_state_time - wind - 0.16) / 0.36, 0.0, 1.0) * 0.55
+		_part_rot("Torso", Vector3(0.22, 0.18, 0.0) * commit)
+		_part_rot("Hips", Vector3(0.12, 0.1, 0.0) * commit)
+		_part_rot("R_UpperArm", Vector3(1.58, 0.12, -0.08) * commit)
+		_part_rot("R_Forearm", Vector3(0.18, 0.0, 0.0))
+		_part_rot("R_Fist", Vector3(0.2, 0.0, 0.0) * commit)
+		_part_rot("L_UpperArm", Vector3(0.2, 0.12, 0.35))
+
+
+func _pose_roll() -> void:
+	var tuck := 1.0
+	if _state_time > 0.26:
+		tuck = 1.0 - clampf((_state_time - 0.26) / 0.14, 0.0, 1.0)
+	_part_rot("Hips", Vector3(1.15, 0.0, 0.0) * tuck)
+	_part_rot("Torso", Vector3(0.62, 0.0, 0.0) * tuck)
+	_part_rot("Head", Vector3(0.35, 0.0, 0.0) * tuck)
+	_part_rot("L_Thigh", Vector3(-1.35, 0.0, 0.12) * tuck)
+	_part_rot("R_Thigh", Vector3(-1.45, 0.0, -0.12) * tuck)
+	_part_rot("L_Shin", Vector3(1.55, 0.0, 0.0) * tuck)
+	_part_rot("R_Shin", Vector3(1.45, 0.0, 0.0) * tuck)
+	_part_rot("L_UpperArm", Vector3(0.85, 0.4, 0.55) * tuck)
+	_part_rot("R_UpperArm", Vector3(0.85, -0.4, -0.55) * tuck)
+	_part_rot("L_Forearm", Vector3(0.9, 0.0, 0.0) * tuck)
+	_part_rot("R_Forearm", Vector3(0.9, 0.0, 0.0) * tuck)
