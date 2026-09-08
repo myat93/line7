@@ -62,6 +62,33 @@ func _run() -> void:
 		_he._stride = 0.85
 		_he._update_visual_pose()
 	)
+	await _shot("he_run_stop_idle", func() -> void:
+		_he.state = HE.State.FREE
+		_he._sprinting = true
+		_he._stride = 0.85
+		_he._update_visual_pose()
+		_he._sprinting = false
+		_he._moving = false
+		_he._update_visual_pose()
+	)
+	## Three-quarter so jab / heavy fists read; facing already proven from behind.
+	_he._look_yaw = PI + 0.55
+	_he._look_pitch = -0.14
+	_he.camera_pivot.rotation = Vector3(_he._look_pitch, _he._look_yaw, 0.0)
+	if spring:
+		spring.spring_length = 2.7
+	await _shot("he_jab_three_quarter", func() -> void:
+		_he.state = HE.State.ATTACK
+		_he._attack = Combat.fists_light()
+		_he._state_time = 0.12
+		_he._update_visual_pose()
+	)
+	await _shot("he_heavy_three_quarter", func() -> void:
+		_he.state = HE.State.ATTACK
+		_he._attack = Combat.fists_heavy()
+		_he._state_time = 0.40
+		_he._update_visual_pose()
+	)
 	print("HE_POSE_SHOTS_OK")
 	get_tree().quit(0)
 
@@ -75,6 +102,9 @@ func _shot(name: String, setup: Callable) -> void:
 	if img == null:
 		push_error("POSE_SHOTS: empty viewport for %s" % name)
 		return
+	DirAccess.make_dir_recursive_absolute("/tmp/he_pose_shots")
 	var path := "%s/%s.png" % [OUT_DIR, name]
 	var err := img.save_png(path)
+	var tmp := "/tmp/he_pose_shots/%s.png" % name
+	img.save_png(tmp)
 	print("WROTE ", path, " ", err, " ", img.get_width(), "x", img.get_height())

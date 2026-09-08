@@ -248,7 +248,11 @@ func _try_attack(heavy: bool) -> void:
 	_attack = profile
 	_attack_hit = false
 	_state_time = 0.0
+	_sprinting = false
+	_moving = false
 	state = State.ATTACK
+	if _rig.skeleton:
+		_rig.reset_to_bind()
 	_face_herald()
 	_place_hitbox(_active_box(), float(profile.reach), float(profile.width))
 
@@ -408,6 +412,9 @@ func _refresh_stance_visual() -> void:
 
 func _update_visual_pose() -> void:
 	mesh_root.rotation.x = 0.0
+	## Bind first every frame so run↔attack cannot keep a prior extra.
+	if _rig.skeleton:
+		_rig.reset_to_bind()
 	if Game.ashpike_bound and ashpike_visual:
 		ashpike_visual.rotation_degrees = Vector3(-18, 0, 12)
 		if state == State.ATTACK:
@@ -425,11 +432,10 @@ func _update_visual_pose() -> void:
 				_pose_jab()
 		State.HITSTUN:
 			_pose_idle()
-			_part_rot("Torso", Vector3(0.18, 0.12, 0.08))
-			_part_rot("Head", Vector3(-0.2, 0.15, 0.0))
+			_part_rot("Head", Vector3(-0.08, 0.06, 0.0))
 		State.DEAD:
-			_part_rot("Hips", Vector3(1.2, 0.0, 0.35))
-			_part_rot("Torso", Vector3(0.4, 0.0, 0.2))
+			_pose_idle()
+			_part_rot("Head", Vector3(0.12, 0.08, 0.0))
 		_:
 			if not is_on_floor() and velocity.y > 0.4:
 				_pose_jump()
@@ -495,14 +501,11 @@ func _pose_jab() -> void:
 	elif _state_time > wind + active:
 		snap = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0)
 	_pose_idle()
-	_part_rot("Torso", Vector3(0.0, 0.16, -0.06) * snap)
-	_part_rot("Hips", Vector3(0.0, 0.08, -0.03) * snap)
-	_part_rot("Head", Vector3(0.04, -0.06, 0.0) * snap)
-	_part_rot("L_UpperArm", Vector3(-0.35, 0.22, 0.28) * snap)
-	_part_rot("L_Forearm", Vector3(0.22, 0.0, 0.0) * snap)
-	_part_rot("L_Fist", Vector3(0.08, 0.0, 0.0) * snap)
-	_rig.aim_along_y("L_UpperArm", Vector3(0.05, 0.08, -1.0), snap * 0.34)
-	_part_rot("R_UpperArm", Vector3(0.08, -0.06, -0.06))
+	## Arms only. Hip/torso extras stretch the 100×-IBM skin on run-stop.
+	_part_rot("L_Forearm", Vector3(0.20, 0.0, 0.0) * snap)
+	_part_rot("L_Fist", Vector3(0.06, 0.0, 0.0) * snap)
+	_rig.aim_along_y("L_UpperArm", Vector3(0.04, 0.10, -1.0), snap * 0.28)
+	_part_rot("R_UpperArm", Vector3(0.06, -0.04, -0.04))
 
 
 func _pose_heavy() -> void:
@@ -514,24 +517,15 @@ func _pose_heavy() -> void:
 	if _state_time < wind:
 		var coil := clampf(_state_time / maxf(wind, 0.05), 0.0, 1.0)
 		coil = coil * coil
-		_part_rot("Torso", Vector3(0.0, -0.16, 0.06) * coil)
-		_part_rot("Hips", Vector3(0.0, -0.08, 0.04) * coil)
-		_part_rot("Head", Vector3(-0.04, -0.08, 0.0) * coil)
-		_part_rot("R_UpperArm", Vector3(0.28, 0.18, 0.20) * coil)
-		_part_rot("R_Forearm", Vector3(0.35, 0.0, 0.0) * coil)
-		_part_rot("L_UpperArm", Vector3(0.10, 0.06, 0.08) * coil)
+		_part_rot("R_Forearm", Vector3(0.28, 0.0, 0.0) * coil)
+		_rig.aim_along_y("R_UpperArm", Vector3(0.35, 0.25, 0.15), coil * 0.22)
 	else:
 		var commit := 1.0 - pow(1.0 - clampf((_state_time - wind) / 0.10, 0.0, 1.0), 2.0)
 		if _state_time > wind + active:
 			commit = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0) * 0.55
-		_part_rot("Torso", Vector3(0.0, 0.16, -0.08) * commit)
-		_part_rot("Hips", Vector3(0.0, 0.08, -0.04) * commit)
-		_part_rot("Head", Vector3(0.05, -0.05, 0.0) * commit)
-		_part_rot("R_UpperArm", Vector3(-0.28, -0.12, -0.10) * commit)
-		_rig.aim_along_y("R_UpperArm", Vector3(-0.08, 0.06, -1.0), commit * 0.34)
-		_part_rot("R_Forearm", Vector3(0.12, 0.0, 0.0))
-		_part_rot("R_Fist", Vector3(0.08, 0.0, 0.0) * commit)
-		_part_rot("L_UpperArm", Vector3(0.10, 0.06, 0.08))
+		_part_rot("R_Forearm", Vector3(0.10, 0.0, 0.0))
+		_part_rot("R_Fist", Vector3(0.06, 0.0, 0.0) * commit)
+		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.08, -1.0), commit * 0.28)
 
 
 func _pose_roll() -> void:
@@ -551,12 +545,5 @@ func _pose_roll() -> void:
 
 func _pose_jump() -> void:
 	_pose_idle()
-	_part_rot("Hips", Vector3(0.06, 0.0, 0.0))
-	_part_rot("Torso", Vector3(0.04, 0.0, 0.0))
-	_part_rot("Head", Vector3(-0.06, 0.0, 0.0))
-	_part_rot("L_UpperArm", Vector3(-0.18, 0.14, 0.10))
-	_part_rot("R_UpperArm", Vector3(-0.18, -0.14, -0.10))
-	_part_rot("L_Forearm", Vector3(0.16, 0.0, 0.0))
-	_part_rot("R_Forearm", Vector3(0.16, 0.0, 0.0))
-	_part_rot("L_Thigh", Vector3(-0.14, 0.0, 0.04))
-	_part_rot("R_Thigh", Vector3(0.10, 0.0, -0.04))
+	_part_rot("L_Thigh", Vector3(-0.12, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(0.08, 0.0, 0.0))
