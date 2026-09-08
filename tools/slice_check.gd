@@ -29,6 +29,8 @@ func _check_layout(failures: PackedStringArray) -> void:
 		"res://enemies/hollow_herald/hollow_herald.gd",
 		"res://enemies/hollow_herald/herald_blockout.glb",
 		"res://enemies/hollow_herald/build_herald_blockout.py",
+		"res://enemies/hollow_herald/hollow_herald_blockout.glb",
+		"res://enemies/hollow_herald/build_hollow_herald_blockout.py",
 		"res://ruins/line7_undercroft/line7_undercroft.tscn",
 		"res://ruins/fallen_castle/fallen_castle.tscn",
 		"res://ruins/fallen_castle/fallen_castle.gd",
@@ -165,6 +167,16 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		if herald_visual.find_child("Crown", true, false) == null:
 			failures.append("herald_blockout.glb is missing the Crown joint.")
 		herald_visual.free()
+	var official_glb := load("res://enemies/hollow_herald/hollow_herald_blockout.glb") as PackedScene
+	if official_glb == null:
+		failures.append("hollow_herald_blockout.glb did not import as a PackedScene.")
+	else:
+		var official_visual: Node = official_glb.instantiate()
+		if official_visual.find_child("Hips", true, false) == null or official_visual.find_child("R_UpperArm", true, false) == null:
+			failures.append("hollow_herald_blockout.glb is missing pose joints (Hips / R_UpperArm).")
+		if official_visual.find_child("Crown", true, false) == null:
+			failures.append("hollow_herald_blockout.glb is missing the Crown joint.")
+		official_visual.free()
 	var under_text := FileAccess.get_file_as_string("res://ruins/line7_undercroft/line7_undercroft.gd")
 	if not under_text.contains("line7_pocket") or not under_text.contains("door_gap"):
 		failures.append("Undercroft does not link the service-tunnel door_gap.")
