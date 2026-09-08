@@ -58,9 +58,9 @@ A fourth linked scene at `ruins/guard_camp/` — palisade yard off the tunnel ex
 **How to enter**
 
 1. Walk the service tunnel to the far wall. A sealed **CAMP** door sits past the locker.
-2. Press **E**. The yard opens at a gap in the palisade logs. The cook **TRIPOD** orients the space.
-3. Check A: walk through the lean-to and torch post. Check B: short jump (or roll from the step crate) onto the raised guard plank. Optional **E** on the crate for a wrap / scrap.
-4. Far gap is look-only mist — fog wall, no drop softlock. **E** at **TUNNEL** to return to the service corridor.
+2. Press **E**. The yard opens at a gap in the palisade logs. The cook **TRIPOD** orients the cramped ring.
+3. Lean-tos sit on the **left**. Short jump (or roll) onto `guard_plank`. Optional **E** on the crate for a wrap / scrap.
+4. Torch / brazier marks the far gap. Look-only purple mist / forest drop — no softlock. **E** at **TUNNEL** to return.
 5. Optional debug: press **0** to toggle this pocket.
 
 ## Controls

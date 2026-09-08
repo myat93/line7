@@ -6,17 +6,17 @@ Props come from Jake’s **`CampKit`** (`ruins/fallen_castle/camp_kit.gd`) — g
 
 **Enter:** tunnel past the locker → sealed **CAMP** door → **E**.
 
-**Loop (~45–60s, no fight)**
+**Loop (~45–60s, no fight)** — photo match: cramped ring, shelters on the left, torch at the mist gap.
 
-1. `palisade_log` / `palisade_ring` — jagged rope-lashed stakes, enter gap
-2. `tripod_central` — cook tripod orients the yard
-3. Check A — `lean_to_a` (cloth) + `torch_post`
-4. Check B — `guard_plank` (short jump). `lean_to_b` beside it.
-5. Optional `crate_loot` — **E** wrap / scrap. Skip = faster exit.
-6. `mist_drop` — look-only fog / forest. No softlock.
+1. `palisade_log` / `palisade_ring` — jagged rope-lashed stakes with horizontal rails, enter gap
+2. `tripod_central` — thin-pole cook tripod in the mud
+3. Check A / B — `lean_to_a` + `lean_to_b` (dark cloth) on the **left**, `guard_plank` between them
+4. Optional `crate_loot` — **E** wrap / scrap under the left clutter
+5. `torch_post` at the **mist exit** (warm brazier)
+6. `mist_drop` — purple forest fog beyond the ring. No softlock.
 
 **E** at **TUNNEL** returns to the service corridor far end. No new enemy. Combat / HE untouched.
 
 Debug: **0** camp · **9** tunnel · **8** ruins camp.
 
-**Mesh vs placeholder:** every prop is a CampKit `MeshInstance3D` (tapered logs, cloth planes, plank boxes, rope bands). No CSG. Ground is `Kit.mud_ground`.
+**Mesh vs placeholder:** every named piece is a CampKit `MeshInstance3D` (tapered bark logs, cloth planes, plank boxes, rope rails, hooped barrels, iron brazier). No CSG grey cubes. Ground is `Kit.mud_ground`. Mist is a translucent fog sheet, not a solid wall.

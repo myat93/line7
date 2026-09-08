@@ -24,6 +24,14 @@ func _ready() -> void:
 	Kit.crate(self, Vector3(0.0, 0.0, 0.0), Vector3(0.7, 0.5, 0.62), 8.0)
 	Kit.crate(self, Vector3(0.58, -0.04, 0.18), Vector3(0.45, 0.32, 0.4), -16.0)
 	Kit.barrel(self, Vector3(-0.55, -0.22, 0.12))
+	var hide := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(0.72, 0.58)
+	hide.mesh = plane
+	hide.material_override = Kit.mat("leather")
+	hide.position = Vector3(0.04, 0.32, 0.02)
+	hide.rotation_degrees = Vector3(8, 14, -5)
+	add_child(hide)
 	PocketGeo.label(self, Vector3(0.12, 0.72, 0.0), "CRATE", Color(0.86, 0.72, 0.48), 22)
 	if get_node_or_null("CollisionShape3D") == null:
 		var col := CollisionShape3D.new()

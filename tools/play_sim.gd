@@ -208,12 +208,12 @@ func _run() -> void:
 	if get_tree().get_nodes_in_group("torch_post").is_empty():
 		_fail("Torch post missing.")
 	for stand in [
-		Vector3(0.0, 1.0, 2.0),
-		Vector3(0.0, 1.0, 6.6),
-		Vector3(-3.4, 1.0, 5.4),
-		Vector3(3.15, 1.85, 6.9),
-		Vector3(1.15, 1.2, 8.6),
-		Vector3(0.0, 1.0, 13.0),
+		Vector3(0.0, 1.0, 1.85),
+		Vector3(0.0, 1.0, 4.45),
+		Vector3(-2.2, 1.0, 3.3),
+		Vector3(-1.55, 1.85, 4.75),
+		Vector3(-1.45, 1.2, 7.25),
+		Vector3(0.0, 1.0, 8.55),
 	]:
 		he.global_position = stand
 		he.velocity = Vector3.ZERO

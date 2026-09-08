@@ -23,16 +23,16 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(3.4).timeout
 	## PI looks +Z (same as tunnel pocket_shots).
-	await _view(Vector3(0.0, 1.15, 37.2), PI, -0.08, "kit_camp_door_at_tunnel")
+	await _view(Vector3(0.0, 1.15, 37.2), PI, -0.08, "photo_camp_door_at_tunnel")
 	Game.travel_to("guard_camp")
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().create_timer(3.4).timeout
-	await _view(Vector3(0.0, 1.05, 2.1), PI, -0.12, "kit_yard_tripod_and_ring")
-	await _view(Vector3(-2.2, 1.05, 4.1), PI + 0.4, -0.12, "kit_lean_to_a_cloth")
-	await _view(Vector3(1.8, 1.05, 5.7), PI - 0.55, -0.18, "kit_plank_and_lean_to_b")
-	await _view(Vector3(0.2, 1.05, 7.6), PI - 0.35, -0.12, "kit_crate_loot")
-	await _view(Vector3(0.0, 1.05, 12.2), PI, -0.06, "kit_mist_drop")
+	await _view(Vector3(0.0, 1.05, 1.7), PI, -0.10, "photo_yard_tripod_and_ring")
+	await _view(Vector3(-1.6, 1.05, 2.6), PI + 0.55, -0.10, "photo_lean_tos_left")
+	await _view(Vector3(-0.4, 1.05, 4.2), PI + 0.85, -0.16, "photo_plank_left")
+	await _view(Vector3(-0.2, 1.05, 6.4), PI + 0.45, -0.12, "photo_crate_loot")
+	await _view(Vector3(0.0, 1.05, 7.6), PI, -0.06, "photo_torch_and_mist")
 	print("LINE7_CAMP_SHOTS_OK")
 	get_tree().quit(0)
 
