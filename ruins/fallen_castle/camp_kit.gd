@@ -38,12 +38,17 @@ static func _build_mat(kind: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = tex
 	m.roughness = 0.92
-	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	if kind == "cloth":
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		m.roughness = 0.78
 	if kind == "grass":
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if kind == "mud":
+		m.uv1_scale = Vector3(6, 6, 6)
+		m.albedo_color = Color(0.85, 0.72, 0.55)
+	if kind == "bark":
+		m.uv1_scale = Vector3(1.6, 2.4, 1.6)
 	return m
 
 

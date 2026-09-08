@@ -24,28 +24,34 @@ func _ready() -> void:
 	_place_crate()
 	_place_return_gate()
 	_place_markers()
+	if OS.get_cmdline_user_args().has("--camp-shot"):
+		_dump_camp_shots()
 
 
 func _style_environment() -> void:
 	var sky := ProceduralSkyMaterial.new()
-	sky.sky_top_color = Color(0.18, 0.2, 0.24)
-	sky.sky_horizon_color = Color(0.42, 0.28, 0.26)
-	sky.ground_bottom_color = Color(0.08, 0.07, 0.06)
-	sky.ground_horizon_color = Color(0.22, 0.16, 0.12)
-	sky.sun_angle_max = 10.0
-	sky.energy_multiplier = 0.85
+	sky.sky_top_color = Color(0.28, 0.32, 0.4)
+	sky.sky_horizon_color = Color(0.62, 0.36, 0.32)
+	sky.ground_bottom_color = Color(0.1, 0.08, 0.07)
+	sky.ground_horizon_color = Color(0.32, 0.22, 0.16)
+	sky.sun_angle_max = 12.0
+	sky.energy_multiplier = 1.15
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.sky = Sky.new()
 	env.sky.sky_material = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.55
+	env.ambient_light_energy = 0.85
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.22, 0.2, 0.2)
-	env.fog_density = 0.014
-	env.fog_aerial_perspective = 0.35
+	env.fog_light_color = Color(0.36, 0.3, 0.28)
+	env.fog_density = 0.01
+	env.fog_aerial_perspective = 0.28
 	env.glow_enabled = true
 	world_env.environment = env
+	var sun := get_node_or_null("DirectionalLight3D") as DirectionalLight3D
+	if sun:
+		sun.light_energy = 0.95
+		sun.light_color = Color(0.72, 0.68, 0.62)
 
 
 func _build_ground() -> void:
@@ -151,6 +157,38 @@ func _marker(marker_name: String, pos: Vector3) -> void:
 	m.name = marker_name
 	m.position = pos
 	markers.add_child(m)
+
+
+func _dump_camp_shots() -> void:
+	var cam := Camera3D.new()
+	add_child(cam)
+	cam.current = true
+	await get_tree().create_timer(0.4).timeout
+	var origins: Array[Vector3] = [
+		Vector3(1.6, 2.2, 3.4),
+		Vector3(-1.1, 1.9, 7.6),
+		Vector3(3.8, 2.5, 16.2),
+		Vector3(-10.4, 2.4, 12.0),
+	]
+	var aims: Array[Vector3] = [
+		Vector3(-3.0, 1.55, 11.2),
+		Vector3(-6.2, 1.55, 9.3),
+		Vector3(-3.1, 1.8, 11.6),
+		Vector3(0.0, 1.6, 12.0),
+	]
+	var names := PackedStringArray([
+		"guard_camp_gate_twilight.png",
+		"guard_camp_lean_to_close.png",
+		"guard_camp_yard.png",
+		"guard_camp_wall.png",
+	])
+	for i in origins.size():
+		cam.global_position = origins[i]
+		cam.look_at(aims[i], Vector3.UP)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		get_viewport().get_texture().get_image().save_png("/opt/cursor/artifacts/" + names[i])
+	get_tree().quit()
 
 
 func _label(pos: Vector3, text: String) -> void:
