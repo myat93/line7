@@ -182,12 +182,15 @@ static func palisade_run(parent: Node3D, from: Vector3, to: Vector3, seed_n: int
 	for i in count:
 		var t := float(i) / float(count - 1)
 		var jitter := float((seed_n * 17 + i * 31) % 10) * 0.012
-		var h := 2.35 + float((seed_n + i * 7) % 13) * 0.09
+		var h := 2.15 + float((seed_n + i * 7) % 13) * 0.14
 		var r := 0.11 + float((i * 3 + seed_n) % 5) * 0.012
 		var pos := from.lerp(to, t) + side * (jitter - 0.05)
 		pos.y = from.y
 		var lean := float((i * 5 + seed_n) % 7) - 3.0
 		add_log(parent, pos, h, r, float(i * 27), lean * 0.8)
+	## Horizontal rope rails — photo palisade is lashed, not free stakes.
+	lash_rail(parent, from, to, 0.95, 0.028)
+	lash_rail(parent, from, to, 1.55, 0.032)
 	var wall := StaticBody3D.new()
 	wall.collision_layer = Combat.LAYER_WORLD
 	var col := CollisionShape3D.new()
@@ -202,6 +205,23 @@ static func palisade_run(parent: Node3D, from: Vector3, to: Vector3, seed_n: int
 		xaxis = Vector3.RIGHT
 	xaxis = xaxis.normalized()
 	wall.transform = Transform3D(Basis(xaxis, Vector3.UP, dir), mid)
+
+
+static func lash_rail(parent: Node3D, from: Vector3, to: Vector3, y: float, radius: float = 0.03) -> void:
+	var a := Vector3(from.x, from.y + y, from.z)
+	var b := Vector3(to.x, to.y + y, to.z)
+	if a.distance_to(b) < 0.2:
+		return
+	var rail := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = radius
+	cyl.bottom_radius = radius
+	cyl.height = a.distance_to(b)
+	cyl.radial_segments = 6
+	rail.mesh = cyl
+	rail.material_override = mat("rope")
+	rail.transform = _orient_along(a, b)
+	parent.add_child(rail)
 
 
 static func crate(parent: Node3D, pos: Vector3, size: Vector3 = Vector3(0.72, 0.55, 0.72), yaw: float = 0.0) -> MeshInstance3D:
@@ -333,6 +353,31 @@ static func tripod(parent: Node3D, origin: Vector3) -> void:
 
 static func torch_post(parent: Node3D, pos: Vector3, lights: Node3D) -> void:
 	add_log(parent, pos, 1.85, 0.07, 10.0, 1.5)
+	var iron := StandardMaterial3D.new()
+	iron.albedo_color = Color(0.18, 0.16, 0.14)
+	iron.metallic = 0.68
+	iron.roughness = 0.48
+	var basket := MeshInstance3D.new()
+	var bowl := CylinderMesh.new()
+	bowl.top_radius = 0.17
+	bowl.bottom_radius = 0.055
+	bowl.height = 0.14
+	bowl.radial_segments = 8
+	basket.mesh = bowl
+	basket.material_override = iron
+	basket.position = pos + Vector3(0.05, 1.88, 0.0)
+	parent.add_child(basket)
+	for i in 4:
+		var bar := MeshInstance3D.new()
+		var rod := CylinderMesh.new()
+		rod.top_radius = 0.012
+		rod.bottom_radius = 0.012
+		rod.height = 0.2
+		bar.mesh = rod
+		bar.material_override = iron
+		var ang := float(i) * TAU / 4.0
+		bar.position = pos + Vector3(0.05 + cos(ang) * 0.12, 1.82, sin(ang) * 0.12)
+		parent.add_child(bar)
 	var flame := MeshInstance3D.new()
 	var sph := SphereMesh.new()
 	sph.radius = 0.11
@@ -402,7 +447,16 @@ static func grass_tuft(parent: Node3D, pos: Vector3) -> void:
 		parent.add_child(blade)
 
 
-static func mud_ground(parent: Node3D, pos: Vector3, size: Vector3) -> void:
+static func weather_cloth(root: Node3D, tint: Color = Color(0.2, 0.16, 0.12)) -> void:
+	var dark := mat("cloth").duplicate() as StandardMaterial3D
+	dark.albedo_color = tint
+	for child in root.find_children("*", "MeshInstance3D", true, false):
+		var mi := child as MeshInstance3D
+		if mi.mesh is PlaneMesh and (mi.mesh as PlaneMesh).size.x > 1.2:
+			mi.material_override = dark
+
+
+static func mud_ground(parent: Node3D, pos: Vector3, size: Vector3, tint: Color = Color(0.85, 0.72, 0.55)) -> void:
 	var body := StaticBody3D.new()
 	body.position = pos
 	body.collision_layer = Combat.LAYER_WORLD
@@ -410,7 +464,11 @@ static func mud_ground(parent: Node3D, pos: Vector3, size: Vector3) -> void:
 	var box := BoxMesh.new()
 	box.size = size
 	mi.mesh = box
-	mi.material_override = mat("mud")
+	var ground_mat := mat("mud")
+	if tint != Color(0.85, 0.72, 0.55):
+		ground_mat = ground_mat.duplicate() as StandardMaterial3D
+		ground_mat.albedo_color = tint
+	mi.material_override = ground_mat
 	body.add_child(mi)
 	var col := CollisionShape3D.new()
 	var shape := BoxShape3D.new()

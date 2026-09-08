@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ruins/line7_pocket/tunnel_flood.gd" id="1_tun"]
+
+[node name="tunnel_flood" type="Node3D"]
+script = ExtResource("1_tun")

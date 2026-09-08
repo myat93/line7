@@ -126,6 +126,8 @@ func _run() -> void:
 	var kit_script := load("res://ruins/fallen_castle/camp_kit.gd")
 	if kit_script == null:
 		_fail("camp_kit.gd failed to compile — camp will stay empty.")
+	if not ResourceLoader.exists("res://ruins/line7_pocket/line7_pocket.tscn"):
+		_fail("Tunnel pocket scene missing.")
 	Game.travel_to("fallen_castle")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -146,6 +148,108 @@ func _run() -> void:
 	await get_tree().process_frame
 	if Game.current_pocket != "undercroft":
 		_fail("Return travel did not restore the undercroft.")
+
+	Game.travel_to("line7_pocket")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if Game.current_pocket != "line7_pocket":
+		_fail("travel_to did not enter line7_pocket.")
+	if he.global_position.y < 0.4:
+		_fail("HE spawned in the void in the tunnel (y=%.2f)." % he.global_position.y)
+	if he.global_position.z < 1.5:
+		_fail("HE did not teleport into the service tunnel (z=%.2f)." % he.global_position.z)
+	if herald.visible or herald.process_mode != Node.PROCESS_MODE_DISABLED:
+		_fail("Herald must stay disabled in the tunnel pocket.")
+	var extra_enemies := 0
+	for node in get_tree().get_nodes_in_group("enemy"):
+		if node != herald:
+			extra_enemies += 1
+	if extra_enemies > 0:
+		_fail("Tunnel pocket must not add a new enemy.")
+	var lockers := get_tree().get_nodes_in_group("maint_locker")
+	if lockers.is_empty():
+		_fail("Maintenance locker missing.")
+	else:
+		var locker: Node = lockers[0]
+		he.global_position = (locker as Node3D).global_position
+		if not locker.has_method("interact") or not locker.interact():
+			_fail("Locker E did not give stub loot.")
+		if locker.has_method("can_interact") and locker.can_interact():
+			_fail("Locker should be one-shot.")
+		if not Game.pocket_note_taken and not Game.pocket_kit_taken:
+			_fail("Locker interact did not record stub loot.")
+	if not ResourceLoader.exists("res://ruins/guard_camp/guard_camp.tscn"):
+		_fail("Guard camp scene missing.")
+	Game.travel_to("guard_camp")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if Game.current_pocket != "guard_camp":
+		_fail("travel_to did not enter guard_camp.")
+	if he.global_position.y < 0.4:
+		_fail("HE spawned in the void at the camp (y=%.2f)." % he.global_position.y)
+	if he.global_position.z < 1.5 or he.global_position.z > 5.0:
+		_fail("HE did not teleport into the palisade enter (z=%.2f)." % he.global_position.z)
+	if herald.visible or herald.process_mode != Node.PROCESS_MODE_DISABLED:
+		_fail("Herald must stay disabled in the guard camp.")
+	extra_enemies = 0
+	for node in get_tree().get_nodes_in_group("enemy"):
+		if node != herald:
+			extra_enemies += 1
+	if extra_enemies > 0:
+		_fail("Guard camp must not add a new enemy.")
+	if get_tree().get_nodes_in_group("tripod_central").is_empty():
+		_fail("Camp tripod landmark missing.")
+	if get_tree().get_nodes_in_group("guard_plank").is_empty():
+		_fail("Guard plank missing.")
+	if get_tree().get_nodes_in_group("mist_drop").is_empty():
+		_fail("Mist drop missing.")
+	if get_tree().get_nodes_in_group("lean_to_a").is_empty() or get_tree().get_nodes_in_group("lean_to_b").is_empty():
+		_fail("Cloth lean-tos missing.")
+	if get_tree().get_nodes_in_group("torch_post").is_empty():
+		_fail("Torch post missing.")
+	for stand in [
+		Vector3(0.0, 1.0, 1.85),
+		Vector3(0.0, 1.0, 4.45),
+		Vector3(2.2, 1.0, 3.3),
+		Vector3(1.55, 1.85, 4.75),
+		Vector3(1.45, 1.2, 7.25),
+		Vector3(0.0, 1.0, 8.55),
+	]:
+		he.global_position = stand
+		he.velocity = Vector3.ZERO
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		if he.global_position.y < 0.4:
+			_fail("Camp path dropped HE at %s (y=%.2f)." % [stand, he.global_position.y])
+	var crates := get_tree().get_nodes_in_group("crate_loot")
+	if crates.is_empty():
+		_fail("Camp crate missing.")
+	else:
+		var crate: Node = crates[0]
+		he.global_position = (crate as Node3D).global_position
+		if not crate.has_method("interact") or not crate.interact():
+			_fail("Camp crate E did not give stub loot.")
+		if crate.has_method("can_interact") and crate.can_interact():
+			_fail("Camp crate should be one-shot.")
+		if not Game.camp_loot_taken:
+			_fail("Camp crate interact did not record stub loot.")
+	Game.travel_to("line7_pocket")
+	await get_tree().process_frame
+	if Game.current_pocket != "line7_pocket":
+		_fail("Return from the camp did not restore the tunnel.")
+	if he.global_position.z < 35.0:
+		_fail("Camp return must land at the tunnel far end (z > 35), got z=%.2f." % he.global_position.z)
+	if he.global_position.y < 0.4:
+		_fail("Camp return dropped HE in the tunnel void (y=%.2f)." % he.global_position.y)
+	Game.travel_to("undercroft")
+	await get_tree().process_frame
+	if Game.current_pocket != "undercroft":
+		_fail("Return from the tunnel did not restore the undercroft.")
+	if he.global_position.z <= 8.0:
+		_fail("Tunnel return must land south of the Herald leash (z > 8), got z=%.2f." % he.global_position.z)
+	if he.global_position.y < 0.4:
+		_fail("Tunnel return dropped HE in the flood (y=%.2f)." % he.global_position.y)
 
 	he.global_position = Vector3(0.0, 1.05, 17.2)
 	await get_tree().create_timer(1.6).timeout

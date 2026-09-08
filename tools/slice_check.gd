@@ -33,6 +33,22 @@ func _check_layout(failures: PackedStringArray) -> void:
 		"res://ruins/fallen_castle/fallen_castle.tscn",
 		"res://ruins/fallen_castle/fallen_castle.gd",
 		"res://ruins/fallen_castle/camp_kit.gd",
+		"res://ruins/line7_pocket/line7_pocket.tscn",
+		"res://ruins/line7_pocket/door_gap.tscn",
+		"res://ruins/line7_pocket/tunnel_flood.tscn",
+		"res://ruins/line7_pocket/tube_cluster.tscn",
+		"res://ruins/line7_pocket/relief_wall.tscn",
+		"res://ruins/line7_pocket/maint_locker.tscn",
+		"res://ruins/guard_camp/guard_camp.tscn",
+		"res://ruins/guard_camp/palisade_log.tscn",
+		"res://ruins/guard_camp/palisade_enter.tscn",
+		"res://ruins/guard_camp/tripod_central.tscn",
+		"res://ruins/guard_camp/lean_to_a.tscn",
+		"res://ruins/guard_camp/lean_to_b.tscn",
+		"res://ruins/guard_camp/guard_plank.tscn",
+		"res://ruins/guard_camp/crate_loot.tscn",
+		"res://ruins/guard_camp/torch_post.tscn",
+		"res://ruins/guard_camp/mist_drop.tscn",
 		"res://core/area_gate.gd",
 		"res://weapons/ashpike/ashpike.tscn",
 		"res://weapons/ashpike/ashpike_pickup.tscn",
@@ -86,6 +102,8 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		"res://enemies/hollow_herald/hollow_herald.tscn",
 		"res://ruins/line7_undercroft/line7_undercroft.tscn",
 		"res://ruins/fallen_castle/fallen_castle.tscn",
+		"res://ruins/line7_pocket/line7_pocket.tscn",
+		"res://ruins/guard_camp/guard_camp.tscn",
 		"res://weapons/ashpike/ashpike.tscn",
 		"res://weapons/ashpike/ashpike_pickup.tscn",
 		"res://core/hud.tscn",
@@ -147,3 +165,23 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		if herald_visual.find_child("Crown", true, false) == null:
 			failures.append("herald_blockout.glb is missing the Crown joint.")
 		herald_visual.free()
+	var under_text := FileAccess.get_file_as_string("res://ruins/line7_undercroft/line7_undercroft.gd")
+	if not under_text.contains("line7_pocket") or not under_text.contains("door_gap"):
+		failures.append("Undercroft does not link the service-tunnel door_gap.")
+	var pocket_text := FileAccess.get_file_as_string("res://ruins/line7_pocket/line7_pocket.gd")
+	for piece in ["door_gap", "tunnel_flood", "tube_cluster", "relief_wall", "maint_locker"]:
+		if not pocket_text.contains(piece):
+			failures.append("line7_pocket does not place named piece %s." % piece)
+	if not pocket_text.contains("guard_camp") or not pocket_text.contains("CAMP"):
+		failures.append("line7_pocket does not link the guard-camp door.")
+	if FileAccess.file_exists("res://ruins/line7_pocket/README.md") == false:
+		failures.append("ruins/line7_pocket/README.md is missing.")
+	var camp_text := FileAccess.get_file_as_string("res://ruins/guard_camp/guard_camp.gd")
+	for piece in ["palisade_log", "palisade_ring", "lean_to_a", "lean_to_b", "guard_plank", "tripod_central", "crate_loot", "torch_post", "mist_drop"]:
+		if not camp_text.contains(piece):
+			failures.append("guard_camp does not place named piece %s." % piece)
+	if FileAccess.file_exists("res://ruins/guard_camp/README.md") == false:
+		failures.append("ruins/guard_camp/README.md is missing.")
+	var combat_text := FileAccess.get_file_as_string("res://core/combat.gd")
+	if not combat_text.contains("\"reach\": 1.32") or not combat_text.contains("\"reach\": 2.35"):
+		failures.append("Combat reach numbers must stay 1.32 (jab) / 2.35 (pike).")

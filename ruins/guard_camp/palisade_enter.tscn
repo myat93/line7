@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ruins/guard_camp/palisade_enter.gd" id="1_enter"]
+
+[node name="palisade_enter" type="Node3D"]
+script = ExtResource("1_enter")

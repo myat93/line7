@@ -1,16 +1,22 @@
 extends Node3D
 
-## Run scene. F5 is the undercroft. Fallen castle is instanced and swapped in via the breach.
+## Run scene. F5 is the undercroft. Pockets instance here and swap via gates.
 
 const CASTLE_SCENE := preload("res://ruins/fallen_castle/fallen_castle.tscn")
+const POCKET_SCENE := preload("res://ruins/line7_pocket/line7_pocket.tscn")
+const CAMP_SCENE := preload("res://ruins/guard_camp/guard_camp.tscn")
 
 @onready var level: Line7Undercroft = $Line7Undercroft
 @onready var he: HE = $HE
 @onready var herald: HollowHerald = $HollowHerald
 
 var castle
+var pocket
+var camp
 var _under_env: Environment
 var _castle_env: Environment
+var _pocket_env: Environment
+var _camp_env: Environment
 
 
 func _ready() -> void:
@@ -22,30 +28,71 @@ func _ready() -> void:
 	Game.current_pocket = "undercroft"
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	castle = CASTLE_SCENE.instantiate()
-	castle.visible = false
-	castle.process_mode = Node.PROCESS_MODE_DISABLED
-	add_child(castle)
+	pocket = POCKET_SCENE.instantiate()
+	camp = CAMP_SCENE.instantiate()
+	_stash(castle)
+	_stash(pocket)
+	_stash(camp)
 	_under_env = level.world_env.environment
 	_castle_env = castle.get_node("WorldEnvironment").environment
+	_pocket_env = pocket.get_node("WorldEnvironment").environment
+	_camp_env = camp.get_node("WorldEnvironment").environment
 	castle.get_node("WorldEnvironment").environment = null
+	pocket.get_node("WorldEnvironment").environment = null
+	camp.get_node("WorldEnvironment").environment = null
 	Game.pocket_requested.connect(_on_pocket)
 
 
+func _stash(node: Node) -> void:
+	node.visible = false
+	node.process_mode = Node.PROCESS_MODE_DISABLED
+	add_child(node)
+
+
 func _on_pocket(pocket_id: String) -> void:
-	if pocket_id == "fallen_castle":
-		_show_castle()
-	else:
-		_show_undercroft()
+	match pocket_id:
+		"fallen_castle":
+			_show_castle()
+		"line7_pocket":
+			_show_tunnel()
+		"guard_camp":
+			_show_camp()
+		_:
+			_show_undercroft()
 
 
-func _show_castle() -> void:
+func _hide_level() -> void:
 	level.visible = false
 	level.process_mode = Node.PROCESS_MODE_DISABLED
 	herald.visible = false
 	herald.process_mode = Node.PROCESS_MODE_DISABLED
+	level.world_env.environment = null
+
+
+func _hide_castle() -> void:
+	castle.visible = false
+	castle.process_mode = Node.PROCESS_MODE_DISABLED
+	castle.get_node("WorldEnvironment").environment = null
+
+
+func _hide_tunnel() -> void:
+	pocket.visible = false
+	pocket.process_mode = Node.PROCESS_MODE_DISABLED
+	pocket.get_node("WorldEnvironment").environment = null
+
+
+func _hide_camp() -> void:
+	camp.visible = false
+	camp.process_mode = Node.PROCESS_MODE_DISABLED
+	camp.get_node("WorldEnvironment").environment = null
+
+
+func _show_castle() -> void:
+	_hide_level()
+	_hide_tunnel()
+	_hide_camp()
 	castle.visible = true
 	castle.process_mode = Node.PROCESS_MODE_INHERIT
-	level.world_env.environment = null
 	castle.get_node("WorldEnvironment").environment = _castle_env
 	var spawn: Vector3 = castle.get("player_spawn")
 	if typeof(spawn) != TYPE_VECTOR3:
@@ -55,14 +102,38 @@ func _show_castle() -> void:
 	Game.banner("GUARD CAMP\nPalisade watch. Lean-tos still stand.")
 
 
+func _show_tunnel() -> void:
+	_hide_level()
+	_hide_castle()
+	_hide_camp()
+	pocket.visible = true
+	pocket.process_mode = Node.PROCESS_MODE_INHERIT
+	pocket.get_node("WorldEnvironment").environment = _pocket_env
+	he.global_position = Game.tunnel_return
+	he.velocity = Vector3.ZERO
+	Game.banner("SERVICE TUNNEL\nFlooded corridor. Watch the gap.")
+
+
+func _show_camp() -> void:
+	_hide_level()
+	_hide_castle()
+	_hide_tunnel()
+	camp.visible = true
+	camp.process_mode = Node.PROCESS_MODE_INHERIT
+	camp.get_node("WorldEnvironment").environment = _camp_env
+	he.global_position = camp.player_spawn
+	he.velocity = Vector3.ZERO
+	Game.banner("GUARD CAMP\nPalisade yard. The tripod marks the center.")
+
+
 func _show_undercroft() -> void:
-	castle.visible = false
-	castle.process_mode = Node.PROCESS_MODE_DISABLED
+	_hide_castle()
+	_hide_tunnel()
+	_hide_camp()
 	level.visible = true
 	level.process_mode = Node.PROCESS_MODE_INHERIT
 	herald.visible = true
 	herald.process_mode = Node.PROCESS_MODE_INHERIT
-	castle.get_node("WorldEnvironment").environment = null
 	level.world_env.environment = _under_env
 	he.global_position = Game.undercroft_return
 	he.velocity = Vector3.ZERO

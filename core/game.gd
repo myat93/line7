@@ -20,6 +20,15 @@ var herald: Node3D
 var shrine_pickup: Node3D
 var current_pocket: String = "undercroft"
 var undercroft_return: Vector3 = Vector3(-3.2, 1.05, -1.4)
+var tunnel_return: Vector3 = Vector3(0.0, 1.15, 2.2)
+var pocket_note_taken: bool = false
+var pocket_kit_taken: bool = false
+var camp_loot_taken: bool = false
+
+const RETURN_FROM_CASTLE := Vector3(-3.2, 1.05, -1.4)
+const RETURN_FROM_POCKET := Vector3(6.4, 1.05, 14.2)
+const TUNNEL_FROM_UNDERCROFT := Vector3(0.0, 1.15, 2.2)
+const TUNNEL_FROM_CAMP := Vector3(0.0, 1.15, 37.4)
 
 
 func _ready() -> void:
@@ -29,14 +38,22 @@ func _ready() -> void:
 		var sim := Node.new()
 		sim.set_script(load("res://tools/play_sim.gd"))
 		add_child(sim)
-	if OS.get_cmdline_user_args().has("--pose-shots"):
+	elif OS.get_cmdline_user_args().has("--pose-shots"):
 		var shots := Node.new()
 		shots.set_script(load("res://tools/pose_shots.gd"))
 		add_child(shots)
-	if OS.get_cmdline_user_args().has("--herald-shots"):
+	elif OS.get_cmdline_user_args().has("--herald-shots"):
 		var hshots := Node.new()
 		hshots.set_script(load("res://tools/herald_shots.gd"))
 		add_child(hshots)
+	elif OS.get_cmdline_user_args().has("--pocket-shots"):
+		var shots := Node.new()
+		shots.set_script(load("res://tools/pocket_shots.gd"))
+		add_child(shots)
+	elif OS.get_cmdline_user_args().has("--camp-shots"):
+		var camp_shots := Node.new()
+		camp_shots.set_script(load("res://tools/camp_shots.gd"))
+		add_child(camp_shots)
 
 
 func restart() -> void:
@@ -45,13 +62,29 @@ func restart() -> void:
 	herald_dead = false
 	player_dead = false
 	near_shrine = false
+	pocket_note_taken = false
+	pocket_kit_taken = false
+	camp_loot_taken = false
 	current_pocket = "undercroft"
+	undercroft_return = RETURN_FROM_CASTLE
+	tunnel_return = TUNNEL_FROM_UNDERCROFT
 	get_tree().reload_current_scene()
 
 
 func travel_to(pocket_id: String) -> void:
 	if pocket_id == current_pocket:
 		return
+	match pocket_id:
+		"fallen_castle":
+			undercroft_return = RETURN_FROM_CASTLE
+		"line7_pocket":
+			if current_pocket == "guard_camp":
+				tunnel_return = TUNNEL_FROM_CAMP
+			else:
+				undercroft_return = RETURN_FROM_POCKET
+				tunnel_return = TUNNEL_FROM_UNDERCROFT
+		"guard_camp":
+			tunnel_return = TUNNEL_FROM_CAMP
 	current_pocket = pocket_id
 	pocket_requested.emit(pocket_id)
 
@@ -133,6 +166,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			travel_to("fallen_castle")
 		get_viewport().set_input_as_handled()
 		return
+	if event.is_action_pressed("debug_tunnel"):
+		if current_pocket == "line7_pocket":
+			travel_to("undercroft")
+		else:
+			travel_to("line7_pocket")
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("debug_camp"):
+		if current_pocket == "guard_camp":
+			travel_to("line7_pocket")
+		else:
+			travel_to("guard_camp")
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("toggle_mouse"):
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -157,6 +204,8 @@ func _ensure_input_map() -> void:
 	_action("bind_fists", [_key(KEY_2)])
 	_action("restart", [_key(KEY_R)])
 	_action("debug_ruins", [_key(KEY_8)])
+	_action("debug_tunnel", [_key(KEY_9)])
+	_action("debug_camp", [_key(KEY_0)])
 	_action("toggle_mouse", [_key(KEY_ESCAPE)])
 
 
