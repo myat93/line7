@@ -159,7 +159,13 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	var planar := Vector2(velocity.x, velocity.z).length()
 	if state == State.FREE and planar > 0.15:
-		_stride += planar * delta * (2.8 if _sprinting else 2.2)
+		## Faster than a 1.2 s cycle so F5 walk/sprint actually reads as stepping.
+		_stride += planar * delta * (4.2 if _sprinting else 3.4)
+	_update_visual_pose()
+
+
+func _process(_delta: float) -> void:
+	## Render tick — F5 samples the mesh here, not only on the physics frame.
 	_update_visual_pose()
 
 
@@ -392,10 +398,11 @@ func _bind_blockout() -> void:
 	## Undo the 0.01 armature so the authored 100× IBM skins Body at 1.8 m.
 	_rig.prepare_realistic(_blockout, 1.8)
 	_rig.bind_parts(_blockout, POSE_PARTS)
-	## PosePlayer is the hook for authored clips. The GLB has none yet, so
-	## _update_visual_pose() drives jab / heavy / roll / sprint procedurally.
+	## Procedural poses own the skeleton. An imported RESET clip would plant F5.
+	for node in _blockout.find_children("*", "AnimationPlayer", true, false):
+		(node as AnimationPlayer).active = false
 	if pose_player:
-		pose_player.active = true
+		pose_player.active = false
 
 
 func _part_rot(part_name: String, extra: Vector3) -> void:
@@ -446,6 +453,8 @@ func _update_visual_pose() -> void:
 				_pose_walk()
 			else:
 				_pose_idle()
+	if _rig.skeleton:
+		_rig.skeleton.force_update_all_bone_transforms()
 
 
 func _pose_idle() -> void:
@@ -471,24 +480,25 @@ func _pose_idle() -> void:
 func _pose_walk() -> void:
 	## Distance-driven stride so feet read against walk speed (no clock skate).
 	_pose_idle()
-	var swing := sin(_stride)
-	## Legs only — torso extras stretch the 100×-IBM sleeves.
-	_part_rot("L_Thigh", Vector3(swing * 0.12, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.12, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.10, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.10, 0.0, 0.0))
+	_pose_stride_legs(0.62, 0.50)
 
 
 func _pose_sprint() -> void:
 	## No hip/torso lean — those extras flatten the IBM skin and read as a back-lean.
 	## Legs + a tiny head nod so the run still aims down the move.
 	_pose_idle()
-	var swing := sin(_stride)
 	_part_rot("Head", Vector3(0.05, 0.0, 0.0))
-	_part_rot("L_Thigh", Vector3(swing * 0.14, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.14, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.11, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.11, 0.0, 0.0))
+	_pose_stride_legs(0.78, 0.62)
+
+
+func _pose_stride_legs(thigh_amp: float, shin_amp: float) -> void:
+	## Rest-relative extras only — aim remaps explode the 100×-IBM pants.
+	## Thigh local X ≈ MeshRoot forward (abduct / planted F5 slide). Local Z is sagittal.
+	var swing := sin(_stride)
+	_part_rot("L_Thigh", Vector3(0.0, 0.0, -swing * thigh_amp))
+	_part_rot("R_Thigh", Vector3(0.0, 0.0, swing * thigh_amp))
+	_part_rot("L_Shin", Vector3(0.0, 0.0, maxf(-swing, 0.0) * shin_amp))
+	_part_rot("R_Shin", Vector3(0.0, 0.0, maxf(swing, 0.0) * shin_amp))
 
 
 func _pose_jab() -> void:
