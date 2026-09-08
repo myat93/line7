@@ -18,10 +18,11 @@ const ROLL_COST := 20.0
 const ROLL_TIME := 0.4
 const ROLL_IFRAMES := 0.22
 const ROLL_SPEED := 8.6
-const WALK_SPEED := 2.35
-const SPRINT_SPEED := 4.1
-const MOVE_ACCEL := 7.2
-const MOVE_DECEL := 11.5
+const WALK_SPEED := 2.4
+const SPRINT_SPEED := 6.4
+const MOVE_ACCEL := 8.0
+const SPRINT_ACCEL := 16.0
+const MOVE_DECEL := 12.0
 const GRAVITY := 28.0
 const JUMP_VELOCITY := 8.8
 

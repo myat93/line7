@@ -120,17 +120,25 @@ func _ensure_input_map() -> void:
 	_action("move_back", [_key(KEY_S)])
 	_action("move_left", [_key(KEY_A)])
 	_action("move_right", [_key(KEY_D)])
-	_action("sprint", [_key(KEY_SHIFT)])
+	_rebind("sprint", [_key(KEY_SHIFT)])
 	_action("jump", [_key(KEY_SPACE)])
 	_action("light_attack", [_mouse(MOUSE_BUTTON_LEFT), _key(KEY_J)])
 	_action("heavy_attack", [_mouse(MOUSE_BUTTON_RIGHT), _key(KEY_K)])
-	_action("roll", [_key(KEY_CTRL)])
+	_rebind("roll", [_key(KEY_CTRL)])
 	_unbind_key("roll", KEY_SPACE)
 	_action("interact", [_key(KEY_E)])
 	_action("bind_ashpike", [_key(KEY_1)])
 	_action("bind_fists", [_key(KEY_2)])
 	_action("restart", [_key(KEY_R)])
 	_action("toggle_mouse", [_key(KEY_ESCAPE)])
+
+
+func _rebind(action_name: String, events: Array) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+	InputMap.action_erase_events(action_name)
+	for event in events:
+		InputMap.action_add_event(action_name, event)
 
 
 func _unbind_key(action_name: String, physical: Key) -> void:
@@ -161,6 +169,13 @@ func _action(action_name: String, events: Array) -> void:
 func _key(physical: Key) -> InputEventKey:
 	var event := InputEventKey.new()
 	event.physical_keycode = physical
+	event.keycode = physical
+	## Shift/Ctrl events arrive with their modifier flag set. A binding with
+	## shift_pressed=false never matches a live Shift press.
+	event.shift_pressed = physical == KEY_SHIFT
+	event.ctrl_pressed = physical == KEY_CTRL
+	event.alt_pressed = physical == KEY_ALT
+	event.meta_pressed = physical == KEY_META
 	return event
 
 

@@ -42,6 +42,7 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	mesh_root.rotation.y = PI
 	camera_pivot.rotation = Vector3(_look_pitch, _look_yaw, 0.0)
+	_build_facing_read()
 	_refresh_stance_visual()
 	floor_snap_length = 0.3
 
@@ -115,21 +116,42 @@ func _physics_process(delta: float) -> void:
 
 func _tick_free(delta: float) -> void:
 	var input_dir := _move_vector()
-	var can_sprint := input_dir.length() > 0.1 and (
-		not Combat.STAMINA_GATING or stamina > 4.0
-	)
-	var sprinting := Input.is_action_pressed("sprint") and can_sprint
-	var speed := Combat.SPRINT_SPEED if sprinting else Combat.WALK_SPEED
+	var sprinting := is_sprint_held() and input_dir.length() > 0.1
 	if sprinting and Combat.STAMINA_GATING:
-		stamina = maxf(stamina - Combat.SPRINT_DRAIN * delta, 0.0)
-		_stam_delay = 0.25
+		if stamina <= 4.0:
+			sprinting = false
+		else:
+			stamina = maxf(stamina - Combat.SPRINT_DRAIN * delta, 0.0)
+			_stam_delay = 0.25
+	var speed := target_move_speed(sprinting)
 	var target := input_dir * speed
-	var accel := Combat.MOVE_ACCEL if input_dir.length() > 0.1 else Combat.MOVE_DECEL
+	var accel := Combat.MOVE_DECEL
+	if input_dir.length() > 0.1:
+		accel = Combat.SPRINT_ACCEL if sprinting else Combat.MOVE_ACCEL
 	velocity.x = move_toward(velocity.x, target.x, accel * delta)
 	velocity.z = move_toward(velocity.z, target.z, accel * delta)
 	if input_dir.length() > 0.12:
-		var face := atan2(input_dir.x, input_dir.z)
-		mesh_root.rotation.y = lerp_angle(mesh_root.rotation.y, face, 1.0 - exp(-10.0 * delta))
+		_face_direction(input_dir, delta)
+
+
+func is_sprint_held() -> bool:
+	## Shift is a modifier. Poll the key directly so sprint cannot miss InputMap match.
+	if Input.is_physical_key_pressed(KEY_SHIFT) or Input.is_key_pressed(KEY_SHIFT):
+		return true
+	return Input.is_action_pressed("sprint")
+
+
+func target_move_speed(sprinting: bool) -> float:
+	return Combat.SPRINT_SPEED if sprinting else Combat.WALK_SPEED
+
+
+func _face_direction(dir: Vector3, delta: float) -> void:
+	dir.y = 0.0
+	if dir.length() < 0.05:
+		return
+	## Godot forward is -Z. atan2(x, z) is +Z-forward and made HE moonwalk.
+	var desired := atan2(-dir.x, -dir.z)
+	mesh_root.rotation.y = lerp_angle(mesh_root.rotation.y, desired, 1.0 - exp(-14.0 * delta))
 
 
 func _tick_roll(_delta: float) -> void:
@@ -302,6 +324,67 @@ func _regen(delta: float) -> void:
 	if state == State.ATTACK or state == State.ROLL:
 		return
 	stamina = minf(stamina + Combat.STAMINA_REGEN * delta, Combat.PLAYER_MAX_STAMINA)
+
+
+func _build_facing_read() -> void:
+	if mesh_root.get_node_or_null("Visor") != null:
+		return
+	var visor_mat := StandardMaterial3D.new()
+	visor_mat.albedo_color = Color(0.12, 0.2, 0.26)
+	visor_mat.metallic = 0.35
+	visor_mat.roughness = 0.25
+	visor_mat.emission_enabled = true
+	visor_mat.emission = Color(0.2, 0.55, 0.62)
+	visor_mat.emission_energy_multiplier = 0.9
+	var visor := MeshInstance3D.new()
+	visor.name = "Visor"
+	var visor_mesh := BoxMesh.new()
+	visor_mesh.size = Vector3(0.26, 0.09, 0.07)
+	visor.mesh = visor_mesh
+	visor.material_override = visor_mat
+	visor.position = Vector3(0.0, 1.7, -0.16)
+	mesh_root.add_child(visor)
+
+	var beak := MeshInstance3D.new()
+	beak.name = "Beak"
+	var beak_mesh := BoxMesh.new()
+	beak_mesh.size = Vector3(0.16, 0.12, 0.28)
+	beak.mesh = beak_mesh
+	var beak_mat := StandardMaterial3D.new()
+	beak_mat.albedo_color = Color(0.62, 0.48, 0.36)
+	beak_mat.roughness = 0.7
+	beak.material_override = beak_mat
+	beak.position = Vector3(0.0, 1.12, -0.38)
+	mesh_root.add_child(beak)
+
+	var mark := MeshInstance3D.new()
+	mark.name = "ChestMark"
+	var mark_mesh := BoxMesh.new()
+	mark_mesh.size = Vector3(0.1, 0.28, 0.04)
+	mark.mesh = mark_mesh
+	var mark_mat := StandardMaterial3D.new()
+	mark_mat.albedo_color = Color(0.78, 0.22, 0.2)
+	mark_mat.emission_enabled = true
+	mark_mat.emission = Color(0.55, 0.12, 0.1)
+	mark_mat.emission_energy_multiplier = 0.45
+	mark.material_override = mark_mat
+	mark.position = Vector3(0.1, 1.18, -0.3)
+	mesh_root.add_child(mark)
+
+	var chevron := MeshInstance3D.new()
+	chevron.name = "FacingChevron"
+	var prism := PrismMesh.new()
+	prism.size = Vector3(0.36, 0.05, 0.4)
+	chevron.mesh = prism
+	var chev_mat := StandardMaterial3D.new()
+	chev_mat.albedo_color = Color(0.85, 0.78, 0.45)
+	chev_mat.emission_enabled = true
+	chev_mat.emission = Color(0.55, 0.45, 0.18)
+	chev_mat.emission_energy_multiplier = 0.35
+	chevron.material_override = chev_mat
+	chevron.position = Vector3(0.0, 0.04, -0.32)
+	chevron.rotation_degrees = Vector3(90, 180, 0)
+	mesh_root.add_child(chevron)
 
 
 func _refresh_stance_visual() -> void:

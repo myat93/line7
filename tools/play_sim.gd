@@ -28,6 +28,17 @@ func _run() -> void:
 		_fail("HE did not start at full HP.")
 	if Combat.STAMINA_GATING or Combat.WHIFF_PUNISH:
 		_fail("Playtest stamina gating / whiff punish must default off.")
+	if Combat.SPRINT_SPEED < Combat.WALK_SPEED * 1.6:
+		_fail("Sprint must be clearly faster than walk.")
+	if he.target_move_speed(true) <= he.target_move_speed(false) + 1.5:
+		_fail("HE sprint target speed does not exceed walk.")
+	var sprint_shift_ok := false
+	if InputMap.has_action("sprint"):
+		for event in InputMap.action_get_events("sprint"):
+			if event is InputEventKey and event.physical_keycode == KEY_SHIFT and event.shift_pressed:
+				sprint_shift_ok = true
+	if not sprint_shift_ok:
+		_fail("Sprint binding must match a live Shift press (shift_pressed=true).")
 	if not InputMap.has_action("jump"):
 		_fail("jump action is missing.")
 	else:
@@ -49,6 +60,11 @@ func _run() -> void:
 	he._try_jump()
 	if he.velocity.y < Combat.JUMP_VELOCITY * 0.9:
 		_fail("Jump did not apply upward velocity.")
+	he._face_direction(Vector3(0.0, 0.0, 1.0), 1.0)
+	if absf(angle_difference(he.mesh_root.rotation.y, PI)) > 0.25:
+		_fail("HE does not face movement direction (+Z).")
+	if he.mesh_root.get_node_or_null("Visor") == null:
+		_fail("Facing visor missing.")
 
 	he.global_position = Vector3(0.0, 1.05, 17.2)
 	await get_tree().create_timer(1.6).timeout

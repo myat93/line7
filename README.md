@@ -27,7 +27,7 @@ If Godot asks to generate import files, accept. `.godot/` is local cache and is 
 | Action | Input |
 | --- | --- |
 | Walk | WASD (weighty) |
-| Sprint | Shift |
+| Sprint | **Shift** (hold with WASD — clearly faster than walk) |
 | Jump | Space |
 | Look | Mouse |
 | Light jab | LMB or **J** |
@@ -39,7 +39,7 @@ If Godot asks to generate import files, accept. `.godot/` is local cache and is 
 | Restart slice | **R** |
 | Free / recapture mouse | Esc |
 
-Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still short.
+Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still short. HE’s visor, chest mark, and ground chevron point the way the capsule is facing.
 
 ## Folders
 

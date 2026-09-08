@@ -58,6 +58,8 @@ func _check_combat_rules(failures: PackedStringArray) -> void:
 		failures.append("Playtest default: WHIFF_PUNISH must be off.")
 	if Combat.JUMP_VELOCITY <= 0.0:
 		failures.append("Jump velocity must be set.")
+	if Combat.SPRINT_SPEED < Combat.WALK_SPEED * 1.6:
+		failures.append("Sprint must be clearly faster than walk.")
 
 
 func _check_scenes(failures: PackedStringArray) -> void:
