@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ruins/line7_pocket/line7_pocket.gd" id="1_pkt"]
+
+[sub_resource type="Environment" id="Environment_tunnel"]
+background_mode = 1
+background_color = Color(0.03, 0.04, 0.045, 1)
+ambient_light_source = 1
+ambient_light_color = Color(0.14, 0.2, 0.2, 1)
+ambient_light_energy = 0.4
+
+[node name="Line7Pocket" type="Node3D"]
+script = ExtResource("1_pkt")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_tunnel")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.88, -0.32, 0.35, 0, 0.74, 0.67, -0.48, -0.59, 0.65, 0, 8, 12)
+light_color = Color(0.55, 0.68, 0.66, 1)
+light_energy = 0.35
+shadow_enabled = true
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="Markers" type="Node3D" parent="."]

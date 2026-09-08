@@ -95,6 +95,8 @@ func _run() -> void:
 		_fail("Facing visor missing.")
 	if not ResourceLoader.exists("res://ruins/fallen_castle/fallen_castle.tscn"):
 		_fail("Fallen castle scene missing.")
+	if not ResourceLoader.exists("res://ruins/line7_pocket/line7_pocket.tscn"):
+		_fail("Tunnel pocket scene missing.")
 	Game.travel_to("fallen_castle")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -108,6 +110,44 @@ func _run() -> void:
 	await get_tree().process_frame
 	if Game.current_pocket != "undercroft":
 		_fail("Return travel did not restore the undercroft.")
+
+	Game.travel_to("line7_pocket")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if Game.current_pocket != "line7_pocket":
+		_fail("travel_to did not enter line7_pocket.")
+	if he.global_position.y < 0.4:
+		_fail("HE spawned in the void in the tunnel (y=%.2f)." % he.global_position.y)
+	if he.global_position.z < 1.5:
+		_fail("HE did not teleport into the service tunnel (z=%.2f)." % he.global_position.z)
+	if herald.visible or herald.process_mode != Node.PROCESS_MODE_DISABLED:
+		_fail("Herald must stay disabled in the tunnel pocket.")
+	var extra_enemies := 0
+	for node in get_tree().get_nodes_in_group("enemy"):
+		if node != herald:
+			extra_enemies += 1
+	if extra_enemies > 0:
+		_fail("Tunnel pocket must not add a new enemy.")
+	var lockers := get_tree().get_nodes_in_group("maint_locker")
+	if lockers.is_empty():
+		_fail("Maintenance locker missing.")
+	else:
+		var locker: Node = lockers[0]
+		he.global_position = (locker as Node3D).global_position
+		if not locker.has_method("interact") or not locker.interact():
+			_fail("Locker E did not give stub loot.")
+		if locker.has_method("can_interact") and locker.can_interact():
+			_fail("Locker should be one-shot.")
+		if not Game.pocket_note_taken and not Game.pocket_kit_taken:
+			_fail("Locker interact did not record stub loot.")
+	Game.travel_to("undercroft")
+	await get_tree().process_frame
+	if Game.current_pocket != "undercroft":
+		_fail("Return from the tunnel did not restore the undercroft.")
+	if he.global_position.z <= 8.0:
+		_fail("Tunnel return must land south of the Herald leash (z > 8), got z=%.2f." % he.global_position.z)
+	if he.global_position.y < 0.4:
+		_fail("Tunnel return dropped HE in the flood (y=%.2f)." % he.global_position.y)
 
 	he.global_position = Vector3(0.0, 1.05, 17.2)
 	await get_tree().create_timer(1.6).timeout
