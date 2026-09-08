@@ -91,8 +91,21 @@ func _run() -> void:
 	he._face_direction(Vector3(0.0, 0.0, 1.0), 1.0)
 	if absf(angle_difference(he.mesh_root.rotation.y, PI)) > 0.25:
 		_fail("HE does not face movement direction (+Z).")
-	if he.mesh_root.get_node_or_null("Visor") == null:
-		_fail("Facing visor missing.")
+	var blockout := he.mesh_root.get_node_or_null("HEBlockout")
+	if blockout == null:
+		_fail("HE blockout mesh is not instanced under MeshRoot.")
+	elif blockout.find_child("Hips", true, false) == null or blockout.find_child("L_Fist", true, false) == null:
+		_fail("HE blockout joints (Hips / L_Fist) were not imported.")
+	var body_col := he.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if body_col == null or not (body_col.shape is CapsuleShape3D):
+		_fail("HE world collision must stay a capsule.")
+	var hurt_col := he.hurt.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if hurt_col == null or not (hurt_col.shape is CapsuleShape3D):
+		_fail("HE hurtbox must stay a capsule.")
+	if not is_equal_approx(float(Combat.fists_light().reach), 1.32):
+		_fail("Jab reach changed from locked 1.32.")
+	if not is_equal_approx(float(Combat.fists_heavy().reach), 1.52):
+		_fail("Heavy reach changed from locked 1.52.")
 	if not ResourceLoader.exists("res://ruins/fallen_castle/fallen_castle.tscn"):
 		_fail("Fallen castle scene missing.")
 	var kit_script := load("res://ruins/fallen_castle/camp_kit.gd")

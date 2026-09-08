@@ -41,6 +41,8 @@ const LAYER_HURT := 32
 const LAYER_INTERACT := 64
 
 
+## Locked fist reach (do not retune for mesh readability): jab 1.32, heavy 1.52.
+
 static func fists_light() -> Dictionary:
 	return {
 		"id": "jab",

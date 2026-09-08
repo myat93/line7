@@ -5,3 +5,5 @@
 *.godot text
 *.md text
 *.svg text
+*.py text
+*.glb binary

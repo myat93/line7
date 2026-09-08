@@ -2,7 +2,7 @@
 
 Godot **4.7.x** third-person combat slice. HE wakes in a flooded subway chapel, fights the Hollow Herald with bare fists, then takes the Ashpike from the angel-stone shrine — unequipped until it is bound.
 
-Placeholder capsules are intentional. This is one room, not an MMO.
+HE uses the civilian box blockout (`characters/he/he_blockout.glb`) as a visual under the existing capsule body. Collision, hurtboxes, and locked fist reach stay on the capsule. This is one room, not an MMO.
 
 ## Import and play
 
@@ -56,12 +56,12 @@ F5 never opens the castle as the main scene — it is instanced from `main.tscn`
 | Restart slice | **R** |
 | Free / recapture mouse | Esc |
 
-Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still short. HE’s visor, chest mark, and ground chevron point the way the capsule is facing.
+Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still the locked jab **1.32** / heavy **1.52**. Fist arcs, roll tuck, and sprint lean are procedural poses on the blockout joints — see `characters/he/README.md`.
 
 ## Folders
 
 ```
-characters/he/                 protagonist
+characters/he/                 protagonist + blockout GLB (visual only)
 enemies/hollow_herald/         slow telegraph duel
 ruins/line7_undercroft/        flooded subway + angel stone
 ruins/fallen_castle/           fallen keep exploration pocket
@@ -80,6 +80,8 @@ From this folder, with Godot 4.7 on `PATH`:
 godot --headless --path . --script res://tools/slice_check.gd
 godot --headless --path . -- --slice-sim
 ```
+
+`godot --path . -- --pose-shots` writes stills of idle / jab / heavy / roll / sprint.
 
 Prints `LINE7_SLICE_OK` / `LINE7_PLAY_SIM_OK` when the layout, fist-first rules, shrine bind contract, and `main.tscn` wiring hold.
 
