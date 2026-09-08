@@ -483,13 +483,13 @@ func _pose_sprint() -> void:
 
 
 func _pose_stride_legs(thigh_amp: float, shin_amp: float) -> void:
-	## Rocketbox thigh local X ≈ MeshRoot forward, so Euler X abducts (planted slide).
-	## swing_along_y pitches +Y (down the IBM leg) toward MeshRoot −Z / +Z.
+	## Rest-relative extras only — aim-style remaps explode the 100×-IBM pants.
+	## Thigh local X ≈ MeshRoot forward (abduct / planted slide). Local Z is sagittal.
 	var swing := sin(_stride)
-	_rig.swing_along_y("L_Thigh", Vector3(0.06, -0.22, -1.0), swing * thigh_amp)
-	_rig.swing_along_y("R_Thigh", Vector3(-0.06, -0.22, -1.0), -swing * thigh_amp)
-	_rig.swing_along_y("L_Shin", Vector3(0.0, -0.12, 1.0), maxf(-swing, 0.0) * shin_amp)
-	_rig.swing_along_y("R_Shin", Vector3(0.0, -0.12, 1.0), maxf(swing, 0.0) * shin_amp)
+	_part_rot("L_Thigh", Vector3(0.0, 0.0, -swing * thigh_amp))
+	_part_rot("R_Thigh", Vector3(0.0, 0.0, swing * thigh_amp))
+	_part_rot("L_Shin", Vector3(0.0, 0.0, maxf(-swing, 0.0) * shin_amp))
+	_part_rot("R_Shin", Vector3(0.0, 0.0, maxf(swing, 0.0) * shin_amp))
 
 
 func _pose_jab() -> void:
