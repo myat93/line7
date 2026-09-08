@@ -2,7 +2,9 @@
 
 Separate exploration pocket off the service-tunnel far end. Not part of the fallen-castle ruins pocket (that pocket is also a camp on `main`).
 
-Props come from Jake’s **`CampKit`** (`ruins/fallen_castle/camp_kit.gd`) — generated bark/cloth/mud/rope meshes. Kenney CC0 kits were evaluated on main and not used (cartoon town pieces). Same kit, named pieces here.
+Props come from Jake’s **`CampKit`** (`ruins/fallen_castle/camp_kit.gd`) — generated bark/cloth/mud/rope meshes. Named pieces live in this folder: `palisade_log` / `palisade_ring`, `lean_to_a` / `lean_to_b`, `guard_plank`, `tripod_central`, `crate_loot`, `torch_post`, `mist_drop`.
+
+Kenney Survival Kit / Fantasy Town Kit are **not** on `main` and are not vendored here (cartoon town read vs the locked camp still). Same CampKit, photo-matched layout.
 
 **Enter:** tunnel past the locker → sealed **CAMP** door → **E**.
 
