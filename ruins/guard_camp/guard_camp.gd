@@ -14,7 +14,6 @@ const TORCH := preload("res://ruins/guard_camp/torch_post.tscn")
 const MIST := preload("res://ruins/guard_camp/mist_drop.tscn")
 const DIRT := preload("res://ruins/guard_camp/materials/dirt.tres")
 const MUD := preload("res://ruins/guard_camp/materials/mud.tres")
-const BOARD := preload("res://ruins/guard_camp/materials/wood_board.tres")
 
 ## Tiny ring. Dirt top is y = 0.8. Pieces sit on that plane.
 var player_spawn: Vector3 = Vector3(0.0, 1.0, 2.0)
