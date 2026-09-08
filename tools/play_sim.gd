@@ -96,8 +96,8 @@ func _run() -> void:
 	if chest_fwd.length() < 0.2 or chest_fwd.dot(mesh_fwd) < 0.85:
 		_fail("HE realistic mesh does not face MeshRoot / move forward (moonwalk).")
 	var realistic := he.mesh_root.find_child("HERealistic", true, false) as Node3D
-	if realistic and absf(angle_difference(realistic.rotation.y, 0.0)) > 0.08:
-		_fail("HERealistic import yaw must be 0 so mesh −Z matches MeshRoot −Z (got y=%.3f)." % realistic.rotation.y)
+	if realistic and absf(angle_difference(realistic.rotation.y, PI * 0.5)) > 0.08:
+		_fail("HERealistic yaw must be +90° so Bip01 +X matches MeshRoot −Z (got y=%.3f)." % realistic.rotation.y)
 	var blockout := he.mesh_root.get_node_or_null("HEBlockout")
 	if blockout == null:
 		_fail("HE realistic mesh is not instanced under MeshRoot.")

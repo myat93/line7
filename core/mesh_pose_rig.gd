@@ -10,11 +10,10 @@ extends RefCounted
 ## them with inverse(rest) explodes vertices. Idle stays bind-pose (A-pose is
 ## the authored rest). Combat extras go through set_bone_pose_rotation.
 ##
-## Bind-pose mesh chest is Godot −Z (the skinned shirt/face). The armature is
-## authored −90° Y so Bip01 +X (Max-forward) sits on Godot +Z — that is 90°
-## from the mesh chest. Chasing Bip01 +X made HE face perpendicular to travel.
-## Clear the import yaw so mesh −Z == MeshRoot −Z. Capsules / MeshRoot yaw /
-## reach stay untouched.
+## Bind-pose chest follows Bip01 +X (Max-forward). Authored −90° Y puts that
+## on Godot +Z, i.e. MeshRoot +Z — perpendicular / moonwalk vs WASD (−Z).
+## +90° Y maps hips +X onto MeshRoot −Z. Capsules / MeshRoot yaw / reach stay
+## untouched. Do not zero the import yaw: that leaves the chest on ±X.
 
 var skeleton: Skeleton3D
 var body: MeshInstance3D
@@ -155,15 +154,15 @@ func bone_world_axis(part_name: String, axis: int) -> Vector3:
 
 
 func character_forward() -> Vector3:
-	## After _align_godot_forward, the skinned chest is skeleton −Z.
+	## After +90° align, armature +X (Bip01 chest) is MeshRoot −Z.
 	if skeleton == null:
 		return Vector3.ZERO
-	return (-skeleton.global_transform.basis.z).normalized()
+	return skeleton.global_transform.basis.x.normalized()
 
 
 func _char_basis() -> Basis:
-	## Skeleton space == Godot character space after the import yaw is cleared.
-	return Basis.IDENTITY
+	## After +90° align: skeleton +X = Godot −Z, skeleton +Z = Godot +X.
+	return Basis(Vector3(0.0, 0.0, 1.0), Vector3.UP, Vector3(-1.0, 0.0, 0.0))
 
 
 func _cache_rest_globals() -> void:
@@ -214,9 +213,12 @@ func _align_godot_forward(root: Node) -> void:
 		var visual := root.find_child(node_name, true, false) as Node3D
 		if visual == null:
 			continue
-		## Authored −90° (or the old +90° Bip01 flip) puts mesh −Z on ±X.
-		if absf(angle_difference(visual.rotation.y, 0.0)) > 0.05:
-			visual.rotation.y = 0.0
+		## Authored −90° → +90° so Max +X / chest → MeshRoot −Z.
+		## Also recover if a prior pass zeroed the yaw (chest on ±X).
+		if absf(angle_difference(visual.rotation.y, -PI * 0.5)) < 0.25:
+			visual.rotation.y += PI
+		elif absf(angle_difference(visual.rotation.y, 0.0)) < 0.25:
+			visual.rotation.y = PI * 0.5
 
 
 func _first_skeleton(node: Node) -> Skeleton3D:
