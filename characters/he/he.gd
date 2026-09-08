@@ -472,10 +472,10 @@ func _pose_walk() -> void:
 	_pose_idle()
 	var swing := sin(_stride)
 	## Legs only — torso extras stretch the 100×-IBM sleeves.
-	_part_rot("L_Thigh", Vector3(swing * 0.34, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.34, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.28, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.28, 0.0, 0.0))
+	_part_rot("L_Thigh", Vector3(swing * 0.16, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(-swing * 0.16, 0.0, 0.0))
+	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.12, 0.0, 0.0))
+	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.12, 0.0, 0.0))
 
 
 func _pose_sprint() -> void:
@@ -484,10 +484,10 @@ func _pose_sprint() -> void:
 	_pose_idle()
 	var swing := sin(_stride)
 	## Legs only. Hip/torso extras stretch the 100×-IBM sleeves across the back.
-	_part_rot("L_Thigh", Vector3(swing * 0.42, 0.0, 0.0))
-	_part_rot("R_Thigh", Vector3(-swing * 0.42, 0.0, 0.0))
-	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.40, 0.0, 0.0))
-	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.40, 0.0, 0.0))
+	_part_rot("L_Thigh", Vector3(swing * 0.18, 0.0, 0.0))
+	_part_rot("R_Thigh", Vector3(-swing * 0.18, 0.0, 0.0))
+	_part_rot("L_Shin", Vector3(maxf(-swing, 0.0) * 0.14, 0.0, 0.0))
+	_part_rot("R_Shin", Vector3(maxf(swing, 0.0) * 0.14, 0.0, 0.0))
 
 
 func _pose_jab() -> void:
@@ -504,7 +504,7 @@ func _pose_jab() -> void:
 	## Arms only. Hip/torso extras stretch the 100×-IBM skin on run-stop.
 	_part_rot("L_Forearm", Vector3(0.20, 0.0, 0.0) * snap)
 	_part_rot("L_Fist", Vector3(0.06, 0.0, 0.0) * snap)
-	_rig.aim_along_y("L_UpperArm", Vector3(0.04, 0.10, -1.0), snap * 0.28)
+	_rig.aim_along_y("L_UpperArm", Vector3(0.04, 0.10, -1.0), snap * 0.20)
 	_part_rot("R_UpperArm", Vector3(0.06, -0.04, -0.04))
 
 
@@ -525,7 +525,7 @@ func _pose_heavy() -> void:
 			commit = 1.0 - clampf((_state_time - wind - active) / maxf(recover, 0.05), 0.0, 1.0) * 0.55
 		_part_rot("R_Forearm", Vector3(0.10, 0.0, 0.0))
 		_part_rot("R_Fist", Vector3(0.06, 0.0, 0.0) * commit)
-		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.08, -1.0), commit * 0.28)
+		_rig.aim_along_y("R_UpperArm", Vector3(-0.06, 0.08, -1.0), commit * 0.20)
 
 
 func _pose_roll() -> void:
