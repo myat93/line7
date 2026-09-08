@@ -68,7 +68,8 @@ static func _build_mat(kind: String) -> StandardMaterial3D:
 			m = _pbr("cloth_diff.jpg", "cloth_nor.jpg", "cloth_rough.jpg")
 			m.albedo_color = Color(0.28, 0.24, 0.22)
 			m.cull_mode = BaseMaterial3D.CULL_DISABLED
-			m.roughness = 0.82
+			m.metallic = 0.0
+			m.roughness = 0.94
 			m.uv1_scale = Vector3(2.0, 2.0, 2.0)
 		"leather":
 			m = _pbr("leather_diff.jpg", "leather_nor.jpg", "leather_rough.jpg")
