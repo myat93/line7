@@ -2,11 +2,11 @@ class_name HollowHerald
 extends CharacterBody3D
 
 ## Slow, readable bosslet. Telegraph swipe, then telegraph lunge.
-## Visual is the transit-coat blockout under MeshRoot. Capsule collision is unchanged.
+## Visual is the realistic transit-coat mesh under MeshRoot. Capsule collision is unchanged.
 
 enum Phase { WAIT, APPROACH, SWIPE_WIND, SWIPE, PAUSE, LUNGE_WIND, LUNGE, REST, DEAD }
 
-const BLOCKOUT_SCENE: PackedScene = preload("res://enemies/hollow_herald/hollow_herald_blockout.glb")
+const BLOCKOUT_SCENE: PackedScene = preload("res://enemies/hollow_herald/hollow_herald_realistic.glb")
 const POSE_PARTS: PackedStringArray = [
 	"Hips", "Torso", "Head", "Crown",
 	"L_UpperArm", "L_Forearm", "L_Fist",
@@ -224,9 +224,24 @@ func _bind_blockout() -> void:
 		_blockout = BLOCKOUT_SCENE.instantiate() as Node3D
 		_blockout.name = "HeraldBlockout"
 		mesh_root.add_child(_blockout)
+	_apply_realistic_meters()
 	_cache_pose_nodes()
 	if pose_player:
 		pose_player.active = true
+
+
+func _apply_realistic_meters() -> void:
+	## Coat / crown are authored in meters on a 0.01 armature node. Undo that scale
+	## so the raincoat and horns read at ~2 m. Hide the Rocketbox body — its
+	## inverse binds collapse in Godot (A-pose / IBM pass still pending).
+	if _blockout == null:
+		return
+	var visual := _blockout.find_child("HeraldRealistic", true, false) as Node3D
+	if visual:
+		visual.scale = Vector3.ONE
+	var body := _blockout.find_child("Body", true, false) as MeshInstance3D
+	if body:
+		body.visible = false
 
 
 func _cache_pose_nodes() -> void:

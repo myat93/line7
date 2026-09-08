@@ -1,9 +1,7 @@
 class_name CrateLoot
 extends Area3D
 
-## Optional stub loot. Visual is CampKit crate + barrel.
-
-const Kit := preload("res://ruins/fallen_castle/camp_kit.gd")
+## Optional stub loot. Visual is the PBR crate + barrel stack.
 
 const LOOT := "A linen wrap and a scrap of watch brass.\nThe crate is picked clean."
 const HEAL := 12
@@ -21,17 +19,7 @@ func _ready() -> void:
 	add_to_group("crate_loot")
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
-	Kit.crate(self, Vector3(0.0, 0.0, 0.0), Vector3(0.7, 0.5, 0.62), 8.0)
-	Kit.crate(self, Vector3(0.58, -0.04, 0.18), Vector3(0.45, 0.32, 0.4), -16.0)
-	Kit.barrel(self, Vector3(-0.55, -0.22, 0.12))
-	var hide := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(0.72, 0.58)
-	hide.mesh = plane
-	hide.material_override = Kit.mat("leather")
-	hide.position = Vector3(0.04, 0.32, 0.02)
-	hide.rotation_degrees = Vector3(8, 14, -5)
-	add_child(hide)
+	RealisticCamp.add(self, "res://ruins/guard_camp/meshes/crate_loot_realistic.glb")
 	PocketGeo.label(self, Vector3(0.12, 0.72, 0.0), "CRATE", Color(0.86, 0.72, 0.48), 22)
 	if get_node_or_null("CollisionShape3D") == null:
 		var col := CollisionShape3D.new()

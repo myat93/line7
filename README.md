@@ -2,7 +2,7 @@
 
 Godot **4.7.x** third-person combat slice. HE wakes in a flooded subway chapel, fights the Hollow Herald with bare fists, then takes the Ashpike from the angel-stone shrine — unequipped until it is bound.
 
-HE uses the civilian box blockout (`characters/he/he_blockout.glb`) as a visual under the existing capsule body. The Hollow Herald uses the official lesser-demon transit-coat blockout (`enemies/hollow_herald/hollow_herald_blockout.glb`) the same way. Collision, hurtboxes, locked fist reach, and Herald swipe/lunge clocks stay on the capsules. This is one room, not an MMO.
+HE uses the Rocketbox civilian mesh (`characters/he/he_realistic.glb`) as the live MeshRoot visual. The Hollow Herald uses `enemies/hollow_herald/hollow_herald_realistic.glb` the same way. Collision, hurtboxes, locked fist reach, and Herald swipe/lunge clocks stay on the capsules. This is one room, not an MMO.
 
 ## Import and play
 
@@ -80,13 +80,13 @@ A fourth linked scene at `ruins/guard_camp/` — palisade yard off the tunnel ex
 | Restart slice | **R** |
 | Free / recapture mouse | Esc |
 
-Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still the locked jab **1.32** / heavy **1.52**. Fist arcs, roll tuck, and sprint lean are procedural poses on the blockout joints — see `characters/he/README.md`.
+Stamina gating and whiff punish are **off** for playtest (`Combat.STAMINA_GATING` / `Combat.WHIFF_PUNISH`). Reach is still the locked jab **1.32** / heavy **1.52**. MeshRoot stays A-pose until Skeleton3D bone poses or clips land — see `characters/he/README.md`.
 
 ## Folders
 
 ```
-characters/he/                 protagonist + blockout GLB (visual only)
-enemies/hollow_herald/         slow telegraph duel + transit-coat blockout
+characters/he/                 protagonist + realistic MeshRoot GLB (visual only)
+enemies/hollow_herald/         slow telegraph duel + realistic transit-coat mesh
 ruins/line7_undercroft/        flooded subway + angel stone
 ruins/fallen_castle/           fallen keep exploration pocket
 ruins/line7_pocket/            service-tunnel exploration pocket

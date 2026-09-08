@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://core/hitbox.gd" id="2_hit"]
 [ext_resource type="Script" path="res://core/hurtbox.gd" id="3_hurt"]
 [ext_resource type="PackedScene" path="res://weapons/ashpike/ashpike.tscn" id="4_pike"]
-[ext_resource type="PackedScene" path="res://characters/he/he_blockout.glb" id="5_blockout"]
+[ext_resource type="PackedScene" path="res://characters/he/he_realistic.glb" id="5_blockout"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.32
