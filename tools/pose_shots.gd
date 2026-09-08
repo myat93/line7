@@ -57,9 +57,24 @@ func _run() -> void:
 		_he._state_time = 0.12
 		_he._update_visual_pose()
 	)
+	await _shot("he_walk_left_pass", func() -> void:
+		_he.state = HE.State.FREE
+		_he._sprinting = false
+		_he._moving = true
+		_he._stride = PI * 0.5
+		_he._update_visual_pose()
+	)
+	await _shot("he_walk_right_pass", func() -> void:
+		_he.state = HE.State.FREE
+		_he._sprinting = false
+		_he._moving = true
+		_he._stride = PI * 1.5
+		_he._update_visual_pose()
+	)
 	await _shot("he_sprint_lean_readable", func() -> void:
 		_he.state = HE.State.FREE
 		_he._sprinting = true
+		_he._moving = true
 		_he._stride = 0.85
 		_he._update_visual_pose()
 	)
@@ -88,6 +103,28 @@ func _run() -> void:
 		_he.state = HE.State.ATTACK
 		_he._attack = Combat.fists_heavy()
 		_he._state_time = 0.40
+		_he._update_visual_pose()
+	)
+	## Side-on so the bipedal stride reads (behind hid planted vs cycling legs).
+	_he._look_yaw = PI + PI * 0.5
+	_he._look_pitch = -0.08
+	_he.camera_pivot.rotation = Vector3(_he._look_pitch, _he._look_yaw, 0.0)
+	if spring:
+		spring.spring_length = 3.1
+	if _cam:
+		_cam.h_offset = 0.0
+	await _shot("he_walk_left_side", func() -> void:
+		_he.state = HE.State.FREE
+		_he._sprinting = false
+		_he._moving = true
+		_he._stride = PI * 0.5
+		_he._update_visual_pose()
+	)
+	await _shot("he_walk_right_side", func() -> void:
+		_he.state = HE.State.FREE
+		_he._sprinting = false
+		_he._moving = true
+		_he._stride = PI * 1.5
 		_he._update_visual_pose()
 	)
 	print("HE_POSE_SHOTS_OK")

@@ -193,6 +193,11 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		failures.append("MeshPoseRig must unscale the 0.01 armature and pose via set_bone_pose_rotation.")
 	if not pose_rig.contains("_align_godot_forward") or not pose_rig.contains("aim_along_y"):
 		failures.append("MeshPoseRig must align Bip01 +Z to Godot −Z and aim punch bones in character space.")
+	if not pose_rig.contains("swing_along_y"):
+		failures.append("MeshPoseRig must keep swing_along_y for signed along-bone extras.")
+	var he_pose := FileAccess.get_file_as_string("res://characters/he/he.gd")
+	if not he_pose.contains("_pose_stride_legs") or not he_pose.contains("Local Z is sagittal"):
+		failures.append("he.gd walk/sprint must drive a sagittal (local Z) thigh/shin stride.")
 	var official_glb := load("res://enemies/hollow_herald/hollow_herald_realistic.glb") as PackedScene
 	if official_glb == null:
 		failures.append("hollow_herald_realistic.glb did not import as a PackedScene.")

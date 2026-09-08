@@ -91,10 +91,10 @@ func set_char_rot(part_name: String, extra: Vector3) -> void:
 	set_rot(part_name, extra)
 
 
-func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0) -> void:
+func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0, max_ang: float = 0.28) -> void:
 	## Rest-relative nudge so +Y (along-bone) leans toward a Godot direction.
 	## Cap the swing — a full 90° slerp stretches the 100×-IBM skin (clip 0:05/0:13).
-	## 0.28 rad is the read/safety ceiling; jab/heavy silhouette comes from the elbow.
+	## 0.28 rad is the punch ceiling; jab/heavy silhouette comes from the elbow.
 	if skeleton == null or not _bones.has(part_name):
 		return
 	if char_dir.length() < 0.05 or weight <= 0.001:
@@ -111,9 +111,30 @@ func aim_along_y(part_name: String, char_dir: Vector3, weight: float = 1.0) -> v
 	else:
 		axis = axis.normalized()
 	## 0.28 rad is enough to leave A-pose; 90° slerp is the clip spaghetti.
-	var ang := minf(current_y.angle_to(want), 0.28) * clampf(weight, 0.0, 1.0)
+	var ang := minf(current_y.angle_to(want), max_ang) * clampf(weight, 0.0, 1.0)
 	if ang < 0.01:
 		return
+	var parent_b := _parent_rest_basis(idx)
+	var aimed := Basis(axis, ang) * rest_global
+	var new_local := parent_b.inverse() * aimed
+	skeleton.set_bone_pose_rotation(idx, new_local.get_rotation_quaternion())
+
+
+func swing_along_y(part_name: String, char_dir: Vector3, ang: float) -> void:
+	## Signed sagittal swing for walk/sprint. Thigh local X ≈ MeshRoot forward, so
+	## Euler X abducts (planted slide). Rotate +Y (along-bone) toward char_dir.
+	if skeleton == null or not _bones.has(part_name):
+		return
+	if char_dir.length() < 0.05 or absf(ang) < 0.01:
+		return
+	var idx: int = _bones[part_name]
+	var rest_global: Basis = _rest_global.get(part_name, skeleton.get_bone_rest(idx).basis)
+	var current_y := rest_global.y.normalized()
+	var want := (_char_basis() * char_dir).normalized()
+	var axis := current_y.cross(want)
+	if axis.length() < 0.001:
+		return
+	axis = axis.normalized()
 	var parent_b := _parent_rest_basis(idx)
 	var aimed := Basis(axis, ang) * rest_global
 	var new_local := parent_b.inverse() * aimed
