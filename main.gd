@@ -47,9 +47,12 @@ func _show_castle() -> void:
 	castle.process_mode = Node.PROCESS_MODE_INHERIT
 	level.world_env.environment = null
 	castle.get_node("WorldEnvironment").environment = _castle_env
-	he.global_position = castle.player_spawn
+	var spawn: Vector3 = castle.get("player_spawn")
+	if typeof(spawn) != TYPE_VECTOR3:
+		spawn = Vector3(0.0, 1.05, 2.4)
+	he.global_position = spawn
 	he.velocity = Vector3.ZERO
-	Game.banner("FALLEN CASTLE\nGuard posts. Climb the rubble. The keep is dead.")
+	Game.banner("GUARD CAMP\nPalisade watch. Lean-tos still stand.")
 
 
 func _show_undercroft() -> void:

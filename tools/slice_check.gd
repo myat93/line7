@@ -28,6 +28,7 @@ func _check_layout(failures: PackedStringArray) -> void:
 		"res://ruins/line7_undercroft/line7_undercroft.tscn",
 		"res://ruins/fallen_castle/fallen_castle.tscn",
 		"res://ruins/fallen_castle/fallen_castle.gd",
+		"res://ruins/fallen_castle/camp_kit.gd",
 		"res://core/area_gate.gd",
 		"res://weapons/ashpike/ashpike.tscn",
 		"res://weapons/ashpike/ashpike_pickup.tscn",

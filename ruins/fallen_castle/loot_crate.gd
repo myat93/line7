@@ -1,7 +1,7 @@
 class_name LootCrate
 extends Area3D
 
-## One-shot stub interact. No loot table — just a ruin beat.
+## Searchable crate under the lean-to. Wood mesh, not a grey cube.
 
 var opened: bool = false
 
@@ -15,7 +15,12 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	if get_child_count() == 0:
-		_build_visual()
+		preload("res://ruins/fallen_castle/camp_kit.gd").crate(self, Vector3.ZERO, Vector3(0.72, 0.52, 0.7), 8.0)
+		var col := CollisionShape3D.new()
+		var shape := SphereShape3D.new()
+		shape.radius = 1.35
+		col.shape = shape
+		add_child(col)
 
 
 func can_interact() -> bool:
@@ -28,7 +33,7 @@ func interact() -> bool:
 	opened = true
 	Game.banner("The crate is empty. The watch is long gone.")
 	Game.set_prompt("")
-	rotate_x(0.35)
+	rotate_z(0.4)
 	return true
 
 
@@ -42,20 +47,3 @@ func _on_body_entered(body: Node) -> void:
 func _on_body_exited(body: Node) -> void:
 	if body.is_in_group("player"):
 		Game.set_prompt("")
-
-
-func _build_visual() -> void:
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(0.7, 0.55, 0.7)
-	mesh.mesh = box
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.38, 0.26, 0.16)
-	mat.roughness = 0.85
-	mesh.material_override = mat
-	add_child(mesh)
-	var col := CollisionShape3D.new()
-	var shape := SphereShape3D.new()
-	shape.radius = 1.4
-	col.shape = shape
-	add_child(col)

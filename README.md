@@ -24,7 +24,9 @@ If Godot asks to generate import files, accept. `.godot/` is local cache and is 
 
 ## Fallen castle ruins
 
-A second pocket sits beside the undercroft — a **fallen keep** with three **guard posts** (gatehouse, west watch, east watch), rubble stairs, and an empty loot crate. Same HE controls; no extra enemy.
+A second pocket sits beside the undercroft — a **wooden guard camp** (not CSG boxes): uneven sharpened palisade logs, cloth lean-tos, crates/barrels, a lashed-pole tripod, muddy path, torch posts, and three watch posts (gatehouse / west / east / keep). Same HE controls; no extra enemy.
+
+Props and bark/cloth/mud textures are original (`ruins/fallen_castle/camp_kit.gd`). See `ruins/fallen_castle/ATTRIBUTION.md`.
 
 **How to enter**
 
@@ -83,4 +85,4 @@ Prints `LINE7_SLICE_OK` / `LINE7_PLAY_SIM_OK` when the layout, fist-first rules,
 
 ## Out of scope
 
-No Unreal project, no multiplayer, no full MMO systems. One-room first-playable slice only.
+No Unreal project, no multiplayer, no full MMO systems. Undercroft combat slice plus one ruins exploration pocket.

@@ -1,15 +1,13 @@
 class_name FallenCastle
 extends Node3D
 
-## Exploration pocket: fallen keep, three guard posts, rubble climb. No enemy.
+## Guard camp pocket — wooden palisade, lean-tos, tripod, mud path. Not CSG greybox.
 
-const STONE := preload("res://ruins/fallen_castle/materials/ruin_stone.tres")
-const KEEP := preload("res://ruins/fallen_castle/materials/keep_stone.tres")
-const ANGEL := preload("res://ruins/line7_undercroft/materials/angel_stone.tres")
 const GATE := preload("res://core/area_gate.gd")
 const CRATE := preload("res://ruins/fallen_castle/loot_crate.gd")
+const Kit := preload("res://ruins/fallen_castle/camp_kit.gd")
 
-var player_spawn: Vector3 = Vector3(0.0, 1.15, 3.2)
+var player_spawn: Vector3 = Vector3(0.0, 1.05, 2.4)
 
 @onready var geometry: Node3D = $Geometry
 @onready var lights: Node3D = $Lights
@@ -20,8 +18,8 @@ var player_spawn: Vector3 = Vector3(0.0, 1.15, 3.2)
 func _ready() -> void:
 	_style_environment()
 	_build_ground()
-	_build_keep()
-	_build_guard_posts()
+	_build_palisade()
+	_build_camp()
 	_build_climb()
 	_place_crate()
 	_place_return_gate()
@@ -29,125 +27,123 @@ func _ready() -> void:
 
 
 func _style_environment() -> void:
+	var sky := ProceduralSkyMaterial.new()
+	sky.sky_top_color = Color(0.18, 0.2, 0.24)
+	sky.sky_horizon_color = Color(0.42, 0.28, 0.26)
+	sky.ground_bottom_color = Color(0.08, 0.07, 0.06)
+	sky.ground_horizon_color = Color(0.22, 0.16, 0.12)
+	sky.sun_angle_max = 10.0
+	sky.energy_multiplier = 0.85
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.05, 0.045, 0.04)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.22, 0.18, 0.16)
-	env.ambient_light_energy = 0.7
+	env.background_mode = Environment.BG_SKY
+	env.sky = Sky.new()
+	env.sky.sky_material = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 0.55
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.2, 0.16, 0.14)
-	env.fog_density = 0.01
+	env.fog_light_color = Color(0.22, 0.2, 0.2)
+	env.fog_density = 0.014
+	env.fog_aerial_perspective = 0.35
 	env.glow_enabled = true
 	world_env.environment = env
 
 
 func _build_ground() -> void:
-	_box(geometry, Vector3(0, 0.4, 16), Vector3(38, 0.8, 40), STONE, true)
-	## Outer rubble walls (collapsed, with gaps).
-	_box(geometry, Vector3(-18.4, 2.4, 16), Vector3(1.4, 4.0, 40), KEEP, true)
-	_box(geometry, Vector3(18.4, 2.4, 16), Vector3(1.4, 4.0, 40), KEEP, true)
-	_box(geometry, Vector3(0, 2.6, -3.4), Vector3(38, 4.4, 1.4), KEEP, true)
-	_box(geometry, Vector3(-8, 2.2, 35.6), Vector3(22, 3.6, 1.4), KEEP, true)
-	_box(geometry, Vector3(12, 1.4, 35.4), Vector3(8, 2.0, 1.2), KEEP, true)
-	var dirt := STONE.duplicate() as StandardMaterial3D
-	dirt.albedo_color = Color(0.2, 0.18, 0.14)
-	_box(geometry, Vector3(0, 0.15, 16), Vector3(36, 0.2, 38), dirt, false)
-	_torch(Vector3(0, 4.8, 6), Color(1.0, 0.7, 0.4), 2.2)
+	Kit.mud_ground(geometry, Vector3(0, 0.35, 14), Vector3(30, 0.7, 32))
+	## Darker central path.
+	var path := MeshInstance3D.new()
+	var strip := BoxMesh.new()
+	strip.size = Vector3(4.2, 0.04, 26)
+	path.mesh = strip
+	var path_mat := Kit.mat("mud").duplicate() as StandardMaterial3D
+	path_mat.albedo_color = Color(0.55, 0.45, 0.35)
+	path.material_override = path_mat
+	path.position = Vector3(0, 0.72, 14)
+	geometry.add_child(path)
+	for p in [
+		Vector3(-2.4, 0.72, 5), Vector3(2.2, 0.72, 6.5), Vector3(-2.6, 0.72, 12),
+		Vector3(2.4, 0.72, 14), Vector3(-2.3, 0.72, 20), Vector3(2.6, 0.72, 22),
+		Vector3(-8.5, 0.72, 10), Vector3(8.2, 0.72, 11), Vector3(-7.4, 0.72, 18),
+	]:
+		Kit.grass_tuft(geometry, p)
 
 
-func _build_keep() -> void:
-	## Slumped keep — readable blockout of a fallen castle.
-	_box(geometry, Vector3(0, 3.2, 26.5), Vector3(12, 5.2, 8), KEEP, true)
-	_box(geometry, Vector3(-3.4, 5.8, 24.2), Vector3(4.5, 1.6, 3.2), KEEP, true)
-	_box(geometry, Vector3(4.2, 2.4, 22.4), Vector3(3.4, 2.2, 3.6), KEEP, true)
-	_box(geometry, Vector3(2.8, 1.4, 20.2), Vector3(2.4, 1.2, 2.2), STONE, true)
-	## Broken tower lean.
-	var lean := StaticBody3D.new()
-	lean.position = Vector3(-5.6, 4.6, 28.4)
-	lean.rotation_degrees = Vector3(0, 12, -18)
-	lean.collision_layer = Combat.LAYER_WORLD
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(2.4, 7.2, 2.4)
-	mesh.mesh = box
-	mesh.material_override = KEEP
-	lean.add_child(mesh)
-	var col := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = box.size
-	col.shape = shape
-	lean.add_child(col)
-	geometry.add_child(lean)
-	## Interior dais.
-	_box(geometry, Vector3(0, 1.15, 26.4), Vector3(5.5, 0.5, 4.2), STONE, true)
-	_label(Vector3(0, 3.4, 22.6), "FALLEN KEEP")
-	_torch(Vector3(-4.2, 5.2, 24.0), Color(1.0, 0.55, 0.28), 2.8)
-	_torch(Vector3(4.2, 4.4, 24.0), Color(1.0, 0.55, 0.28), 2.4)
+func _build_palisade() -> void:
+	## ~30m enclosure of uneven sharpened logs.
+	Kit.palisade_run(geometry, Vector3(-13, 0.7, 0.4), Vector3(13, 0.7, 0.4), 2)
+	Kit.palisade_run(geometry, Vector3(-13.2, 0.7, 0.6), Vector3(-13.2, 0.7, 28.5), 4)
+	Kit.palisade_run(geometry, Vector3(13.2, 0.7, 0.6), Vector3(13.2, 0.7, 28.5), 5)
+	Kit.palisade_run(geometry, Vector3(-13, 0.7, 28.6), Vector3(-2.2, 0.7, 28.6), 7)
+	Kit.palisade_run(geometry, Vector3(2.2, 0.7, 28.6), Vector3(13, 0.7, 28.6), 8)
+	## Taller keep-end palisade (fallen timber mass, not a grey cube).
+	for i in 9:
+		var x := -3.6 + float(i) * 0.9
+		Kit.add_log(geometry, Vector3(x, 0.7, 26.8), 3.6 + float(i % 4) * 0.18, 0.13, float(i * 15), float(i % 5) - 2.0)
+	## Collapsed leaning logs.
+	for i in 4:
+		var log := Kit.add_log(geometry, Vector3(-5.5 + float(i) * 0.55, 0.85, 24.2 + float(i) * 0.3), 3.4, 0.11, 70.0, 62.0)
+		log.get_parent().rotation_degrees = Vector3(68, 18 + float(i) * 8, 0)
 
 
-func _build_guard_posts() -> void:
-	_guard_post(Vector3(0, 0, 7.2), "GATEHOUSE")
-	_guard_post(Vector3(-11.5, 0, 16.5), "WEST WATCH")
-	_guard_post(Vector3(11.5, 0, 16.5), "EAST WATCH")
-
-
-func _guard_post(origin: Vector3, title: String) -> void:
-	_box(geometry, origin + Vector3(0, 1.6, 0), Vector3(3.2, 2.4, 3.2), KEEP, true)
-	_box(geometry, origin + Vector3(0, 3.15, 0), Vector3(3.6, 0.35, 3.6), STONE, true)
-	_box(geometry, origin + Vector3(-1.3, 2.6, -1.3), Vector3(0.35, 1.8, 0.35), KEEP, true)
-	_box(geometry, origin + Vector3(1.3, 2.6, -1.3), Vector3(0.35, 1.8, 0.35), KEEP, true)
-	_box(geometry, origin + Vector3(-1.3, 2.6, 1.3), Vector3(0.35, 1.8, 0.35), KEEP, true)
-	_box(geometry, origin + Vector3(1.3, 2.6, 1.3), Vector3(0.35, 1.8, 0.35), KEEP, true)
-	_label(origin + Vector3(0, 3.7, 0), title)
-	_torch(origin + Vector3(0, 4.3, 0), Color(1.0, 0.72, 0.38), 2.0)
+func _build_camp() -> void:
+	Kit.timber_gate(geometry, Vector3(0, 0.7, 5.8), 0.0)
+	Kit.lean_to(geometry, Vector3(-6.4, 0.7, 9.2), 18.0)
+	Kit.lean_to(geometry, Vector3(-7.2, 0.7, 14.8), 8.0)
+	Kit.lean_to(geometry, Vector3(6.8, 0.7, 10.8), -22.0)
+	Kit.tripod(geometry, Vector3(-3.1, 0.7, 11.6))
+	Kit.crate(geometry, Vector3(-4.4, 0.98, 10.4), Vector3(0.68, 0.48, 0.62), 22.0)
+	Kit.barrel(geometry, Vector3(-2.2, 0.7, 10.1))
+	Kit.barrel(geometry, Vector3(4.8, 0.7, 13.2))
+	Kit.crate(geometry, Vector3(5.4, 0.98, 14.6), Vector3(0.7, 0.5, 0.66), -12.0)
+	Kit.watch_post(geometry, Vector3(-9.2, 0.7, 19.4), lights, "WEST WATCH")
+	Kit.watch_post(geometry, Vector3(9.2, 0.7, 19.4), lights, "EAST WATCH")
+	Kit.watch_post(geometry, Vector3(0.0, 0.7, 24.6), lights, "KEEP WATCH")
+	Kit.torch_post(geometry, Vector3(2.4, 0.7, 6.2), lights)
+	Kit.torch_post(geometry, Vector3(-8.6, 0.7, 8.4), lights)
+	Kit.torch_post(geometry, Vector3(8.2, 0.7, 16.0), lights)
+	_label(Vector3(0, 3.55, 5.8), "GATEHOUSE")
 
 
 func _build_climb() -> void:
-	## Rubble stair from courtyard to keep wall-walk so jump/sprint matter.
-	var steps := [
-		Vector3(-2.2, 0.95, 12.4),
-		Vector3(-1.4, 1.45, 13.6),
-		Vector3(-0.6, 1.95, 14.8),
-		Vector3(0.2, 2.45, 16.0),
-		Vector3(0.8, 2.95, 17.4),
-		Vector3(0.4, 3.45, 18.8),
-	]
-	for pos in steps:
-		_box(geometry, pos, Vector3(2.4, 0.45, 1.6), STONE, true)
-	_box(geometry, Vector3(0.2, 3.7, 20.4), Vector3(4.8, 0.4, 2.4), KEEP, true)
-	_box(geometry, Vector3(-6.5, 1.2, 12.8), Vector3(2.0, 0.7, 1.8), STONE, true)
-	_box(geometry, Vector3(6.8, 1.35, 13.2), Vector3(1.8, 0.9, 1.6), STONE, true)
+	## Timber ramp toward the keep watch so jump/sprint matter.
+	Kit.plank_ramp(geometry, Vector3(-1.6, 1.15, 16.4), Vector3(2.4, 0.1, 0.85), -18.0, 12.0)
+	Kit.plank_ramp(geometry, Vector3(-0.4, 1.65, 18.2), Vector3(2.2, 0.1, 0.8), -16.0, 8.0)
+	Kit.plank_ramp(geometry, Vector3(0.5, 2.05, 20.0), Vector3(2.0, 0.1, 0.75), -14.0, 4.0)
+	for i in 5:
+		Kit.add_log(geometry, Vector3(2.4 + float(i) * 0.22, 0.85, 17.2 + float(i) * 0.35), 1.6, 0.1, 90.0, 82.0)
 
 
 func _place_crate() -> void:
 	var crate := Area3D.new()
 	crate.set_script(CRATE)
-	crate.position = Vector3(0.6, 1.55, 26.6)
+	crate.position = Vector3(-5.6, 1.05, 9.0)
 	add_child(crate)
 
 
 func _place_return_gate() -> void:
-	_box(geometry, Vector3(-1.15, 2.1, 1.15), Vector3(0.35, 2.4, 0.35), ANGEL, true)
-	_box(geometry, Vector3(1.15, 2.1, 1.15), Vector3(0.35, 2.4, 0.35), ANGEL, true)
-	_box(geometry, Vector3(0, 3.35, 1.15), Vector3(2.6, 0.28, 0.35), ANGEL, true)
-	_label(Vector3(0, 2.6, 1.6), "LINE 7")
+	Kit.timber_gate(geometry, Vector3(0, 0.7, 1.15), 0.0)
+	_label(Vector3(0, 2.55, 1.5), "LINE 7")
 	var gate := Area3D.new()
 	gate.set_script(GATE)
 	gate.destination = "undercroft"
 	gate.prompt_text = "E  —  return to Line 7"
 	gate.arrive_banner = "LINE 7 — UNDERCROFT"
-	gate.position = Vector3(0.0, 1.2, 1.3)
+	gate.position = Vector3(0.0, 1.15, 1.3)
 	add_child(gate)
-	_torch(Vector3(0, 3.6, 1.2), Color(0.55, 0.85, 0.9), 2.4)
+	var glow := OmniLight3D.new()
+	glow.position = Vector3(0, 2.8, 1.2)
+	glow.light_color = Color(0.55, 0.82, 0.88)
+	glow.light_energy = 1.6
+	glow.omni_range = 6.0
+	lights.add_child(glow)
 
 
 func _place_markers() -> void:
 	_marker("PlayerSpawn", player_spawn)
-	_marker("Gatehouse", Vector3(0, 1, 7.2))
-	_marker("WestWatch", Vector3(-11.5, 1, 16.5))
-	_marker("EastWatch", Vector3(11.5, 1, 16.5))
-	_marker("Keep", Vector3(0, 1, 26.5))
+	_marker("Gatehouse", Vector3(0, 1, 5.8))
+	_marker("WestWatch", Vector3(-9.2, 1, 19.4))
+	_marker("EastWatch", Vector3(9.2, 1, 19.4))
+	_marker("KeepWatch", Vector3(0, 1, 24.6))
 
 
 func _marker(marker_name: String, pos: Vector3) -> void:
@@ -160,45 +156,7 @@ func _marker(marker_name: String, pos: Vector3) -> void:
 func _label(pos: Vector3, text: String) -> void:
 	var plaque := Label3D.new()
 	plaque.text = text
-	plaque.font_size = 42
+	plaque.font_size = 32
 	plaque.position = pos
-	plaque.modulate = Color(0.88, 0.78, 0.58)
+	plaque.modulate = Color(0.86, 0.76, 0.55)
 	geometry.add_child(plaque)
-
-
-func _torch(pos: Vector3, color: Color, energy: float) -> void:
-	var lamp := OmniLight3D.new()
-	lamp.position = pos
-	lamp.light_color = color
-	lamp.light_energy = energy
-	lamp.omni_range = 11.0
-	lamp.shadow_enabled = true
-	lights.add_child(lamp)
-
-
-func _box(parent: Node, pos: Vector3, size: Vector3, mat: Material, collide: bool) -> void:
-	if collide:
-		var body := StaticBody3D.new()
-		body.position = pos
-		body.collision_layer = Combat.LAYER_WORLD
-		body.collision_mask = 0
-		var mesh := MeshInstance3D.new()
-		var box := BoxMesh.new()
-		box.size = size
-		mesh.mesh = box
-		mesh.material_override = mat
-		body.add_child(mesh)
-		var col := CollisionShape3D.new()
-		var shape := BoxShape3D.new()
-		shape.size = size
-		col.shape = shape
-		body.add_child(col)
-		parent.add_child(body)
-	else:
-		var mesh := MeshInstance3D.new()
-		var box := BoxMesh.new()
-		box.size = size
-		mesh.mesh = box
-		mesh.material_override = mat
-		mesh.position = pos
-		parent.add_child(mesh)
