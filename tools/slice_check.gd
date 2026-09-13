@@ -198,6 +198,12 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		failures.append("he.gd walk/sprint must drive a sagittal (local Z) thigh/shin stride for F5.")
 	if not he_pose.contains("func _process") or not he_pose.contains("force_update_all_bone_transforms"):
 		failures.append("he.gd must pose on the render tick and flush Skeleton3D so F5 sees the stride.")
+	if not he_pose.contains("LOCO_SPEED") or not he_pose.contains("_is_locomoting"):
+		failures.append("he.gd must keep walk/sprint stride while horizontal speed is above LOCO_SPEED.")
+	if not he_pose.contains("Relaxed standing") and not he_pose.contains("relaxed standing"):
+		failures.append("he.gd idle must be a relaxed standing pose, not bind A/T-pose.")
+	if he_pose.contains("reset_to_bind()\n\t\treturn"):
+		failures.append("he.gd _pose_idle must not early-return to bind A-pose.")
 	var official_glb := load("res://enemies/hollow_herald/hollow_herald_realistic.glb") as PackedScene
 	if official_glb == null:
 		failures.append("hollow_herald_realistic.glb did not import as a PackedScene.")

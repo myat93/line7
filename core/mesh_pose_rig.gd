@@ -7,8 +7,9 @@ extends RefCounted
 ## Jake's GLBs parent a 100×-IBM Body under a 0.01 armature so coat/crown
 ## (authored in meters) shrink. Undo that scale — coat, crown, and the skinned
 ## Body then read at ~1.8 / 2.05 m. Keep the authored inverse binds; replacing
-## them with inverse(rest) explodes vertices. Idle stays bind-pose (A-pose is
-## the authored rest). Combat extras go through set_bone_pose_rotation.
+## them with inverse(rest) explodes vertices. Authored rest is A-pose; HE idle
+## applies modest extras so the stand is arms-down, not bind. Combat extras
+## go through set_bone_pose_rotation.
 ##
 ## Bind-pose chest follows Bip01 +X (Max-forward). Authored −90° Y puts that
 ## on Godot +Z, i.e. MeshRoot +Z — perpendicular / moonwalk vs WASD (−Z).
