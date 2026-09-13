@@ -165,6 +165,8 @@ func _run() -> void:
 		var idle_thigh := he._rig.bone_pose_rotation("L_Thigh")
 		if not _assert_moving_thigh_delta(he, idle_thigh):
 			pass
+		if not _assert_stride_never_bind(he):
+			pass
 		he._sprinting = false
 		he._moving = true
 		if not _assert_leg_stride(he, mesh_fwd, false):
@@ -426,6 +428,35 @@ func _has_named_bones(root: Node, names: PackedStringArray) -> bool:
 	for bone_name in names:
 		if skel.find_bone(bone_name) < 0:
 			return false
+	return true
+
+
+func _assert_stride_never_bind(he: HE) -> bool:
+	## Consecutive F5-style ticks must keep thighs off bind — no wipe between strides.
+	he._rig.reset_to_bind()
+	if he._rig.skeleton:
+		he._rig.skeleton.force_update_all_bone_transforms()
+	var bind_thigh := he._rig.bone_pose_rotation("L_Thigh")
+	he.state = HE.State.FREE
+	he._sprinting = false
+	he._moving = true
+	he.velocity = Vector3(0.0, 0.0, Combat.WALK_SPEED)
+	he._stride = 0.0
+	var prev := bind_thigh
+	var changed := 0
+	for i in 16:
+		he._stride += Combat.WALK_SPEED * (1.0 / 60.0) * 3.4
+		he._update_visual_pose()
+		var q := he._rig.bone_pose_rotation("L_Thigh")
+		if q.is_equal_approx(bind_thigh):
+			_fail("HE walk frame %d dropped L_Thigh to bind (stride overwritten)." % i)
+			return false
+		if not q.is_equal_approx(prev):
+			changed += 1
+		prev = q
+	if changed < 8:
+		_fail("HE walk thigh must cycle across render ticks, not stay static (changed=%d)." % changed)
+		return false
 	return true
 
 

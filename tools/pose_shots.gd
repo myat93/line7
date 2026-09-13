@@ -81,6 +81,16 @@ func _run() -> void:
 		_he._stride = PI * 1.5
 		_he._update_visual_pose()
 	)
+	for i in 8:
+		var phase: float = float(i) * PI * 0.25
+		await _shot("he_walk_cycle_%d" % i, func() -> void:
+			_he.state = HE.State.FREE
+			_he._sprinting = false
+			_he._moving = true
+			_he.velocity = Vector3(0.0, 0.0, Combat.WALK_SPEED)
+			_he._stride = phase
+			_he._update_visual_pose()
+		)
 	await _shot("he_sprint_lean_readable", func() -> void:
 		_he.state = HE.State.FREE
 		_he._sprinting = true

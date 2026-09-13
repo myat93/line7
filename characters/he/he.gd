@@ -67,6 +67,9 @@ func _ready() -> void:
 	_bind_blockout()
 	_refresh_stance_visual()
 	floor_snap_length = 0.3
+	## Last chance before the GPU sample — F5 must not catch a bind wipe.
+	if not RenderingServer.frame_pre_draw.is_connected(_on_frame_pre_draw):
+		RenderingServer.frame_pre_draw.connect(_on_frame_pre_draw)
 
 
 func get_vitals() -> Dictionary:
@@ -176,6 +179,15 @@ func _physics_process(delta: float) -> void:
 func _process(_delta: float) -> void:
 	## Render tick — F5 samples the mesh here, not only on the physics frame.
 	_update_visual_pose()
+
+
+func _on_frame_pre_draw() -> void:
+	_update_visual_pose()
+
+
+func _exit_tree() -> void:
+	if RenderingServer.frame_pre_draw.is_connected(_on_frame_pre_draw):
+		RenderingServer.frame_pre_draw.disconnect(_on_frame_pre_draw)
 
 
 func _planar_speed() -> float:
@@ -439,8 +451,10 @@ func _refresh_stance_visual() -> void:
 
 func _update_visual_pose() -> void:
 	mesh_root.rotation.x = 0.0
-	## Bind first every frame so run↔attack cannot keep a prior extra.
-	if _rig.skeleton:
+	## Never wipe to bind while locomoting — that is the planted F5 A-pose.
+	## Attack/roll/idle still reset so leftovers cannot stick.
+	var loco := state == State.FREE and _is_locomoting()
+	if _rig.skeleton and not loco:
 		_rig.reset_to_bind()
 	if Game.ashpike_bound and ashpike_visual:
 		ashpike_visual.rotation_degrees = Vector3(-18, 0, 12)

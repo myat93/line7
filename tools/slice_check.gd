@@ -204,6 +204,8 @@ func _check_scenes(failures: PackedStringArray) -> void:
 		failures.append("he.gd idle must be a relaxed standing pose, not bind A/T-pose.")
 	if he_pose.contains("reset_to_bind()\n\t\treturn"):
 		failures.append("he.gd _pose_idle must not early-return to bind A-pose.")
+	if not he_pose.contains("frame_pre_draw") or not he_pose.contains("not loco"):
+		failures.append("he.gd must apply stride before the GPU sample and must not reset_to_bind while locomoting.")
 	var official_glb := load("res://enemies/hollow_herald/hollow_herald_realistic.glb") as PackedScene
 	if official_glb == null:
 		failures.append("hollow_herald_realistic.glb did not import as a PackedScene.")
