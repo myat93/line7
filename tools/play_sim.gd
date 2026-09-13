@@ -115,6 +115,10 @@ func _run() -> void:
 		_assert_visible_body(he, "HE")
 		he.state = HE.State.FREE
 		he._sprinting = false
+		he._moving = false
+		he.velocity = Vector3.ZERO
+		he._rig.reset_to_bind()
+		var bind_arm := he._rig.bone_pose_rotation("L_UpperArm")
 		he._update_visual_pose()
 		var idle_l := he._rig.bone_pose_rotation("L_UpperArm")
 		var idle_r := he._rig.bone_pose_rotation("R_UpperArm")
@@ -122,6 +126,8 @@ func _run() -> void:
 		var idle_r_fore := he._rig.bone_pose_rotation("R_Forearm")
 		var idle_l_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
 		var idle_r_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
+		if idle_l.is_equal_approx(bind_arm):
+			_fail("HE idle must leave the bind A/T-pose (relaxed arms down).")
 		he.state = HE.State.ATTACK
 		he._attack = Combat.fists_light()
 		he._state_time = 0.12
@@ -151,14 +157,19 @@ func _run() -> void:
 			_fail("HE heavy R_Fist spaghetti — bone pose exploded the IBM skin.")
 		he.state = HE.State.FREE
 		he._sprinting = false
+		he._moving = false
+		he.velocity = Vector3.ZERO
 		he._update_visual_pose()
 		var idle_thigh := he._rig.bone_pose_rotation("L_Thigh")
+		if not _assert_moving_thigh_delta(he, idle_thigh):
+			pass
 		he._sprinting = false
 		he._moving = true
 		if not _assert_leg_stride(he, mesh_fwd, false):
 			pass
 		he._sprinting = true
 		he._moving = true
+		he.velocity = Vector3(0.0, 0.0, Combat.SPRINT_SPEED)
 		he._stride = 0.6
 		he._update_visual_pose()
 		var sprint_thigh := he._rig.bone_pose_rotation("L_Thigh")
@@ -416,10 +427,26 @@ func _has_named_bones(root: Node, names: PackedStringArray) -> bool:
 	return true
 
 
+func _assert_moving_thigh_delta(he: HE, idle_thigh: Quaternion) -> bool:
+	## Render-tick path: any locomoting pose must keep thighs off idle/bind.
+	he.state = HE.State.FREE
+	he._sprinting = false
+	he._moving = false
+	he.velocity = Vector3(0.0, 0.0, Combat.WALK_SPEED)
+	for phase in [0.0, 0.4, PI * 0.5, PI]:
+		he._stride = phase
+		he._update_visual_pose()
+		if idle_thigh.is_equal_approx(he._rig.bone_pose_rotation("L_Thigh")):
+			_fail("HE walk must keep a thigh extra vs idle on the render tick (phase=%.2f)." % phase)
+			return false
+	return true
+
+
 func _assert_leg_stride(he: HE, mesh_fwd: Vector3, sprinting: bool) -> bool:
 	## Bone origins sit in the 100×-IBM nest; the F5 read is thigh +Y along MeshRoot −Z.
 	var label := "sprint" if sprinting else "walk"
 	var min_sep := 0.22 if sprinting else 0.16
+	he.velocity = Vector3(0.0, 0.0, Combat.SPRINT_SPEED if sprinting else Combat.WALK_SPEED)
 	he._stride = PI * 0.5
 	he._update_visual_pose()
 	var left_fwd := he._rig.bone_world_axis("L_Thigh", 1).dot(mesh_fwd)
@@ -446,6 +473,7 @@ func _assert_f5_stride_cycle(he: HE, mesh_fwd: Vector3) -> bool:
 	he.state = HE.State.FREE
 	he._sprinting = false
 	he._moving = true
+	he.velocity = Vector3(0.0, 0.0, Combat.WALK_SPEED)
 	he._stride = 0.0
 	var lo := 1.0
 	var hi := -1.0

@@ -57,10 +57,19 @@ func _run() -> void:
 		_he._state_time = 0.12
 		_he._update_visual_pose()
 	)
+	await _shot("he_walk_mid_cycle", func() -> void:
+		_he.state = HE.State.FREE
+		_he._sprinting = false
+		_he._moving = true
+		_he.velocity = Vector3(0.0, 0.0, Combat.WALK_SPEED)
+		_he._stride = 0.0
+		_he._update_visual_pose()
+	)
 	await _shot("he_walk_left_pass", func() -> void:
 		_he.state = HE.State.FREE
 		_he._sprinting = false
 		_he._moving = true
+		_he.velocity = Vector3(0.0, 0.0, Combat.WALK_SPEED)
 		_he._stride = PI * 0.5
 		_he._update_visual_pose()
 	)
@@ -68,6 +77,7 @@ func _run() -> void:
 		_he.state = HE.State.FREE
 		_he._sprinting = false
 		_he._moving = true
+		_he.velocity = Vector3(0.0, 0.0, Combat.WALK_SPEED)
 		_he._stride = PI * 1.5
 		_he._update_visual_pose()
 	)
@@ -75,6 +85,7 @@ func _run() -> void:
 		_he.state = HE.State.FREE
 		_he._sprinting = true
 		_he._moving = true
+		_he.velocity = Vector3(0.0, 0.0, Combat.SPRINT_SPEED)
 		_he._stride = 0.85
 		_he._update_visual_pose()
 	)

@@ -43,6 +43,13 @@ var _stride: float = 0.0
 var _blockout: Node3D
 var _rig := MeshPoseRig.new()
 
+## Horizontal speed that keeps walk/sprint stride on the render tick.
+const LOCO_SPEED: float = 0.12
+## Modest extras drop the authored A/T-pose without stretching IBM sleeves.
+const IDLE_L_ARM := Vector3(-0.22, 0.08, 0.18)
+const IDLE_R_ARM := Vector3(-0.22, -0.08, -0.18)
+const IDLE_FORE := Vector3(0.20, 0.0, 0.0)
+
 
 func _ready() -> void:
 	add_to_group("player")
@@ -157,8 +164,8 @@ func _physics_process(delta: float) -> void:
 
 	_regen(delta)
 	move_and_slide()
-	var planar := Vector2(velocity.x, velocity.z).length()
-	if state == State.FREE and planar > 0.15:
+	var planar := _planar_speed()
+	if state == State.FREE and planar > LOCO_SPEED:
 		## Faster than a 1.2 s cycle so F5 walk/sprint actually reads as stepping.
 		_stride += planar * delta * (4.2 if _sprinting else 3.4)
 	_update_visual_pose()
@@ -167,6 +174,16 @@ func _physics_process(delta: float) -> void:
 func _process(_delta: float) -> void:
 	## Render tick — F5 samples the mesh here, not only on the physics frame.
 	_update_visual_pose()
+
+
+func _planar_speed() -> float:
+	return Vector2(velocity.x, velocity.z).length()
+
+
+func _is_locomoting() -> bool:
+	## Speed is the F5 source of truth. _moving covers the first input frame
+	## before accel crosses LOCO_SPEED so the bind A-pose cannot flash.
+	return _planar_speed() > LOCO_SPEED or _moving
 
 
 func _tick_free(delta: float) -> void:
@@ -445,12 +462,15 @@ func _update_visual_pose() -> void:
 			_pose_idle()
 			_part_rot("Head", Vector3(0.12, 0.08, 0.0))
 		_:
-			if not is_on_floor() and velocity.y > 0.4:
+			## Horizontal speed keeps the stride every render tick. Camp bumps
+			## must not snap back to bind via jump/idle.
+			if _is_locomoting():
+				if _sprinting:
+					_pose_sprint()
+				else:
+					_pose_walk()
+			elif not is_on_floor() and velocity.y > 0.4:
 				_pose_jump()
-			elif _sprinting:
-				_pose_sprint()
-			elif _moving or Vector2(velocity.x, velocity.z).length() > 0.35:
-				_pose_walk()
 			else:
 				_pose_idle()
 	if _rig.skeleton:
@@ -458,18 +478,16 @@ func _update_visual_pose() -> void:
 
 
 func _pose_idle() -> void:
-	if _rig.skeleton:
-		_rig.reset_to_bind()
-		return
+	## Relaxed standing pose — arms down, not the authored A/T-pose.
 	_part_pos("Hips", Vector3.ZERO)
 	_part_rot("Hips", Vector3.ZERO)
-	_part_rot("Torso", Vector3.ZERO)
-	_part_rot("Head", Vector3.ZERO)
-	_part_rot("L_UpperArm", Vector3(0.28, 0.05, 0.22))
-	_part_rot("L_Forearm", Vector3(0.18, 0.0, 0.0))
+	_part_rot("Torso", Vector3(0.04, 0.0, 0.0))
+	_part_rot("Head", Vector3(-0.03, 0.0, 0.0))
+	_part_rot("L_UpperArm", IDLE_L_ARM)
+	_part_rot("L_Forearm", IDLE_FORE)
 	_part_rot("L_Fist", Vector3.ZERO)
-	_part_rot("R_UpperArm", Vector3(0.28, -0.05, -0.22))
-	_part_rot("R_Forearm", Vector3(0.18, 0.0, 0.0))
+	_part_rot("R_UpperArm", IDLE_R_ARM)
+	_part_rot("R_Forearm", IDLE_FORE)
 	_part_rot("R_Fist", Vector3.ZERO)
 	_part_rot("L_Thigh", Vector3.ZERO)
 	_part_rot("L_Shin", Vector3.ZERO)
@@ -480,6 +498,7 @@ func _pose_idle() -> void:
 func _pose_walk() -> void:
 	## Distance-driven stride so feet read against walk speed (no clock skate).
 	_pose_idle()
+	_pose_stride_arms(0.14)
 	_pose_stride_legs(0.62, 0.50)
 
 
@@ -488,17 +507,27 @@ func _pose_sprint() -> void:
 	## Legs + a tiny head nod so the run still aims down the move.
 	_pose_idle()
 	_part_rot("Head", Vector3(0.05, 0.0, 0.0))
+	_pose_stride_arms(0.18)
 	_pose_stride_legs(0.78, 0.62)
+
+
+func _pose_stride_arms(amp: float) -> void:
+	## Opposite the legs; stay modest so IBM sleeves do not stretch.
+	var swing := sin(_stride)
+	_part_rot("L_UpperArm", IDLE_L_ARM + Vector3(0.0, 0.0, swing * amp))
+	_part_rot("R_UpperArm", IDLE_R_ARM + Vector3(0.0, 0.0, -swing * amp))
 
 
 func _pose_stride_legs(thigh_amp: float, shin_amp: float) -> void:
 	## Rest-relative extras only — aim remaps explode the 100×-IBM pants.
 	## Thigh local X ≈ MeshRoot forward (abduct / planted F5 slide). Local Z is sagittal.
+	## Stance keeps mid-cycle off bind so F5 never flashes A/T-pose between strides.
 	var swing := sin(_stride)
-	_part_rot("L_Thigh", Vector3(0.0, 0.0, -swing * thigh_amp))
-	_part_rot("R_Thigh", Vector3(0.0, 0.0, swing * thigh_amp))
-	_part_rot("L_Shin", Vector3(0.0, 0.0, maxf(-swing, 0.0) * shin_amp))
-	_part_rot("R_Shin", Vector3(0.0, 0.0, maxf(swing, 0.0) * shin_amp))
+	var stance := 0.10
+	_part_rot("L_Thigh", Vector3(0.0, 0.0, -stance - swing * thigh_amp))
+	_part_rot("R_Thigh", Vector3(0.0, 0.0, stance + swing * thigh_amp))
+	_part_rot("L_Shin", Vector3(0.0, 0.0, stance * 0.8 + maxf(-swing, 0.0) * shin_amp))
+	_part_rot("R_Shin", Vector3(0.0, 0.0, stance * 0.8 + maxf(swing, 0.0) * shin_amp))
 
 
 func _pose_jab() -> void:
