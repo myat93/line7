@@ -118,14 +118,16 @@ func _run() -> void:
 		he._moving = false
 		he.velocity = Vector3.ZERO
 		he._rig.reset_to_bind()
+		if he._rig.skeleton:
+			he._rig.skeleton.force_update_all_bone_transforms()
 		var bind_arm := he._rig.bone_pose_rotation("L_UpperArm")
+		var bind_l_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
+		var bind_r_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
 		he._update_visual_pose()
 		var idle_l := he._rig.bone_pose_rotation("L_UpperArm")
 		var idle_r := he._rig.bone_pose_rotation("R_UpperArm")
 		var idle_l_fore := he._rig.bone_pose_rotation("L_Forearm")
 		var idle_r_fore := he._rig.bone_pose_rotation("R_Forearm")
-		var idle_l_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
-		var idle_r_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
 		if idle_l.is_equal_approx(bind_arm):
 			_fail("HE idle must leave the bind A/T-pose (relaxed arms down).")
 		he.state = HE.State.ATTACK
@@ -138,7 +140,7 @@ func _run() -> void:
 		if idle_l_fore.is_equal_approx(he._rig.bone_pose_rotation("L_Forearm")):
 			_fail("HE jab must fold L_Forearm (elbow), not only nudge the upper arm.")
 		var jab_fwd := he._rig.bone_world_axis("L_UpperArm", 1).dot(mesh_fwd)
-		if jab_fwd < idle_l_fwd + 0.08:
+		if jab_fwd < bind_l_fwd + 0.08:
 			_fail("HE jab L_UpperArm must swing toward MeshRoot forward.")
 		if _fist_span(he, "L_Fist") > 1.35:
 			_fail("HE jab L_Fist spaghetti — bone pose exploded the IBM skin.")
@@ -151,7 +153,7 @@ func _run() -> void:
 		if idle_r_fore.is_equal_approx(he._rig.bone_pose_rotation("R_Forearm")):
 			_fail("HE heavy must fold R_Forearm (elbow) on the commit frame.")
 		var heavy_fwd := he._rig.bone_world_axis("R_UpperArm", 1).dot(mesh_fwd)
-		if heavy_fwd < idle_r_fwd + 0.08:
+		if heavy_fwd < bind_r_fwd + 0.08:
 			_fail("HE heavy R_UpperArm must commit toward MeshRoot forward.")
 		if _fist_span(he, "R_Fist") > 1.35:
 			_fail("HE heavy R_Fist spaghetti — bone pose exploded the IBM skin.")

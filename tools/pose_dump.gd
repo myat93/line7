@@ -50,6 +50,9 @@ func _run() -> void:
 	_print_forward(he, "heavy")
 	he.state = HE.State.FREE
 	he._sprinting = true
+	he._moving = true
+	he.velocity = Vector3(0.0, 0.0, Combat.SPRINT_SPEED)
+	he._stride = 0.85
 	he._update_visual_pose()
 	_dump_bones(he, "sprint")
 	_print_forward(he, "sprint")

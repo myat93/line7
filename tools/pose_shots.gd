@@ -104,6 +104,21 @@ func _run() -> void:
 	_he.camera_pivot.rotation = Vector3(_he._look_pitch, _he._look_yaw, 0.0)
 	if spring:
 		spring.spring_length = 2.7
+	await _shot("he_idle_three_quarter", func() -> void:
+		_he.state = HE.State.FREE
+		_he._sprinting = false
+		_he._moving = false
+		_he.velocity = Vector3.ZERO
+		_he._update_visual_pose()
+	)
+	await _shot("he_walk_three_quarter", func() -> void:
+		_he.state = HE.State.FREE
+		_he._sprinting = false
+		_he._moving = true
+		_he.velocity = Vector3(0.0, 0.0, Combat.WALK_SPEED)
+		_he._stride = PI * 0.5
+		_he._update_visual_pose()
+	)
 	await _shot("he_jab_three_quarter", func() -> void:
 		_he.state = HE.State.ATTACK
 		_he._attack = Combat.fists_light()
